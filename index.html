@@ -110,35 +110,24 @@
       }
     /* Ensure responsiveness */
     @media (max-width: 768px) {
-       /* Sidebar settings */
-       .sidebar {
-           width: 100%; /* Stack sidebar on top of content on smaller screens */
-           margin-bottom: 20px;
-       }
-    
-       /* Main content and other sections */
-       .main-content, .certificates-section, .contact-section, .more-section, .tiltable-section {
-           width: 100%;
-           margin-left: 5%;
-       }
-    
-       /* Navbar settings */
-       .navbar {
-           padding: 0 10px; /* Add some padding for smaller screens */
-           text-align: center; /* Center the content */
-       }
-    
-       /* Navbar items: Shift them to the left by 30px */
-       .navbar-item {
-           margin-left: -30px; /* Shift to the left by 30px */
-           padding: 0; /* Reset padding if necessary */
-       }
-    
-       /* Ensure navbar doesn't overflow */
-       .navbar-list {
-           display: flex;
-           justify-content: center; /* Adjust if you want it centered but with a left shift */
-       }
+      .sidebar {
+        width: 100%; /* Stack sidebar on top of content on smaller screens */
+        margin-bottom: 20px;
+      }
+
+      .main-content, .certificates-section, .contact-section, .more-section, .tiltable-section {
+        width: 100%;
+        margin-left: 5%;
+      }
+      .navbar {
+          padding: 0 10px; /* Add some padding for smaller screens */
+          text-align: center; /* Center the content */
+      }
+      .navbar-item {
+          margin: 0;
+          padding: 0;
+      }
+      
     }
   </style>
 
