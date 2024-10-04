@@ -320,7 +320,7 @@ const text = Array.from({ length: 20 }, () =>
 
 // Add your final phrases
 text.push("Cogito, ergo sum");
-text.push("I think, therefore I am");
+text.push("I think, therefore I AM");
 
 const mottoElement = document.getElementById("motto");
 let index = 0;
