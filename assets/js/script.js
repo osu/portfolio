@@ -399,3 +399,49 @@ document.addEventListener("DOMContentLoaded", function () {
     observer.observe(item);
   });
 });
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Sidebar tilt effect
+  const sidebar = document.querySelector(".sidebar");
+
+  sidebar.addEventListener('mousemove', (e) => {
+    const { width, height, left, top } = sidebar.getBoundingClientRect();
+    const x = (e.clientX - left) / width - 0.5;
+    const y = (e.clientY - top) / height - 0.5;
+
+    // Adjust sidebar tilt intensity
+    const rotateX = (y * 20).toFixed(2); // Tilt on X-axis
+    const rotateY = (x * -20).toFixed(2); // Tilt on Y-axis
+
+    // Apply the calculated rotation to the sidebar
+    sidebar.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+
+  // Reset the tilt effect when the mouse leaves the sidebar
+  sidebar.addEventListener('mouseleave', () => {
+    sidebar.style.transform = `rotateX(0deg) rotateY(0deg)`;
+  });
+
+  // Section tilt effect
+  const tiltableSections = document.querySelectorAll(".tiltable-section");
+
+  tiltableSections.forEach((section) => {
+    section.addEventListener('mousemove', (e) => {
+      const { width, height, left, top } = section.getBoundingClientRect();
+      const x = (e.clientX - left) / width - 0.5;
+      const y = (e.clientY - top) / height - 0.5;
+
+      // Adjust section tilt intensity
+      const rotateX = (y * 15).toFixed(2); // Tilt on X-axis for sections
+      const rotateY = (x * -15).toFixed(2); // Tilt on Y-axis for sections
+
+      // Apply the calculated rotation to the section
+      section.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    });
+
+    // Reset the tilt effect when the mouse leaves the section
+    section.addEventListener('mouseleave', () => {
+      section.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    });
+  });
+});
