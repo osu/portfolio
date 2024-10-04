@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-
+<!--
+    inspired from oktayshakirov
+  -->
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -15,7 +17,7 @@
   <!--
     - favicon
   -->
-  <link rel="shortcut icon" href="./assets/images/logo.ico" type="image/x-icon">
+  <link rel="shortcut icon" href="./assets/images/gameboy.ico" type="image/x-icon">
 
   <!--
     - custom css link
@@ -37,6 +39,63 @@
     gtag('js', new Date());
     gtag('config', 'G-G1H2WJ7XH4');
   </script>
+
+  <style>
+    /* Flex container to keep the sidebar and main content properly aligned */
+    body {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      background: url('./assets/images/black-and-white-couple.gif') no-repeat center center fixed;
+      background-size: cover;
+      margin: 0;
+      padding: 0;
+    }
+
+    .sidebar {
+      flex: 0 0 25%; /* Fix the sidebar to 25% of the viewport width */
+      background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+      color: white;
+      padding: 20px;
+    }
+
+    .main-content, .certificates-section, .contact-section, .more-section {
+      flex: 1; /* Allow the main content to take up the remaining space */
+      background: rgba(255, 255, 255, 0.8); /* Slightly transparent white for readability */
+      padding: 20px;
+      margin-left: 5%; /* Adjust margin to ensure space between the sidebar and content */
+      border-radius: 10px;
+    }
+
+    .projects-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust based on screen size */
+      gap: 20px; /* Add space between project cards */
+    }
+
+    .project-item {
+      padding: 15px;
+      background: #333;
+      color: #fff;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Ensure responsiveness */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 100%; /* Stack sidebar on top of content on smaller screens */
+        margin-bottom: 20px;
+      }
+
+      .main-content, .certificates-section, .contact-section, .more-section {
+        width: 100%;
+        margin-left: 0;
+      }
+    }
+  </style>
+
 
 </head>
 
@@ -524,85 +583,125 @@
             <ul class="technologies-list has-scrollbar slider ">
 
               <li class="technologies-item">
-                <img src="./assets/images/html.png" alt="HTML" id="1" width="40">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank">
+                  <img src="./assets/images/html.png" alt="HTML" id="1" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/css.png" alt="CSS" id="2" width="40">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank">
+                  <img src="./assets/images/css.png" alt="CSS" id="2" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/java-script.png" alt="JavaScript" id="3" width="40">
+                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
+                  <img src="./assets/images/java-script.png" alt="JavaScript" id="3" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/react.png" alt="React" id="4" width="40">
+                <a href="https://reactjs.org/" target="_blank">
+                  <img src="./assets/images/react.png" alt="React" id="4" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/unity3d.png" alt="Unity" id="5" width="50">
+                <a href="https://unity.com/" target="_blank">
+                  <img src="./assets/images/unity3d.png" alt="Unity" id="5" width="50">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/node.png" alt="Node" id="6" width="40">
+                <a href="https://nodejs.org/" target="_blank">
+                  <img src="./assets/images/node.png" alt="Node.js" id="6" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/typescript.png" alt="TypeScript" id="7" width="40">
+                <a href="https://www.typescriptlang.org/" target="_blank">
+                  <img src="./assets/images/typescript.png" alt="TypeScript" id="7" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/Azure.png" alt="MS Azure" id="8" width="40">
+                <a href="https://azure.microsoft.com/" target="_blank">
+                  <img src="./assets/images/Azure.png" alt="MS Azure" id="8" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/vs-code.png" alt="VS code" id="9" width="40">
+                <a href="https://code.visualstudio.com/" target="_blank">
+                  <img src="./assets/images/vs-code.png" alt="VS Code" id="9" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/mysql.png" alt="MySQL" id="10" width="40">
+                <a href="https://www.mysql.com/" target="_blank">
+                  <img src="./assets/images/mysql.png" alt="MySQL" id="10" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/python.png" alt="Python" id="11" width="40">
+                <a href="https://www.python.org/" target="_blank">
+                  <img src="./assets/images/python.png" alt="Python" id="11" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/linux.png" alt="Linux" id="12" width="40">
+                <a href="https://www.linux.org/" target="_blank">
+                  <img src="./assets/images/linux.png" alt="Linux" id="12" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/tensor.png" alt="TensorFlow" id="13" width="40">
+                <a href="https://www.tensorflow.org/" target="_blank">
+                  <img src="./assets/images/tensor.png" alt="TensorFlow" id="13" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/git.png" alt="Git" id="14" width="40">
+                <a href="https://git-scm.com/" target="_blank">
+                  <img src="./assets/images/git.png" alt="Git" id="14" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/R.png" alt="R" id="15" width="40">
+                <a href="https://www.r-project.org/" target="_blank">
+                  <img src="./assets/images/R.png" alt="R" id="15" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/adobe.png" alt="Adobe" id="16" width="40">
+                <a href="https://www.adobe.com/" target="_blank">
+                  <img src="./assets/images/adobe.png" alt="Adobe" id="16" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/365.png" alt="Microsoft 365" id="17" width="40">
+                <a href="https://www.microsoft.com/en-us/microsoft-365" target="_blank">
+                  <img src="./assets/images/365.png" alt="Microsoft 365" id="17" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/c.png" alt="C" id="18" width="40">
+                <a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank">
+                  <img src="./assets/images/c.png" alt="C" id="18" width="40">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/c++.png" alt="C++" id="19" width="25">
+                <a href="https://en.wikipedia.org/wiki/C%2B%2B" target="_blank">
+                  <img src="./assets/images/c++.png" alt="C++" id="19" width="25">
+                </a>
               </li>
-
+          
               <li class="technologies-item">
-                <img src="./assets/images/cs.png" alt="C#" id="20" width="30">
+                <a href="https://en.wikipedia.org/wiki/C_Sharp_(programming_language)" target="_blank">
+                  <img src="./assets/images/cs.png" alt="C#" id="20" width="30">
+                </a>
               </li>
-
+          
             </ul>
 
           </section>
@@ -1004,7 +1103,7 @@
           <ul class="social-list">
 
             <li class="social-item">
-              <a href="https://github.com/oktayshakirov" class="socials-item">
+              <a href="https://github.com/osu class="socials-item">
                 <img src="./assets/images/socials/github.png"></img>
               </a>
             </li>
