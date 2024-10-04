@@ -110,17 +110,25 @@
       }
     /* Ensure responsiveness */
     @media (max-width: 768px) {
-    .navbar {
-        padding: 0 10px; /* Add some padding for smaller screens */
-        text-align: center; /* Center the content */
-    }
+      .sidebar {
+        width: 100%; /* Stack sidebar on top of content on smaller screens */
+        margin-bottom: 20px;
+      }
 
-    .navbar-list {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
+      .main-content, .certificates-section, .contact-section, .more-section, .tiltable-section {
+        width: 100%;
+        margin-left: 5%;
+      }
+      .navbar {
+          padding: 0 10px; /* Add some padding for smaller screens */
+          text-align: center; /* Center the content */
+      }
+      .navbar-item {
+          margin: 0;
+          padding: 0;
+      }
+      
     }
-}
   </style>
 
 
