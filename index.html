@@ -10,28 +10,23 @@
   <meta name="google-adsense-account" content="ca-pub-5852582960793521">
   <title>Hasan Khan - Portfolio</title>
   <meta property="og:title" content="Hasan Khan - Portfolio" />
-  <meta property="og:description"
-  content="Hasan Khan is a software developer and cybersecurity enthusiast from Edmonton, Canada. Specializing in creating engaging games, mobile applications, and implementing ML" />
+  <meta property="og:description" content="Hasan Khan is a software developer and cybersecurity enthusiast from Edmonton, Canada. Specializing in creating engaging games, mobile applications, and implementing ML" />
   <meta property="og:image" content="./assets/images/logo.ico" />
   <meta property="og:url" content="https://oktayshakirov.com" />
-  <!--
-    - favicon
-  -->
+
+  <!-- Favicon -->
   <link rel="shortcut icon" href="./assets/images/gameboy.ico" type="image/x-icon">
 
-  <!--
-    - custom css link
-  -->
+  <!-- CSS Links -->
   <link rel="stylesheet" href="./assets/css/style.css">
-  <link rel="stylesheet" href="./assets/css/style.css">
-  <!--
-    - google font link
-  -->
+  <link rel="stylesheet" href="./assets/css/planet.css"> <!-- Solar System CSS -->
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics-->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-G1H2WJ7XH4"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -40,16 +35,8 @@
     gtag('config', 'G-G1H2WJ7XH4');
   </script>
 
+  <!-- Inline CSS for Universe Background Positioning -->
   <style>
-    /* Flex container to keep the sidebar and main content properly aligned */
-    body {
-      display: flex;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-      background: none; /* Remove default background image */
-      margin: 0;
-      padding: 0;
-    }
     /* Universe Background Styling */
     #universe {
       position: fixed;
@@ -60,109 +47,7 @@
       z-index: -1; /* Ensures background */
       pointer-events: none; /* Allows interaction with foreground elements */
     }
-
-    .sidebar {
-      flex: 0 0 25%; /* Fix the sidebar to 25% of the viewport width */
-      background: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-      color: white;
-      padding: 20px;
-    }
-
-    .main-content, .certificates-section, .contact-section, .more-section {
-      flex: 1; /* Allow the main content to take up the remaining space */
-      background: rgba(255, 255, 255, 0.8); /* Slightly transparent white for readability */
-      padding: 20px;
-      margin-left: 5%; /* Adjust margin to ensure space between the sidebar and content */
-      border-radius: 10px;
-    }
-
-    .projects-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust based on screen size */
-      gap: 20px; /* Add space between project cards */
-    }
-
-    .project-item {
-      padding: 15px;
-      background: #333;
-      color: #fff;
-      border-radius: 10px;
-      text-align: center;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    }
-    .technologies-item {
-        perspective: 1000px;
-        transition: transform 0.1s ease-out;
-      }
-
-      .tilt {
-        transform-style: preserve-3d;
-        transition: transform 0.2s ease-out;
-      }
-
-      .technologies-item:hover .tilt {
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-      }
-      .sidebar {
-        perspective: 1500px; /* This adds a 3D perspective */
-        transition: transform 0.2s ease-out; /* Smooth transition when tilting */
-      }
-      .tiltable-section {
-        perspective: 1500px;
-        transition: transform 0.2s ease-out;
-      }
-      .certificates {
-        margin-top: 5px; /* Adjust this value to move the section lower */
-      }
-      .contact {
-        margin-top: 10px; /* Adjust this value to move the section lower */
-      }
-    /* Ensure responsiveness */
-    @media (max-width: 768px) {
-      body {
-        background: url('./assets/images/phonegray.gif') no-repeat center center fixed;
-        background-size: cover;
-      }
-      .sidebar {
-        width: 100%; /* Stack sidebar on top of content on smaller screens */
-        margin-bottom: 20px;
-        text-align: center;
-      }
-
-      .main-content, .certificates-section, .contact-section, .more-section, .tiltable-section {
-        width: 100%;
-        margin-left: 0; /* Remove the margin to align with sidebar */
-        padding-left: 30px; /* Add padding to shift the content to the left */
-        padding-right: 30px; /* Optional: Add padding on the right for better spacing */
-      }
-
-      .navbar {
-          padding: 0 10px; /* Add some padding for smaller screens */
-          text-align: center; /* Center the content */
-      }
-      .navbar-item {
-          margin: 0;
-          padding: 0;
-      }
-     .certificate-container {
-        display: flex;
-        justify-content: center; /* This will center the image */
-        align-items: center;
-        margin: 0 auto; /* Ensure the container is centered */
-        text-align: center; /* Ensure any text inside is also centered */
-      }
-
-      .certificate-container img {
-        max-width: 100%; /* Ensure the image doesn't exceed the width of the screen */
-        height: auto; /* Maintain aspect ratio */
-      }
-      
-}
-      
-    }
   </style>
-
-
 </head>
 
 <body class="opening hide-UI view-2D zoom-large data-close controls-close">
@@ -171,9 +56,7 @@
   <div id="universe" class="scale-stretched">
     <div id="galaxy">
       <div id="solar-system" class="earth">
-        <div id="sun">
-          <dl class="infos"><dt>Sun</dt><dd><span></span></dd></dl>
-        </div>
+        <div id="sun"><dl class="infos"><dt>Sun</dt><dd><span></span></dd></dl></div>
         <div id="mercury" class="orbit"><div class="pos"><div class="planet"><dl class="infos"><dt>Mercury</dt><dd><span></span></dd></dl></div></div></div>
         <div id="venus" class="orbit"><div class="pos"><div class="planet"><dl class="infos"><dt>Venus</dt><dd><span></span></dd></dl></div></div></div>
         <div id="earth" class="orbit">
