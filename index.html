@@ -42,8 +42,6 @@
 
   <style>
     /* Flex container to keep the sidebar and main content properly aligned */
-    <style>
-    /* Flex container to keep the sidebar and main content properly aligned */
     body {
       display: flex;
       flex-wrap: nowrap;
@@ -64,11 +62,11 @@
     
     .main-content, .certificates-section, .contact-section, .more-section {
       flex: 1; /* Allow the main content to take up the remaining space */
-      background: rgba(0, 0, 0, 0.8); /* Black with 80% transparency */
+      background: rgba(142, 144, 250, 0.8); /* Soft light-blue for readability */
       padding: 20px;
       margin-left: 5%; /* Adjust margin to ensure space between the sidebar and content */
       border-radius: 10px;
-      color: #e0e0ff; /* Light text for better readability */
+      color: #191919; /* Darker text for better readability */
     }
     
     .projects-section {
@@ -79,7 +77,7 @@
     
     .project-item {
       padding: 15px;
-      background: rgba(0, 0, 0, 0.8); /* Black with 80% transparency */
+      background: #4e54c8; /* Deep purple for project cards */
       color: #e0e0ff; /* Light text for contrast */
       border-radius: 10px;
       text-align: center;
@@ -98,12 +96,10 @@
     }
     
     /* Mobile-specific styles */
-    /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
         background: url('./assets/images/phonegray.gif') no-repeat center center fixed;
         background-size: cover;
-        min-height: 100vh; /* Ensure the GIF spans the full viewport height */
       }
 
       .sidebar {
@@ -116,12 +112,11 @@
       .main-content, .certificates-section, .contact-section, .more-section {
         width: 100%;
         margin-left: 0; /* Remove the margin to align with sidebar */
-        background: rgba(0, 0, 0, 0.8); /* Black with 80% transparency for mobile */
+        background: rgba(200, 200, 200, 0.9); /* Light gray for main content */
         padding-left: 30px; /* Add padding to shift the content to the left */
         padding-right: 30px; /* Optional: Add padding on the right for better spacing */
       }
     }
-</style>
 </style>
 
 
