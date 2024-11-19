@@ -51,22 +51,23 @@
       margin: 0;
       padding: 0;
     }
-    
+
     .sidebar {
       flex: 0 0 25%; /* Fix the sidebar to 25% of the viewport width */
-      background: rgba(46, 49, 146, 0.5); /* 50% transparent purple */
-      color: #e0e0ff; /* Soft white-blue for contrast */
+      background: linear-gradient(to bottom, #6a82fb, #b06ab3); /* Gradient from blue to purple */
+      color: #ffffff; /* Soft white for contrast */
       padding: 20px;
-      border-right: 2px solid #6a82fb; /* Subtle border to match the gradient */
+      border-right: 2px solid #9b59b6; /* Subtle border matching the gradient */
     }
     
     .main-content, .certificates-section, .contact-section, .more-section {
       flex: 1; /* Allow the main content to take up the remaining space */
-      background: rgba(142, 144, 250, 0.8); /* Soft light-blue for readability */
+      background: linear-gradient(to bottom, #74ebd5, #ACB6E5); /* Gradient inspired by aqua and light blue */
       padding: 20px;
       margin-left: 5%; /* Adjust margin to ensure space between the sidebar and content */
       border-radius: 10px;
-      color: #191919; /* Darker text for better readability */
+      color: #191919; /* Dark text for readability */
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for a modern look */
     }
     
     .projects-section {
@@ -77,8 +78,8 @@
     
     .project-item {
       padding: 15px;
-      background: #4e54c8; /* Deep purple for project cards */
-      color: #e0e0ff; /* Light text for contrast */
+      background: linear-gradient(to bottom, #4e54c8, #b06ab3); /* Deep purple gradient */
+      color: #ffffff; /* Light text for contrast */
       border-radius: 10px;
       text-align: center;
       box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
@@ -87,15 +88,13 @@
     
     .project-item:hover {
       transform: scale(1.05); /* Slight scaling on hover */
-      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow for hover effect */
     }
     
     .sidebar {
       perspective: 1500px; /* This adds a 3D perspective */
       transition: transform 0.2s ease-out; /* Smooth transition when tilting */
     }
-    
-    /* Mobile-specific styles */
     /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
