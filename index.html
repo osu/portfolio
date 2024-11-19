@@ -98,10 +98,12 @@
     }
     
     /* Mobile-specific styles */
+    /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
         background: url('./assets/images/phonegray.gif') no-repeat center center fixed;
         background-size: cover;
+        min-height: 100vh; /* Ensure the GIF spans the full viewport height */
       }
 
       .sidebar {
@@ -114,11 +116,12 @@
       .main-content, .certificates-section, .contact-section, .more-section {
         width: 100%;
         margin-left: 0; /* Remove the margin to align with sidebar */
-        background: rgba(200, 200, 200, 0.9); /* Light gray for main content */
+        background: rgba(0, 0, 0, 0.8); /* Black with 80% transparency for mobile */
         padding-left: 30px; /* Add padding to shift the content to the left */
         padding-right: 30px; /* Optional: Add padding on the right for better spacing */
       }
     }
+</style>
 </style>
 
 
