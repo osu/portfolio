@@ -99,25 +99,18 @@
     /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
-    position: relative; /* Establish positioning context */
-    margin: 0;
-    padding: 0;
-    height: auto; /* Let the content determine the height */
-    background: url('./assets/images/phonegray.gif') no-repeat center top;
-    background-size: contain;
-    }
-    
-      body::after {
-        content: "";
-        position: absolute;
-        top: /* Replace with height of the top image */;
-        left: 0;
-        width: 100%;
-        height: calc(100% - /* Replace with height of the top image */);
-        background: url('./assets/images/phonegray.gif') no-repeat center top;
-        background-size: 100% 100%;
-        z-index: -1; /* Place behind the body content */
-    }
+        display: block;
+        margin: 0;
+        padding: 0;
+        height: 100%; /* Allow body to expand with content */
+        position: relative; /* Create a positioning context */
+        background-image:
+          url('./assets/images/phonegray.gif'), /* Top image */
+          url('./assets/images/phonegray.gif'); /* Stretched background */
+        background-repeat: no-repeat, no-repeat;
+        background-position: center top, center top;
+        background-size: contain, 100% 100%;
+      }
     
       .sidebar {
         width: 100%; /* Stack sidebar on top of content on smaller screens */
