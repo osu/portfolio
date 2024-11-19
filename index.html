@@ -98,17 +98,21 @@
     /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
-        background: url('./assets/images/phonegray.gif') no-repeat center center fixed;
+        display: block; /* Override flex display */
+        height: 100vh;  /* Set body height to viewport height */
+        margin: 0;      /* Remove default margins */
+        padding: 0;     /* Remove default padding */
+        background: url('./assets/images/phonegray.gif') no-repeat center center;
         background-size: cover;
       }
-
+    
       .sidebar {
         width: 100%; /* Stack sidebar on top of content on smaller screens */
         margin-bottom: 20px;
         background: rgba(128, 128, 128, 0.8); /* Gray semi-transparent for mobile */
         text-align: center;
       }
-
+    
       .main-content, .certificates-section, .contact-section, .more-section {
         width: 100%;
         margin-left: 0; /* Remove the margin to align with sidebar */
