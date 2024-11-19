@@ -96,14 +96,18 @@
     }
     
     /* Mobile-specific styles */
+    /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
         display: block; /* Override flex display */
-        height: 100vh;  /* Set body height to viewport height */
         margin: 0;      /* Remove default margins */
         padding: 0;     /* Remove default padding */
-        background: url('./assets/images/phonegray.gif') no-repeat center center;
-        background-size: cover;
+        height: 100%;   /* Allow body to expand with content */
+        background:
+          url('./assets/images/phonegray.gif') no-repeat center top,
+          /* Base background color or image */
+          #CCCCCC; /* Light gray color as base background */
+        background-size: cover, cover;
       }
     
       .sidebar {
