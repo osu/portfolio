@@ -55,7 +55,7 @@
     
     .sidebar {
       flex: 0 0 25%; /* Fix the sidebar to 25% of the viewport width */
-      background: rgba(46, 49, 146, 0.9); /* Deep purple semi-transparent */
+      background: rgba(46, 49, 146, 0.5); /* 50% transparent purple */
       color: #e0e0ff; /* Soft white-blue for contrast */
       padding: 20px;
       border-right: 2px solid #6a82fb; /* Subtle border to match the gradient */
@@ -126,7 +126,7 @@
     /* Ensure responsiveness */
     @media (max-width: 768px) {
       body {
-        background: linear-gradient(135deg, #6a82fb, #a683e9); /* Adjusted gradient for smaller screens */
+        background: url('./assets/images/phonegray.gif') no-repeat center center fixed;
         background-size: cover;
       }
       .sidebar {
