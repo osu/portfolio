@@ -99,16 +99,25 @@
     /* Mobile-specific styles */
     @media (max-width: 768px) {
       body {
-        display: block; /* Override flex display */
-        margin: 0;      /* Remove default margins */
-        padding: 0;     /* Remove default padding */
-        height: 100%;   /* Allow body to expand with content */
-        background:
-          url('./assets/images/phonegray.gif') no-repeat center top,
-          /* Base background color or image */
-          #CCCCCC; /* Light gray color as base background */
-        background-size: cover, cover;
-      }
+    position: relative; /* Establish positioning context */
+    margin: 0;
+    padding: 0;
+    height: auto; /* Let the content determine the height */
+    background: url('./assets/images/phonegray.gif') no-repeat center top;
+    background-size: contain;
+    }
+    
+      body::after {
+        content: "";
+        position: absolute;
+        top: /* Replace with height of the top image */;
+        left: 0;
+        width: 100%;
+        height: calc(100% - /* Replace with height of the top image */);
+        background: url('./assets/images/phonegray.gif') no-repeat center top;
+        background-size: 100% 100%;
+        z-index: -1; /* Place behind the body content */
+    }
     
       .sidebar {
         width: 100%; /* Stack sidebar on top of content on smaller screens */
