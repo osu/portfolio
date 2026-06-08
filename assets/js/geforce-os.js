@@ -437,7 +437,7 @@
       "  <span class='green'>//    /'      ':    /</span>    <span class='green'>Shell</span>   hasansh 2.0",
       "  <span class='green'>//    :        :    /</span>    <span class='green'>GPU</span>     Blackwell RTX (24GB)",
       "  <span class='green'>'//   ':      :'   //</span>    <span class='green'>CPU</span>     RTX Spark N1X",
-      "   <span class='green'>'//.  ':::::'  .//'</span>     <span class='green'>Langs</span>   JS · Py · TS · C/C++",
+      "   <span class='green'>'//.  ':::::'  .//'</span>     <span class='green'>Langs</span>   Py · Go · C++ · TS · JS",
       "    <span class='green'>'////......////'</span>       <span class='green'>Theme</span>   #76B900",
       "       <span class='green'>':::::::::'</span>",
     ];
@@ -483,7 +483,7 @@
         ];
       },
       skills() {
-        return ["<span class='green'>Code</span>  JavaScript · Python · TypeScript · C/C++/C# · SQL · CSS",
+        return ["<span class='green'>Code</span>  Python · Go · C++ · TypeScript · JavaScript · SQL",
                 "<span class='green'>Tools</span> React · Node · Docker · TensorFlow · Linux · Git · Figma",
                 "<span class='green'>Human</span> English · Pashto · Urdu · Hindi · Farsi · French"];
       },
