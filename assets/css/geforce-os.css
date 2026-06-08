@@ -126,16 +126,6 @@ img { max-width: 100%; display: block; }
     linear-gradient(180deg, rgba(6,8,6,0.55), rgba(6,8,6,0.80));
   animation: bgdrift 24s ease-in-out infinite alternate;
 }
-/* faint tech grid */
-.desktop-bg::after {
-  content: ""; position: absolute; inset: 0;
-  background-image:
-    linear-gradient(rgba(118,185,0,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(118,185,0,0.06) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 30%, transparent 85%);
-  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, #000 30%, transparent 85%);
-}
 @keyframes bgdrift { to { transform: translate(2%, -2%) scale(1.05); } }
 
 .desktop-watermark {
