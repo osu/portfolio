@@ -475,9 +475,10 @@
         return [
           "<span class='green'>NVIDIA</span>          Software Engineer Intern        Apr 2026 — Present",
           "<span class='green'>SAP</span>             Software Engineer Intern        Dec 2025 — Apr 2026",
-          "<span class='green'>Bank of Canada</span>  Software Developer              Aug 2025 — Nov 2025",
-          "<span class='green'>Accenture</span>       Data Architecture Intern        May 2025 — Aug 2025",
-          "<span class='green'>GeoComply</span>       Fraud Analyst Intern            Jan 2025 — Apr 2025",
+          "<span class='green'>Bank of Canada</span>  Fullstack SW Dev Intern         Aug 2025 — Nov 2025",
+          "<span class='green'>Accenture</span>       Solutions Architect             May 2025 — Aug 2025",
+          "<span class='green'>Scale AI</span>        Gen AI Technical Advisor        Jan 2025 — May 2025",
+          "<span class='green'>GeoComply</span>       Fraud & Risk Mgmt Intern        Jan 2025 — Apr 2025",
           "<span class='green'>U of Alberta</span>    SW Developer · Optimization Res 2024",
           "Type <span class='green'>open experience</span> for details.",
         ];
