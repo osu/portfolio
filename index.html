@@ -6,15 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="google-adsense-account" content="ca-pub-5852582960793521">
 
-  <title>Hasan Khan — GeForce OS Portfolio</title>
+  <title>Hasan Khan — NVIDIA DGX OS Portfolio</title>
   <meta name="description" content="Hasan Khan — Software Engineer Intern @ NVIDIA. Software development, product, UX, cybersecurity & data science. An NVIDIA-themed desktop portfolio.">
-  <meta property="og:title" content="Hasan Khan — GeForce OS Portfolio" />
-  <meta property="og:description" content="Software Engineer Intern @ NVIDIA. A GeForce-OS themed interactive portfolio — explore the desktop, dock, terminal and GPU stats." />
+  <meta property="og:title" content="Hasan Khan — NVIDIA DGX OS Portfolio" />
+  <meta property="og:description" content="Software Engineer Intern @ NVIDIA. A NVIDIA DGX OS themed interactive portfolio — explore the desktop, dock, terminal and GPU stats." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="./assets/images/geforce-os-logo.svg" />
+  <meta property="og:image" content="./assets/images/nvda.png" />
   <meta name="theme-color" content="#0c0e0c">
 
-  <link rel="icon" href="./assets/images/geforce-os-logo.svg" type="image/svg+xml">
+  <link rel="icon" href="./assets/images/nvda.png" type="image/png">
   <link rel="stylesheet" href="./assets/css/geforce-os.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -52,9 +52,9 @@
   </svg>
 
   <!-- ============================= BOOT SPLASH ============================= -->
-  <div class="boot" id="boot" role="status" aria-label="Booting GeForce OS">
-    <div class="boot-logo"><img src="./assets/images/geforce-os-logo.svg" alt=""></div>
-    <div class="boot-title">GeForce OS</div>
+  <div class="boot" id="boot" role="status" aria-label="Booting NVIDIA DGX OS">
+    <div class="boot-logo"><img src="./assets/images/nvda.png" alt=""></div>
+    <div class="boot-title">NVIDIA DGX OS</div>
     <div class="boot-sub">HASAN KHAN · PORTFOLIO BUILD v2.0</div>
     <div class="boot-bar"><div class="boot-bar-fill"></div></div>
     <div class="boot-hint">click anywhere to skip</div>
@@ -66,8 +66,8 @@
     <!-- MENU BAR -->
     <header class="menubar">
       <div class="menubar-left">
-        <img class="menubar-logo" src="./assets/images/geforce-os-logo.svg" alt="">
-        <span class="menubar-os">GeForce OS</span>
+        <img class="menubar-logo" src="./assets/images/nvda.png" alt="">
+        <span class="menubar-os">NVIDIA DGX OS</span>
         <span class="menubar-app" id="mb-app">Finder</span>
       </div>
       <div class="menubar-right">
@@ -80,9 +80,12 @@
 
     <!-- DESKTOP -->
     <main class="desktop" id="desktop">
+      <video class="desktop-video" autoplay muted loop playsinline preload="auto">
+        <source src="./assets/images/nvda.mp4" type="video/mp4">
+      </video>
       <div class="desktop-bg"></div>
       <div class="desktop-watermark">
-        <img src="./assets/images/geforce-os-logo.svg" alt="">
+        <img src="./assets/images/nvda.png" alt="">
         <p>// double-click the dock to launch apps</p>
       </div>
 
@@ -152,7 +155,7 @@
           <ul class="xp-list" style="margin-top:22px">
 
             <li class="xp-item">
-              <div class="xp-logo is-nvidia"><img src="./assets/images/geforce-os-logo.svg" alt="NVIDIA"></div>
+              <div class="xp-logo is-nvidia"><img src="./assets/images/nvda.png" alt="NVIDIA"></div>
               <div class="xp-head">
                 <span class="xp-role">Software Engineer Intern</span>
                 <span class="xp-co">· NVIDIA</span>
@@ -160,10 +163,11 @@
               </div>
               <div class="xp-when"><span class="now">Apr 2026 – Present</span> · Santa Clara, CA</div>
               <div class="xp-body">
+                <p class="xp-team">🏭 Deep GPU Xceleration (DGX) · Mission Control</p>
                 <ul>
-                  <li>Engineering on NVIDIA's GPU software &amp; developer-tooling stack.</li>
-                  <li>Collaborating across teams to build and ship high-performance tooling.</li>
+                  <li>Automated hardware recovery for AI-factory infrastructure across <strong>GB200, GB300 &amp; Vera Rubin NVL72</strong> — Class of Blackwell.</li>
                 </ul>
+                <a class="btn" href="https://github.com/NVIDIA/infra-controller" target="_blank" rel="noopener" style="margin-top:10px"><svg><use href="#i-github" xlink:href="#i-github"/></svg> infra-controller</a>
               </div>
             </li>
 
@@ -440,13 +444,13 @@
             <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
           </div>
           <svg class="win-ico"><use href="#i-terminal" xlink:href="#i-terminal"/></svg>
-          <span class="win-title">hasan@geforce-os: ~</span>
+          <span class="win-title">hasan@dgx-os: ~</span>
         </header>
         <div class="win-body">
           <div class="term">
             <div class="term-output" aria-live="polite"></div>
             <div class="term-inputline">
-              <span class="term-prompt">hasan@geforce-os:~$</span>
+              <span class="term-prompt">hasan@dgx-os:~$</span>
               <input class="term-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal input">
             </div>
           </div>
@@ -467,7 +471,10 @@
         <div class="win-body">
           <div class="gpu">
             <div class="gpu-head">
-              <div class="name">GeForce RTX <span>4090</span></div>
+              <div>
+                <div class="name">Blackwell <span>RTX</span> GPU</div>
+                <div class="gpu-sub">CPU · RTX Spark N1X</div>
+              </div>
               <div class="badge">● LIVE · portfolio.v2</div>
             </div>
             <div class="gauges">

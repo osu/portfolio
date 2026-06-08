@@ -429,14 +429,14 @@
     let out, input, hist = [], hi = -1, booted = false;
 
     const NEOFETCH = [
-      "        <span class='green'>.::////::.</span>          <span class='cmd'>hasan@geforce-os</span>",
+      "        <span class='green'>.::////::.</span>          <span class='cmd'>hasan@dgx-os</span>",
       "     <span class='green'>:////////////:</span>        ----------------",
-      "   <span class='green'>////'  GeForce '////</span>     <span class='green'>OS</span>      GeForce OS v2.0 (portfolio)",
+      "   <span class='green'>////'  DGX-OS  '////</span>     <span class='green'>OS</span>      NVIDIA DGX OS v2.0 (portfolio)",
       "  <span class='green'>///'   .::::::.  '//</span>     <span class='green'>Host</span>    Hasan Khan — SWE Intern",
       "  <span class='green'>//'   ://////::    '/</span>    <span class='green'>Employer</span> NVIDIA",
       "  <span class='green'>//    /'      ':    /</span>    <span class='green'>Shell</span>   hasansh 2.0",
-      "  <span class='green'>//    :        :    /</span>    <span class='green'>GPU</span>     RTX 4090 (24GB)",
-      "  <span class='green'>'//   ':      :'   //</span>    <span class='green'>Uptime</span>  ∞ shipping",
+      "  <span class='green'>//    :        :    /</span>    <span class='green'>GPU</span>     Blackwell RTX (24GB)",
+      "  <span class='green'>'//   ':      :'   //</span>    <span class='green'>CPU</span>     RTX Spark N1X",
       "   <span class='green'>'//.  ':::::'  .//'</span>     <span class='green'>Langs</span>   JS · Py · TS · C/C++",
       "    <span class='green'>'////......////'</span>       <span class='green'>Theme</span>   #76B900",
       "       <span class='green'>':::::::::'</span>",
@@ -474,7 +474,7 @@
       experience() {
         return [
           "<span class='green'>NVIDIA</span>          Software Engineer Intern        Apr 2026 — Present",
-          "<span class='green'>SAP</span>             Software Engineer Intern        Dec 2025 — Mar 2026",
+          "<span class='green'>SAP</span>             Software Engineer Intern        Dec 2025 — Apr 2026",
           "<span class='green'>Bank of Canada</span>  Software Developer              Aug 2025 — Nov 2025",
           "<span class='green'>Accenture</span>       Data Architecture Intern        May 2025 — Aug 2025",
           "<span class='green'>GeoComply</span>       Fraud Analyst Intern            Jan 2025 — Apr 2025",
@@ -516,7 +516,7 @@
           "<span class='term-art'>| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |</span>",
           "<span class='term-art'>| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |</span>",
           "<span class='term-art'>|===============================+======================+======================|</span>",
-          "<span class='term-art'>|   0  RTX 4090         On      | 00000000:01:00.0  On |                  N/A |</span>",
+          "<span class='term-art'>|   0  Blackwell RTX    On      | 00000000:01:00.0  On |                  N/A |</span>",
           "<span class='term-art'>| " + pad(Math.round(s.fan), 3) + "%  " + pad(Math.round(s.temp), 3) + "C   P2  " + pad(Math.round(s.power), 3) + "W / 350W  |  " + pad(s.mem.toFixed(0), 6) + "MiB / " + s.memTotal + "GiB   |    " + pad(Math.round(s.util), 3) + "%      Default |</span>",
           "<span class='term-art'>+-------------------------------+----------------------+----------------------+</span>",
           "<span class='dim'>Tip: open the GPU app from the dock for live gauges.</span>",
@@ -552,7 +552,7 @@
 
     function run(raw) {
       const line = raw.trim();
-      print("<span class='term-prompt'>hasan@geforce-os:~$</span> <span class='cmd'>" + escapeHtml(raw) + "</span>");
+      print("<span class='term-prompt'>hasan@dgx-os:~$</span> <span class='cmd'>" + escapeHtml(raw) + "</span>");
       if (!line) return;
       hist.unshift(raw); hi = -1;
       const [cmd, ...args] = line.split(/\s+/);
@@ -608,6 +608,9 @@
      INIT
      ============================================================= */
   function init() {
+    // pause the wallpaper video for users who prefer reduced motion
+    const bgVideo = $(".desktop-video");
+    if (bgVideo && reduceMotion) { bgVideo.removeAttribute("autoplay"); bgVideo.pause(); }
     boot();
     clock();
     WM.init();
