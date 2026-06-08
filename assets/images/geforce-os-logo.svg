@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none" role="img" aria-label="GeForce OS">
+  <defs>
+    <linearGradient id="gfx-g" x1="0" y1="0" x2="120" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b6ff00"/>
+      <stop offset="1" stop-color="#76b900"/>
+    </linearGradient>
+    <filter id="gfx-glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- chip body -->
+  <rect x="18" y="18" width="84" height="84" rx="20" stroke="url(#gfx-g)" stroke-width="4" opacity="0.55"/>
+  <!-- chip pins -->
+  <g stroke="url(#gfx-g)" stroke-width="4" stroke-linecap="round" opacity="0.55">
+    <path d="M42 8v10M60 8v10M78 8v10"/>
+    <path d="M42 102v10M60 102v10M78 102v10"/>
+    <path d="M8 42h10M8 60h10M8 78h10"/>
+    <path d="M102 42h10M102 60h10M102 78h10"/>
+  </g>
+  <!-- stylized "eye" swirl, an original homage to the NVIDIA mark -->
+  <g filter="url(#gfx-glow)">
+    <path d="M60 38c-15 0-26 9-26 22 0 11 9 19 22 19 4 0 7-1 7-1v-9s-3 2-7 2c-7 0-12-5-12-12 0-8 7-13 16-13 11 0 18 7 18 17 0 14-13 22-28 22v8c20 0 38-12 38-31 0-19-15-33-36-33z" fill="url(#gfx-g)"/>
+    <circle cx="58" cy="60" r="6" fill="url(#gfx-g)"/>
+  </g>
+</svg>

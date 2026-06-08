@@ -1,37 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<!--
-    inspired from oktayshakirov
-  -->
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="google-adsense-account" content="ca-pub-5852582960793521">
-  <title>Hasan Khan - Portfolio</title>
-  <meta property="og:title" content="Hasan Khan - Portfolio" />
-  <meta property="og:description"
-  content="Hasan Khan is a software developer and cybersecurity enthusiast from Edmonton, Canada. Specializing in creating engaging games, mobile applications, and implementing ML" />
-  <meta property="og:image" content="./assets/images/logo.ico" />
-  <meta property="og:url" content="https://oktayshakirov.com" />
-  <!--
-    - favicon
-  -->
-  <link rel="shortcut icon" href="./assets/images/gameboy.ico" type="image/x-icon">
 
-  <!--
-    - custom css link
-  -->
-  <link rel="stylesheet" href="./assets/css/style.css">
+  <title>Hasan Khan — GeForce OS Portfolio</title>
+  <meta name="description" content="Hasan Khan — Software Engineer Intern @ NVIDIA. Software development, product, UX, cybersecurity & data science. An NVIDIA-themed desktop portfolio.">
+  <meta property="og:title" content="Hasan Khan — GeForce OS Portfolio" />
+  <meta property="og:description" content="Software Engineer Intern @ NVIDIA. A GeForce-OS themed interactive portfolio — explore the desktop, dock, terminal and GPU stats." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="./assets/images/geforce-os-logo.svg" />
+  <meta name="theme-color" content="#0c0e0c">
 
-  <!--
-    - google font link
-  -->
+  <link rel="icon" href="./assets/images/geforce-os-logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./assets/css/geforce-os.css">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 
-  <!-- Google Analytics-->
+  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-G1H2WJ7XH4"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -39,1332 +29,518 @@
     gtag('js', new Date());
     gtag('config', 'G-G1H2WJ7XH4');
   </script>
-
-  <style>
-    /* Flex container to keep the sidebar and main content properly aligned */
-    body {
-      display: flex;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-      background: url('./assets/images/wave.gif') no-repeat center center fixed;
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-    }
-
-    .sidebar {
-      flex: 0 0 25%; /* Fix the sidebar to 25% of the viewport width */
-      background: linear-gradient(to bottom, rgba(106, 130, 251, 0.5), rgba(176, 106, 179, 0.2)); /* Gradient with 50% transparency */
-      color: #ffffff; /* Soft white for contrast */
-      padding: 20px;
-      border-right: 2px solid rgba(155, 89, 182, 0.5); /* Subtle border with matching transparency */
-    }
-    
-    .main-content, .certificates-section, .contact-section, .more-section {
-      flex: 1; /* Allow the main content to take up the remaining space */
-      background: linear-gradient(to bottom, rgba(106, 130, 251, 0.5), rgba(176, 106, 179, 0.2)); /* Gradient with 50% transparency */
-      padding: 20px;
-      margin-left: 5%; /* Adjust margin to ensure space between the sidebar and content */
-      border-radius: 10px;
-      color: #191919; /* Dark text for readability */
-      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for a modern look */
-    }
-    
-    .projects-section {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Adjust based on screen size */
-      gap: 20px; /* Add space between project cards */
-    }
-    
-    .project-item {
-      padding: 15px;
-      background: linear-gradient(to bottom, rgba(106, 130, 251, 0.5), rgba(176, 106, 179, 0.2)); /* Gradient with 50% transparency */
-      color: #ffffff; /* Light text for contrast */
-      border-radius: 10px;
-      text-align: center;
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    
-    .project-item:hover {
-      transform: scale(1.05); /* Slight scaling on hover */
-      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow for hover effect */
-    }
-    
-    .sidebar {
-      perspective: 1500px; /* This adds a 3D perspective */
-      transition: transform 0.2s ease-out; /* Smooth transition when tilting */
-    }
-    /* Mobile-specific styles */
-    @media (max-width: 768px) {
-      body {
-        display: block;
-        margin: 0;
-        padding: 0;
-        height: 100%; /* Allow body to expand with content */
-        position: relative; /* Create a positioning context */
-        background-image:
-          url('./assets/images/phonegray.gif'), /* Top image */
-          url('./assets/images/phonegray.gif'); /* Stretched background */
-        background-repeat: no-repeat, no-repeat;
-        background-position: center top, center top;
-        background-size: contain, 100% 100%;
-      }
-    
-      .sidebar {
-        width: 100%; /* Stack sidebar on top of content on smaller screens */
-        margin-bottom: 20px;
-        background: rgba(128, 128, 128, 0.8); /* Gray semi-transparent for mobile */
-        text-align: center;
-      }
-    
-      .main-content, .certificates-section, .contact-section, .more-section {
-        width: 100%;
-        margin-left: 0; /* Remove the margin to align with sidebar */
-        background: rgba(200, 200, 200, 0.9); /* Light gray for main content */
-        padding-left: 30px; /* Add padding to shift the content to the left */
-        padding-right: 30px; /* Optional: Add padding on the right for better spacing */
-      }
-    }
-</style>
-
-
 </head>
 
 <body>
 
-  <!--
-    - #MAIN
-  -->
+  <!-- ============================= ICON SPRITE ============================= -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><path d="M2 13h20"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M8.5 13.5 7 22l5-3 5 3-1.5-8.5"/></symbol>
+    <symbol id="i-terminal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 9 12 4 17"/><line x1="11" y1="17" x2="19" y2="17"/></symbol>
+    <symbol id="i-activity" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></symbol>
+    <symbol id="i-rocket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1-2 5-2 5s4-.5 5-2c.6-.8.5-2-.2-2.7a2 2 0 0 0-2.8-.3z"/><path d="M12 15 9 12c1.5-5.5 5-8.5 11-9 .5 6-2.5 9.5-9 11z"/><path d="M9 12H4s.5-2.8 2-4c1.7-1.4 5-1 5-1"/><path d="M12 15v5s2.8-.5 4-2c1.4-1.7 1-5 1-5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path fill="currentColor" d="M12 .5C5.7.5.5 5.7.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.7.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0C17 4.7 18 5 18 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5 4.6-1.5 7.9-5.8 7.9-10.9C23.5 5.7 18.3.5 12 .5z"/></symbol>
+    <symbol id="i-linkedin" viewBox="0 0 24 24"><path fill="currentColor" d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.13 1.45-2.13 2.94v5.67H9.35V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.06 2.06 0 1 1 0-4.13 2.06 2.06 0 0 1 0 4.13zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.54C0 23.22.8 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></symbol>
+    <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5c1.6.4 2.9 1 4.2 1.8a16.9 16.9 0 0 0-14.7 0C5.9 4.5 7.3 3.9 8.8 3.5L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.7 8.9-.1 13.3.3 17.6a19.9 19.9 0 0 0 6 3l.8-1.3c-.7-.3-1.3-.6-1.9-1l.5-.3a14.2 14.2 0 0 0 12.2 0l.5.3c-.6.4-1.2.7-1.9 1l.8 1.3a19.8 19.8 0 0 0 6-3c.5-5-.7-9.4-3-13.2zM8.3 15c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm7.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></symbol>
+  </svg>
 
-  <main>
+  <!-- ============================= BOOT SPLASH ============================= -->
+  <div class="boot" id="boot" role="status" aria-label="Booting GeForce OS">
+    <div class="boot-logo"><img src="./assets/images/geforce-os-logo.svg" alt=""></div>
+    <div class="boot-title">GeForce OS</div>
+    <div class="boot-sub">HASAN KHAN · PORTFOLIO BUILD v2.0</div>
+    <div class="boot-bar"><div class="boot-bar-fill"></div></div>
+    <div class="boot-hint">click anywhere to skip</div>
+  </div>
 
-    <!--
-      - #SIDEBAR
-    -->
+  <!-- ============================= OS ============================= -->
+  <div id="os">
 
-    <aside class="sidebar" data-sidebar>
+    <!-- MENU BAR -->
+    <header class="menubar">
+      <div class="menubar-left">
+        <img class="menubar-logo" src="./assets/images/geforce-os-logo.svg" alt="">
+        <span class="menubar-os">GeForce OS</span>
+        <span class="menubar-app" id="mb-app">Finder</span>
+      </div>
+      <div class="menubar-right">
+        <span class="menubar-stat"><span class="dot"></span><span id="mb-gpu">GPU 0% · 45°C</span></span>
+        <span class="mb-sep"></span>
+        <span class="menubar-date" id="mb-date"></span>
+        <span class="menubar-clock" id="mb-clock"></span>
+      </div>
+    </header>
 
-      <div class="sidebar-info">
+    <!-- DESKTOP -->
+    <main class="desktop" id="desktop">
+      <div class="desktop-bg"></div>
+      <div class="desktop-watermark">
+        <img src="./assets/images/geforce-os-logo.svg" alt="">
+        <p>// double-click the dock to launch apps</p>
+      </div>
 
-        <figure class="avatar-box">
-          <img src="./assets/images/blueback.png" alt="Hasan Khan" style="background: none;">
-        </figure>
+      <!-- =================== ABOUT =================== -->
+      <section class="win" data-app="about" data-title="About — Hasan Khan" role="dialog" aria-label="About Hasan Khan">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-user" xlink:href="#i-user"/></svg>
+          <span class="win-title">About — Hasan Khan</span>
+        </header>
+        <div class="win-body">
+          <div class="about-head">
+            <img class="about-avatar" src="./assets/images/blueback.png" alt="Hasan Khan">
+            <div class="about-id">
+              <div class="name">Hasan Khan</div>
+              <div class="role">&gt; Software Engineer Intern @ NVIDIA</div>
+              <div class="meta">📍 Santa Clara, CA</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <p class="lead">
+            Passionate tech enthusiast with a strong interest in <strong>Product Management, Software Development, and User Experience Design</strong>.
+            I'm driven to create <strong>innovative, user-centered solutions</strong> that solve complex challenges while enhancing usability and engagement —
+            with a deep appreciation for <strong>technology's transformative power</strong> and a focus on <strong>security, scalability, and seamless interaction</strong>.
+          </p>
+          <p class="lead" style="margin-top:12px">
+            My background spans <strong>software development, cybersecurity, and data science</strong>, with experience across
+            <strong>Python, Java, C++, SQL, and web technologies</strong>. I enjoy exploring UX principles, optimizing workflows, and creating intuitive digital experiences.
+            My passion for <strong>cybersecurity & ethical hacking</strong> keeps me engaged in <strong>Capture the Flag (CTF)</strong> challenges.
+          </p>
+          <p class="lead" style="margin-top:12px">
+            I co-own <strong>Kuudra Gang</strong>, a thriving <strong>Minecraft Discord community of 36,000+ members</strong>, where I manage engagement, automation, and growth.
+            I thrive in dynamic environments — always learning, building, and shipping.
+          </p>
 
-        <div class="info-content">
-          <h1 class="name" title="Hasan Khan">Hasan Khan</h1>
+          <h3 class="h-sub">Current Goals</h3>
+          <ul class="goals">
+            <li><span class="g-em">📌</span> Become a full-time Product Manager <span class="g-val">0 / 1</span></li>
+            <li><span class="g-em">🔐</span> Cybersecurity CTF challenges <span class="g-val">32 flags</span></li>
+            <li><span class="g-em">💻</span> Hackathons <span class="g-val">4 / 100</span></li>
+            <li><span class="g-em">🎓</span> Internships <span class="g-val">5 / 6</span></li>
+            <li><span class="g-em">🤖</span> Peak paid Discord bot users <span class="g-val">700 / 1000</span></li>
+          </ul>
 
-          <p class="title notranslate" id="motto"></p>
+          <div class="divider"></div>
+          <p class="lead">Want to collaborate on a hackathon, CTF, or tech project? <a data-open-app="contact" href="#">Open Contact <span aria-hidden="true">→</span></a></p>
         </div>
+      </section>
 
-        <button class="info_more-btn" data-sidebar-btn>
-          <ion-icon name="swap-vertical"></ion-icon>
-        </button>
-
-
-      </div>
-
-      <div class="sidebar-info_more">
-
-        <div class="separator"></div>
-
-        <ul class="contacts-list">
-
-          <li class="contact-item">
-            <div class="icon-box">
-              <ion-icon name="hourglass"></ion-icon>
-            </div>
-            <div class="contact-info">
-              <p class="contact-title">Age</p>
-              <time id="age" class="counting-animation"></time>
-            </div>
-          </li>
-
-          <li class="contact-item">
-            <div class="icon-box">
-              <ion-icon name="location-sharp"></ion-icon>
-            </div>
-            <div class="contact-info">
-              <p class="contact-title">Location</p>
-              <address>Vancouver, Canada</address>
-            </div>
-          </li>
-
-          <li class="contact-item">
-            <div class="icon-box">
-              <ion-icon name="person-sharp"></ion-icon>
-            </div>
-            <div class="contact-info">
-              <p class="contact-title">Current</p>
-              <address>Software Engineer Intern @Nvidia</address>
-            </div>
-          </li>
-
-        </ul>
-
-        <div class="separator"></div>
-
-        <ul class="social-list">
-
-          <li class="social-item">
-            <a href="https://github.com/osu" class="social-link">
-              <ion-icon name="logo-github"></ion-icon>
-            </a>
-          </li>
-
-          <li class="social-item">
-            <a href="https://www.linkedin.com/in/hasan-khan-412b5829a/" class="social-link">
-              <ion-icon name="logo-linkedin"></ion-icon>
-            </a>
-          </li>
-
-          <li class="social-item">
-            <a href="mailto:hkhan7@ualberta.ca" class="social-link">
-              <ion-icon name="mail-outline"></ion-icon> <!-- Changed to mail icon -->
-            </a>
-          </li>
-
-          <li class="social-item">
-            <a href="https://discord.com/invite/kuudra" class="social-link">
-              <ion-icon name="logo-discord"></ion-icon> 
-            </a>
-          </li>
-
-        </ul>
-
-      </div>
-
-    </aside>
-
-
-
-
-
-    <!--
-      - #main-content
-    -->
-
-    <div class="main-content">
-
-      <!--
-        - #NAVBAR
-      -->
-
-      <nav class="navbar notranslate">
-
-        <ul class="navbar-list">
-
-          <li class="navbar-item">
-            <button class="navbar-link  active" data-nav-link>About</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Certificates</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Projects</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>More</button>
-          </li>
-
-          <li class="navbar-item">
-            <button class="navbar-link" data-nav-link>Contact</button>
-          </li>
-
-        </ul>
-
-      </nav>
-
-      <div class="modal-container" data-modal-container>
-        <div class="overlay" data-overlay></div>
-        <button class="modal-close-btn" data-modal-close-btn>
-        </button>
-      </div>
-
-
-
-
-
-      <!--
-        - #ABOUT
-      -->
-
-      <article class="about active tiltable-section" data-page="about">
-
-        <header>
-          <h2 class="h2 article-title">About me</h2>
+      <!-- =================== EXPERIENCE =================== -->
+      <section class="win" data-app="experience" data-title="Experience" role="dialog" aria-label="Work experience">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg>
+          <span class="win-title">Experience</span>
         </header>
+        <div class="win-body">
+          <h2 class="h-title">Work <span class="accent">Experience</span></h2>
+          <ul class="xp-list" style="margin-top:22px">
 
-
-        <section class="about-text content-card">
-          <div id="expandable-section">
-            <p>
-    Passionate tech enthusiast with a strong interest in <strong>Product Management, Software Development, and User Experience Design</strong>. 
-    I am driven to create <strong>innovative and user-centered solutions</strong> that solve complex challenges while enhancing usability and engagement. 
-    With a deep appreciation for <strong>technology’s transformative power</strong>, I am committed to building impactful systems that prioritize 
-    <strong>security, scalability, and seamless user interaction</strong>.
-  </p>
-
-  <div id="more" style="display: none;">
-    <p>
-      My background includes <strong>software development, cybersecurity, and data science</strong>, with experience in 
-      <strong>Python, Java, C++, SQL, and web technologies</strong>. 
-      I enjoy <strong>exploring UX design principles</strong>, optimizing workflows, and <strong>creating intuitive digital experiences</strong>. 
-      My passion for <strong>cybersecurity and ethical hacking</strong> keeps me engaged in <strong>Capture the Flag (CTF) challenges</strong>, where I continuously refine my problem-solving skills.
-    </p>
-
-    <p>
-      I co-own <strong>Kuudra Gang</strong>, a thriving <strong>Minecraft Discord server with over 36,000 members</strong>, where I manage 
-      <strong>community engagement, automation tools, and server growth</strong>. 
-      My hands-on experience with <strong>game development, automation, and AI-driven solutions</strong> fuels my drive to explore emerging technologies like 
-      <strong>machine learning and blockchain</strong>.
-    </p>
-
-    <p>
-      I thrive in <strong>dynamic environments</strong>, constantly seeking opportunities to <strong>learn, innovate, and contribute meaningfully</strong> to the digital future. 
-      Whether it’s <strong>leading product growth strategies, participating in hackathons, or designing secure and scalable solutions</strong>, 
-      I am always eager to push my boundaries and collaborate with like-minded individuals.
-    </p>
-
-    <p>
-      <strong>Goals:</strong> <br>
-      📌 <strong>Become a Full-time Product Manager</strong> → <strong>0/1</strong> <br>
-      🔐 <strong>Cybersecurity CTF Challenges</strong> → <strong>5/100</strong> (<strong>32 flags found</strong>) <br>
-      💻 <strong>Hackathons</strong> → <strong>4/100</strong> <br>
-      🎓 <strong>Internships</strong> → <strong>3/6</strong> <br>
-      🤖 <strong>Peak Paid Discord Bot Monthly Users</strong> → <strong>700/1000</strong> <br>
-    </p>
-
-    <p>
-      If you're interested in collaborating on a <strong>hackathon, CTF event, or an exciting tech project</strong>, feel free to reach out! 🚀
-    </p>
-             
-            
-            </div>
-          </div>
-          <center> <button class="more" id="toggle-button" onclick="toggleText()">&darr; &nbsp; &nbsp; Show more &nbsp;
-              &nbsp; &darr;</button> </center>
-        </section>
-
-
-
-        <!--
-          - service
-        -->
-
-        <section class="service">
-
-          <h3 class="h3 service-title">Work Experience</h3>
-
-          <ul class="service-list">
-            <li class="service-item">
-            <div class="service-icon-box">
-              <img src="./assets/images/sap.png" alt="SAP logo" width="40">
-            </div>
-        
-            <div class="service-content-box">
-              <h4 class="h4 service-item-title">SAP</h4>
-              <p class="service-item-text">
-                <strong>Software Engineer Intern</strong> <br>
-                <em>Dec. 2025 – Present</em> <br>
-                <em>Vancouver, British Columbia, Canada</em> <br><br>
-                • Quality Tools and Infrastructure.
-              </p>
-            </div>
-          </li>    
-          <li class="service-item">
-          <div class="service-icon-box">
-            <img src="./assets/images/boc_logo.jpeg" alt="Bank of Canada logo" width="40">
-          </div>
-        
-          <div class="service-content-box">
-            <h4 class="h4 service-item-title">Bank of Canada</h4>
-            <p class="service-item-text">
-              <strong>Software Developer</strong> <br>
-              <em>Aug 2025 – Nov 2025</em> <br>
-              <em>Ottawa, Ontario, Canada</em> <br><br>
-              🏦 Financial Markets &nbsp;&amp;&nbsp; 💻 Frontend
-            </p>
-          </div>
-          </li>
-          <li class="service-item">
-        
-            <div class="service-icon-box">
-              <img src="./assets/images/accenture.png" alt="accenture icon" width="40">
-            </div>
-          
-            <div class="service-content-box">
-              <h4 class="h4 service-item-title">Accenture</h4>
-          
-              <p class="service-item-text">
-                <strong>Data Architecture Intern</strong> <br>
-                <em>May 2025 - August 2025</em> <br><br>
-                Incorporating programming skills to design and build client applications to drive and accelerate business impact. 
-                Cooperating with cross-functional teams to develop and deliver platform and custom-designed solutions for world-class clients.
-              </p>
-
-            </li>
-          <li class="service-item">
-        
-            <div class="service-icon-box">
-              <img src="./assets/images/geocomply.png" alt="Geocomply icon" width="40">
-            </div>
-          
-            <div class="service-content-box">
-              <h4 class="h4 service-item-title">GeoComply</h4>
-          
-              <p class="service-item-text">
-                <strong>Fraud Analyst Intern | Product Fraud & Risk Management</strong> <br>
-                <em>Jan. 2025 – April 2025</em> <br><br>
-                GeoComply is a tech unicorn that provides fraud prevention and cybersecurity solutions that detect location fraud and help verify a user's true digital identity. 
-                It’s award-winning products are based on technologies developed for the highly regulated and complex U.S. online gaming and sports betting market. 
-                Beyond iGaming, GeoComply provides geolocation fraud detection solutions for streaming video broadcasters and the online banking, payments, and cryptocurrency industries. 
-                Clients include Amazon Prime Video, BBC, Akamai, Sightline, DraftKings, FanDuel, and MGM.
-              </p>
-
-            </li>
-
-            <li class="service-item">
-
-              <div class="service-icon-box">
-                <img src="./assets/images/university_of_alberta_logo.jpeg" alt="Ualberta" width="40">
+            <li class="xp-item">
+              <div class="xp-logo is-nvidia"><img src="./assets/images/geforce-os-logo.svg" alt="NVIDIA"></div>
+              <div class="xp-head">
+                <span class="xp-role">Software Engineer Intern</span>
+                <span class="xp-co">· NVIDIA</span>
+                <span class="xp-current">Current</span>
               </div>
-            
-              <div class="service-content-box">
-              <h4 class="h4 service-item-title">University of Alberta</h4>
-          
-              <p class="service-item-text">
-                <strong>Software Developer | Optimization Research</strong> <br>
-                <em>Sept. 2024 – Dec. 2024</em> <br><br>
-                - Led the development of a brain-to-computer interface with real-time EEG analysis, using <strong>Python</strong>, <strong>Cython</strong>, <strong>C++</strong>, and <strong>PyQt6</strong>, enhancing data precision and reducing processing time for real-time clinical use by <strong>40%</strong>.<br>
-                - Mapped user flows and developed <strong>5</strong> interactive prototypes based on <strong>user research</strong> with 10+ clinicians, leading to a <strong>20%</strong> reduction in clicks to complete common tasks.<br>
-                - Designed and iterated on an <strong>effective UI</strong> in collaboration with software engineers, leveraging <strong>Figma</strong> to develop a storyboard and wireframes for EEG visualization, improving analysis speed by <strong>2x</strong>.<br>
-                - Led an <strong>8-member Optimization Team</strong>, leveraging <strong>Agile and Scrum methodologies</strong> to enhance efficiency, drive operational excellence, and ensure continuous improvement in development processes.<br>
-                - Managed <strong>task tracking and sprint cycles</strong> using <strong>GitHub Issues</strong>, ensuring alignment with Scrum practices for structured sprints, backlog refinement, and regular feedback loops.<br>
-              </p>
-
-            </li>
-
-          </ul>
-          <br>
-
-
-          <br>
-
-          <!-- Languages -->
-
-          <!-- Programming Languages -->
-
-          <h3 class="h3 languages-title">Languages</h3>
-
-          <section class="languages content-card">
-
-            <div class="languages-column">
-
-              <h3 class="h3 languages-title-second">Coding Languages</h3>
-
-              <ul class="languages-list">
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">JavaScript</h5>
-                    <data value="100">100%</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-
-                </li>
-                
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">Python</h5>
-                    <data value="100">100%</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">TypeScript</h5>
-                    <data value="100">100%</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">C/C++/C#</h5>
-                    <data value="80">80%</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 80%;"></div>
-                  </div>
-
-                  <li class="languages-item">
-
-                    <div class="title-wrapper">
-                      <h5 class="h5">CSS</h5>
-                      <data value="70">70%</data>
-                    </div>
-  
-                    <div class="languages-progress-bg">
-                      <div class="languages-progress-fill" style="width: 70%;"></div>
-                    </div>
-  
-                  </li>
-
-                  <li class="languages-item">
-
-                    <div class="title-wrapper">
-                      <h5 class="h5">SQL</h5>
-                      <data value="70">70%</data>
-                    </div>
-  
-                    <div class="languages-progress-bg">
-                      <div class="languages-progress-fill" style="width: 70%;"></div>
-                    </div>
-                  </li>
-
-                </li>
-
-              </ul>
-            </div>
-
-            <!-- Human Languages -->
-            <div class="languages-column">
-
-              <h3 class="h3 languages-title-second">Human Languages</h3>
-
-              <ul class="languages-list">
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">English</h5>
-                    <data value="native">Native</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">Pashto</h5>
-                    <data value="native">Native</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">Urdu</h5>
-                    <data value="native">Native</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 100%;"></div>
-                  </div>
-
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">Hindi</h5>
-                    <data value="beginner">Advanced</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 80%;"></div>
-                  </div>
-
-                </li>
-
-                <li class="languages-item">
-
-                  <div class="title-wrapper">
-                    <h5 class="h5">Farsi</h5>
-                    <data value="beginner">Intermediate</data>
-                  </div>
-
-                  <div class="languages-progress-bg">
-                    <div class="languages-progress-fill" style="width: 50%;"></div>
-                  </div>
-
-                  <li class="languages-item">
-
-                    <div class="title-wrapper">
-                      <h5 class="h5">French</h5>
-                      <data value="beginner">Beginner</data>
-                    </div>
-  
-                    <div class="languages-progress-bg">
-                      <div class="languages-progress-fill" style="width: 20%;"></div>
-                    </div>
-
-                </li>
-
-              </ul>
-
-            </div>
-
-          </section>
-
-          <br>
-
-          <!-- technologies -->
-
-          <h3 class="h3 technologies-title">Development Skills</h3>
-          <br>
-
-          <section class="technologies content-card" id="tech-skills">
-
-            <ul class="technologies-list has-scrollbar slider ">
-
-              <li class="technologies-item">
-                <a href="https://www.figma.com/" target="_blank">
-                  <img src="./assets/images/figma.png" alt="Figma" id="1" width="40">
-                </a>
-              </li>
-
-              <li class="technologies-item">
-                <a href="https://www.docker.com/" target="_blank">
-                  <img src="./assets/images/icons8-docker-96.png" alt="Docker" id="1" width="40">
-                </a>
-              </li>
-
-              <li class="technologies-item">
-                <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank">
-                  <img src="./assets/images/html.png" alt="HTML" id="1" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank">
-                  <img src="./assets/images/css.png" alt="CSS" id="2" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
-                  <img src="./assets/images/java-script.png" alt="JavaScript" id="3" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://reactjs.org/" target="_blank">
-                  <img src="./assets/images/react.png" alt="React" id="4" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://unity.com/" target="_blank">
-                  <img src="./assets/images/unity3d.png" alt="Unity" id="5" width="50">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://nodejs.org/" target="_blank">
-                  <img src="./assets/images/node.png" alt="Node.js" id="6" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.typescriptlang.org/" target="_blank">
-                  <img src="./assets/images/typescript.png" alt="TypeScript" id="7" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://azure.microsoft.com/" target="_blank">
-                  <img src="./assets/images/Azure.png" alt="MS Azure" id="8" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://code.visualstudio.com/" target="_blank">
-                  <img src="./assets/images/vs-code.png" alt="VS Code" id="9" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.mysql.com/" target="_blank">
-                  <img src="./assets/images/mysql.png" alt="MySQL" id="10" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.python.org/" target="_blank">
-                  <img src="./assets/images/python.png" alt="Python" id="11" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.linux.org/" target="_blank">
-                  <img src="./assets/images/linux.png" alt="Linux" id="12" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.tensorflow.org/" target="_blank">
-                  <img src="./assets/images/tensor.png" alt="TensorFlow" id="13" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://git-scm.com/" target="_blank">
-                  <img src="./assets/images/git.png" alt="Git" id="14" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.r-project.org/" target="_blank">
-                  <img src="./assets/images/R.png" alt="R" id="15" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.adobe.com/" target="_blank">
-                  <img src="./assets/images/adobe.png" alt="Adobe" id="16" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://www.microsoft.com/en-us/microsoft-365" target="_blank">
-                  <img src="./assets/images/365.png" alt="Microsoft 365" id="17" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank">
-                  <img src="./assets/images/c.png" alt="C" id="18" width="40">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://en.wikipedia.org/wiki/C%2B%2B" target="_blank">
-                  <img src="./assets/images/c++.png" alt="C++" id="19" width="25">
-                </a>
-              </li>
-          
-              <li class="technologies-item">
-                <a href="https://en.wikipedia.org/wiki/C_Sharp_(programming_language)" target="_blank">
-                  <img src="./assets/images/cs.png" alt="C#" id="20" width="30">
-                </a>
-              </li>
-          
-            </ul>
-
-          </section>
-
-
-          <!--
-          - Hobbies
-        -->
-          <br>
-
-          <!-- <section class="hobbies">
-
-            <h3 class="h3 hobbies-title">Favorite Activities</h3>
-
-            <ul class="hobbies-list has-scrollbar">
-
-              <li class="hobbies-item" id="1">
-                <div class="content-card" data-hobbies-item>
-
-                  <figure class="hobbies-avatar-box">
-                    <img src="./assets/images/finances.png" alt="finances" width="60" data-hobbies-avatar>
-                  </figure>
-
-                  <h4 class="h4 hobbies-item-title" data-hobbies-title>Investments</h4>
-
-                  <div class="hobbies-text" data-hobbies-text>
-                    <p>
-                      Exploring Stocks, Crypto and Long-Term Growth Opportunities for Financial Investment
-                    </p>
-                  </div>
-
-                </div>
-              </li>
-
-              <li class="hobbies-item" id="2">
-                <div class="content-card" data-hobbies-item>
-
-                  <figure class="hobbies-avatar-box">
-                    <img src="./assets/images/music.png" alt="music" width="60" data-hobbies-avatar>
-                  </figure>
-
-                  <h4 class="h4 hobbies-item-title" data-hobbies-title>Music</h4>
-
-                  <div class="hobbies-text" data-hobbies-text>
-                    <p>
-                      Creating Instrumentals, Mixing and Mastering Tracks and Collaborating with Musicians
-                    </p>
-                  </div>
-
-                </div>
-              </li>
-
-              <li class="hobbies-item" id="3">
-                <div class="content-card" data-hobbies-item>
-
-                  <figure class="hobbies-avatar-box">
-                    <img src="./assets/images/books.png" alt="traveling" width="60" data-hobbies-avatar>
-                  </figure>
-
-                  <h4 class="h4 hobbies-item-title" data-hobbies-title>Reading</h4>
-
-                  <div class="hobbies-text" data-hobbies-text>
-                    <p>
-                      Books on Self-Improvement, Psychology and Understanding Life Better.
-                    </p>
-                  </div>
-
-                </div>
-              </li>
-
-              <li class="hobbies-item" id="4">
-                <div class="content-card" data-hobbies-item>
-
-                  <figure class="hobbies-avatar-box">
-                    <img src="./assets/images/camera.png" alt="photography" width="60" data-hobbies-avatar>
-                  </figure>
-
-                  <h4 class="h4 hobbies-item-title" data-hobbies-title>Photography</h4>
-
-                  <div class="hobbies-text" data-hobbies-text>
-                    <p>
-                      Capturing precious moments and memories through the lens of a camera.
-                    </p>
-                  </div>
-
-                </div>
-              </li>
-
-            </ul>
-
-          </section> -->
-
-          <!-- Next Page -->
-          <div class="pagination-box">
-            <button class="pagination-button" data-nav-link data-target-section="certificates">Next ></button>
-          </div>
-
-      </article>
-
-
-
-
-
-      <!-- Certificates -->
-
-      <article class="certificates tiltable-section" data-page="certificates">
-
-        <header>
-          <h2 class="h2 article-title">My Certificates</h2>
-        </header>
-
-
-        <section class="certificates content-card">
-          <!-- Group 1 -->
-          <div class="title-wrapper">
-            <div class="icon-box">
-              <ion-icon name="people-outline"></ion-icon>
-            </div>
-
-            <h3 class="h3">Professional Skills</h3>
-          </div>
-
-          <ol class="timeline-list">
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.coursera.org/account/accomplishments/specialization/XJSN1YN4D0VK" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Software Product Management
-                </a>
-              </h4>
-              <p class="timeline-text">University of Alberta</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/softwarespec.jpeg" onclick="window.open(this.src)">
+              <div class="xp-when"><span class="now">Apr 2026 – Present</span> · Santa Clara, CA</div>
+              <div class="xp-body">
+                <ul>
+                  <li>Engineering on NVIDIA's GPU software &amp; developer-tooling stack.</li>
+                  <li>Collaborating across teams to build and ship high-performance tooling.</li>
+                </ul>
               </div>
             </li>
 
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.linkedin.com/learning/certificates/62071e091fb90401a5378c6ebe1dc04880c8d74dd9dca21405d00d68dda56cac" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  LambdaTest Test Automation Professional Certificate
-                </a>
-              </h4>
-              <p class="timeline-text">LambdaTest</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/lambdatest.jpeg" onclick="window.open(this.src)">
+            <li class="xp-item">
+              <div class="xp-logo"><img src="./assets/images/sap.png" alt="SAP"></div>
+              <div class="xp-head">
+                <span class="xp-role">Software Engineer Intern</span>
+                <span class="xp-co">· SAP</span>
+              </div>
+              <div class="xp-when">Dec 2025 – Mar 2026 · Vancouver, BC</div>
+              <div class="xp-body"><ul><li>Quality Tools &amp; Infrastructure — internal developer tooling and test automation.</li></ul></div>
+            </li>
+
+            <li class="xp-item">
+              <div class="xp-logo"><img src="./assets/images/boc_logo.jpeg" alt="Bank of Canada"></div>
+              <div class="xp-head">
+                <span class="xp-role">Software Developer</span>
+                <span class="xp-co">· Bank of Canada</span>
+              </div>
+              <div class="xp-when">Aug 2025 – Nov 2025 · Ottawa, ON</div>
+              <div class="xp-body"><ul><li>🏦 Financial Markets &nbsp;·&nbsp; 💻 Frontend development.</li></ul></div>
+            </li>
+
+            <li class="xp-item">
+              <div class="xp-logo"><img src="./assets/images/accenture.png" alt="Accenture"></div>
+              <div class="xp-head">
+                <span class="xp-role">Data Architecture Intern</span>
+                <span class="xp-co">· Accenture</span>
+              </div>
+              <div class="xp-when">May 2025 – Aug 2025</div>
+              <div class="xp-body"><ul><li>Designed and built client applications to accelerate business impact, partnering with cross-functional teams to deliver custom solutions for world-class clients.</li></ul></div>
+            </li>
+
+            <li class="xp-item">
+              <div class="xp-logo"><img src="./assets/images/geocomply.png" alt="GeoComply"></div>
+              <div class="xp-head">
+                <span class="xp-role">Fraud Analyst Intern</span>
+                <span class="xp-co">· GeoComply</span>
+              </div>
+              <div class="xp-when">Jan 2025 – Apr 2025</div>
+              <div class="xp-body"><ul><li>Product Fraud &amp; Risk Management at a fraud-prevention/cybersecurity unicorn — location-fraud detection &amp; digital-identity verification for clients incl. Amazon Prime Video, BBC, DraftKings &amp; MGM.</li></ul></div>
+            </li>
+
+            <li class="xp-item">
+              <div class="xp-logo"><img src="./assets/images/university_of_alberta_logo.jpeg" alt="University of Alberta"></div>
+              <div class="xp-head">
+                <span class="xp-role">Software Developer · Optimization Research</span>
+                <span class="xp-co">· University of Alberta</span>
+              </div>
+              <div class="xp-when">Sep 2024 – Dec 2024</div>
+              <div class="xp-body">
+                <ul>
+                  <li>Led a real-time EEG brain-computer interface in <strong>Python, Cython, C++ &amp; PyQt6</strong>, cutting processing time for clinical use by <strong>40%</strong>.</li>
+                  <li>Mapped user flows &amp; built <strong>5 prototypes</strong> from research with 10+ clinicians → <strong>20%</strong> fewer clicks on common tasks.</li>
+                  <li>Designed the EEG-visualization UI in <strong>Figma</strong>, improving analysis speed <strong>2×</strong>.</li>
+                  <li>Led an <strong>8-member team</strong> using Agile/Scrum; ran sprints &amp; backlog via GitHub Issues.</li>
+                </ul>
               </div>
             </li>
-
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.linkedin.com/learning/certificates/4aa644556bb204964e44d860ef3a21bc502fb6d133d023ce00ad200c31cf47f0" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Career Essentials in Cybersecurity by Microsoft and LinkedIn
-                </a>
-              </h4>
-              <p class="timeline-text">Microsoft</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/Cybersec_microsoft.jpeg" onclick="window.open(this.src)">
-              </div>
-            </li>
-
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.linkedin.com/learning/certificates/feb078c04d2cd23003d5fd1c547ef27400c236179a0a3a29a11d213895a16a38" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Career Essentials in GitHub Professional Certificate
-                </a>
-              </h4>
-              <p class="timeline-text">Github</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/github.jpeg" onclick="window.open(this.src)">
-              </div>
-            </li>
-
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.linkedin.com/learning/certificates/5ea9835e1d448c7a819475ecec44ba1ab8543d8e41e1504e79e5f3cdc03a593d?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_certifications_details%3BIAs0FUWdT9iF5Z173VwCAA%3D%3D" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Selenium Essential Training
-                </a>
-              </h4>
-              <p class="timeline-text">Linkedin</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/selenium.jpeg" onclick="window.open(this.src)">
-              </div>
-            </li>
-              
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.linkedin.com/learning/certificates/116db0466cce40ad5ab8e7be286f8e2ea41beb13e7a966aa03a54cb0a9c5e9a8?trk=share_certificate" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Teamwork Foundations
-                </a>
-              </h4>
-              <p class="timeline-text">Linkedin Learning</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/teamwork.jpeg" onclick="window.open(this.src)">
-              </div>
-            </li>
-            
-            <li class="timeline-item">
-              <h4 class="h4 timeline-item-title">
-                <a href="https://www.coursera.org/account/accomplishments/verify/ZAJMG7R2BRNH" 
-                  target="_blank" 
-                  style="text-decoration: underline; color: inherit;">
-                  Introduction to Agile Development and Scrum
-                </a>
-              </h4>
-              <p class="timeline-text">IBM</p>
-              <div class="certificate-container">
-                <img src="./assets/images/certificates/ibm_agile.jpeg" onclick="window.open(this.src)">
-              </div>
-            </li>
-
-          </ol>
-          <br><br>
-          
-          <!-- Next Page -->
-          <div class="pagination-box">
-            <button class="pagination-button" data-nav-link data-target-section="projects">Next ></button>
-          </div>
-
-        </section>
-
-
-
-
-      </article>
-
-
-
-
-
-      <!--
-        - #Projects Portfolio
-      -->
-
-      <article class="projects tiltable-section" data-page="projects">
-
-        <header>
-          <h2 class="h2 article-title">My Projects</h2>
-        </header>
-
-        <section class="projects notranslate">
-
-          <ul class="filter-list">
-
-            <li class="filter-item">
-              <button class="active" data-filter-btn>All</button>
-            </li>
-
-            <li class="filter-item">
-              <button data-filter-btn>Websites</button>
-            </li>
-
-
-            <li class="filter-item">
-              <button data-filter-btn>AI</button>
-            </li>
-
-
-          </ul>
-
-          <div class="filter-select-box">
-
-            <button class="filter-select" data-select>
-
-              <div class="select-value" data-selecct-value>Select category</div>
-
-              <div class="select-icon">
-                <ion-icon name="chevron-down"></ion-icon>
-              </div>
-
-            </button>
-
-            <ul class="select-list">
-
-              <li class="select-item">
-                <button data-select-item>All</button>
-              </li>
-
-              <li class="select-item">
-                <button data-select-item>Websites</button>
-              </li>
-
-              <li class="filter-item">
-                <button data-filter-btn>AI</button>
-              </li>
-
-            </ul>
-
-          </div>
-
-          <ul class="project-list">
-
-            <li class="project-item active" data-filter-item data-category="ai">
-              <a href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/AI.png" loading="lazy">
-                </figure>
-              </a>
-              <h3 class="project-title">AI-Powered Disease Detection in X-Ray Images</h3>
-              <p class="project-category">Deep learning model</p>
-              <p class="project-category">Solo Development</p>
-              <p class="project-development">Python | TensorFlow | OpenVino</p>
-              <div class="project-buttons disabled">
-                <a href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images" >
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-
-            <li class="project-item active" data-filter-item data-category="websites designs">
-              <a href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/sql.png" loading="lazy">
-                </figure>
-              </a>
-              <h3 class="project-title">Spotify Top Songs 2021 Data Analysis</h3>
-              <p class="project-category">Data Analysis</p>
-              <p class="project-category">Solo Development</p>
-              <p class="project-development">SQL | Python | matplotlib</p>
-              <p class="project-category"> </p>
-              <div class="project-buttons">
-                <a href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis">
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-
-            <li class="project-item active" data-filter-item data-category="websites designs applications">
-              <a href="https://github.com/osu/Beartracks/">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/beartrack.jpeg" loading="lazy">
-                </figure>
-              </a>
-              <h3 class="project-title">Mini Beartracks</h3>
-              <p class="project-category">Timetable Management</p>
-              <p class="project-category">Solo Development</p>
-              <p class="project-development">Python | Streamlit | Pandas</p>
-              <p class="project-category"> </p>
-              <p class="project-category"> </p>
-              <div class="project-buttons">
-                <a href="https://github.com/osu/Beartracks/">
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-
-            <li class="project-item active" data-filter-item data-category="applications websites">
-              <a href="https://github.com/osu/Maze-Pathfinder">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/Maze.jpeg" loading="lazy">
-                </figure>
-              </a>
-              <h3 class="project-title">Maze Pathfinder</h3>
-              <p class="project-category">Path finding algorithms</p>
-              <p class="project-category">Solo Development</p>
-              <p class="project-development">Javascript | HTML </p>
-              <p class="project-category"> </p>
-              <p class="project-category"> </p>
-              <p class="project-category"> </p>
-              <div class="project-buttons">
-                <a href="https://github.com/osu/Maze-Pathfinder">
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-              
-            <li class="project-item active" data-filter-item data-category="applications websites">
-              <a href="https://github.com/adnansami1992sami/QNNGPD/">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/Normal vs AIPC enchanced matrixes.png" loading="lazy">
-                </figure>
-              </a>
-              <h3 class="project-title">Quantum Neural Networks for Genomic Pattern Detection</h3>
-                <p class="project-category">Genomic Data Analysis & Personalized Medicine</p>
-                <p class="project-category">Intel Fall 2024 Hackathon</p>
-                <p class="project-category">Collaborative Development</p>
-                <p class="project-development">Python | Jupyter Notebook</p>
-              <div class="project-buttons">
-                <a href="https://github.com/adnansami1992sami/QNNGPD">
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-
-            <li class="project-item active" data-filter-item data-category="applications websites">
-              <a href="https://github.com/daksh3333/Neuro-Stress-Monitor">
-                <figure class="project-img loading">
-                  <img data-src="./assets/images/projects/focusboost.gif" loading="lazy" alt="FocusBoost">
-                </figure>
-              </a>
-              <h3 class="project-title">FocusBoost: EEG-Based Productivity App</h3>
-              <p class="project-category">natHACKS Fall 2024 Hackathon</p>
-              <p class="project-category">Real-Time EEG Analysis</p>
-              <p class="project-category">Motivational Alerts & Chromium Integration</p>
-              <p class="project-development">Electron | JavaScript | Python</p>
-              <div class="project-buttons">
-                <a href="https://github.com/daksh3333/Neuro-Stress-Monitor">
-                  <ion-icon name="logo-github"></ion-icon> GitHub
-                </a>
-              </div>
-            </li>
-
-          </ul>
-
-          <!-- Next Page -->
-          <div class="pagination-box">
-            <button class="pagination-button" data-nav-link data-target-section="more">Next ></button>
-          </div>
-
-        </section>
-
-      </article>
-
-
-
-
-
-      <!--
-        - #BLOG
-      -->
-
-      <article class="more tiltable-section" data-page="more">
-
-        <header>
-          <h2 class="h2 article-title">Side Projects</h2>
-        </header>
-
-        <section class="blog-posts">
-
-          <ul class="blog-posts-list">
-
-
-            <li class="blog-card">
-              <figure class="blog-banner-box">
-                <img src="./assets/images/projects/kuudragang.gif" alt="Kuudra Gang" loading="lazy">
-              </figure>
-              <div class="blog-content">
-                <div class="blog-meta">
-                  <p class="blog-category">Co-Founder</p>
-                  <span class="dot"></span>
-                  <p class="blog-category">Server Co-owner</p>
-                </div>
-                <h3 class="h3 blog-item-title">Kuudra Gang</h3>
-                <p class="blog-text">
-                  I took part in creating this Discord server 2 years ago from scratch and helped it grow to over 36,000 members in the span of 2 years,
-                  through giveaways and partnering with other servers and big YouTubers to increase our reach. The Patreon developed by the owner has over
-                  200 paid members!
-                </p>
-              </div>
-              <div class="project-buttons">
-                <a href="https://discord.com/kuudra">
-                  <ion-icon name="logo-discord"></ion-icon> Discord
-                </a>
-                <a href="https://www.patreon.com/kuudragang">
-                  <ion-icon name="logo-usd"></ion-icon> Patreon
-                </a>
-              </div>
-            </li>
-
-          </ul>    
-
-          <!-- Next Page -->
-          <div class="pagination-box">
-            <button class="pagination-button" data-nav-link data-target-section="contact">Next ></button>
-          </div>
-        </section>
-
-      </article>
-
-
-
-
-
-      <!-- CONTACT-->
-
-      <article class="contact tiltable-section" data-page="contact">
-
-        <header>
-          <h2 class="h2 article-title">Contact</h2>
-        </header>
-
-        <!-- Copy Email Address -->
-        <div class="content-card">
-          <h3 class="h3 form-title" align="center">Email:</h3>
-          <div class="container">
-            <div class="email-field">
-              <div class="email-text">hkhan7@ualberta.ca</div>
-              <button class="copy-button" onclick="copyEmail(event)">Copy</button>
-            </div>
-          </div>
-        </div>
-        <br>
-
-        <br>
-
-        <!-- Social Links -->
-        <div class="content-card">
-          <h3 class="h3 form-title" align="center">Socials:</h3>
-
-          <ul class="social-list">
-
-            <li class="social-item">
-              <a href="https://github.com/osu/" class="socials-item">
-                <img src="./assets/images/socials/github.png"></img>
-              </a>
-            </li>
-
-            <li class="social-item">
-              <a href="https://www.linkedin.com/in/hasan-khan-412b5829a/" class="socials-item">
-                <img src="./assets/images/socials/linkedin.png"></img>
-              </a>
-            </li>
-
-            <li class="social-item">
-              <a href="#" class="socials-item" onclick="copyDiscordUsername(event)">
-                <img src="./assets/images/socials/discord.png" alt="Discord">
-                <span id="discord-username" style="display: none;">pashto</span> <!-- Hidden username -->
-              </a>
-            </li>
-            
-            <script>
-              function copyDiscordUsername(event) {
-                event.preventDefault(); // Prevent the link from navigating
-                var username = document.getElementById('discord-username').textContent; // Get the username text
-            
-                // Create a temporary textarea element to copy the text
-                var tempInput = document.createElement('textarea');
-                tempInput.value = username;
-                document.body.appendChild(tempInput);
-                tempInput.select(); // Select the text in the textarea
-            
-                try {
-                  // Try copying the text
-                  var successful = document.execCommand('copy');
-                  if (successful) {
-                    alert("Discord username copied to clipboard!"); // Show alert when copied
-                  }
-                } catch (err) {
-                  console.error('Failed to copy username', err);
-                }
-            
-                // Remove the temporary textarea
-                document.body.removeChild(tempInput);
-              }
-            </script>
-
 
           </ul>
         </div>
-        <br>
+      </section>
 
-      
+      <!-- =================== SKILLS =================== -->
+      <section class="win" data-app="skills" data-title="Skills" role="dialog" aria-label="Skills">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-cpu" xlink:href="#i-cpu"/></svg>
+          <span class="win-title">Skills</span>
+        </header>
+        <div class="win-body">
+          <h2 class="h-title"><span class="accent">Skills</span> &amp; Languages</h2>
+          <div class="skills-grid" style="margin-top:20px">
+            <div>
+              <h3 class="h-sub" style="margin-top:0">Coding Languages</h3>
+              <div class="skill"><div class="skill-top"><b>JavaScript</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Python</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>TypeScript</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>C / C++ / C#</b><span>80%</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>CSS</b><span>70%</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>SQL</b><span>70%</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
+            </div>
+            <div>
+              <h3 class="h-sub" style="margin-top:0">Human Languages</h3>
+              <div class="skill"><div class="skill-top"><b>English</b><span>Native</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Pashto</b><span>Native</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Urdu</b><span>Native</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Hindi</b><span>Advanced</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Farsi</b><span>Intermediate</span></div><div class="skill-bar"><div class="skill-fill" data-val="50"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>French</b><span>Beginner</span></div><div class="skill-bar"><div class="skill-fill" data-val="20"></div></div></div>
+            </div>
+          </div>
 
+          <h3 class="h-sub">Development Skills</h3>
+          <div class="tech-grid">
+            <a href="https://www.figma.com/" target="_blank" rel="noopener"><img src="./assets/images/figma.png" alt=""><span>Figma</span></a>
+            <a href="https://www.docker.com/" target="_blank" rel="noopener"><img src="./assets/images/icons8-docker-96.png" alt=""><span>Docker</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/HTML" target="_blank" rel="noopener"><img src="./assets/images/html.png" alt=""><span>HTML</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/CSS" target="_blank" rel="noopener"><img src="./assets/images/css.png" alt=""><span>CSS</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noopener"><img src="./assets/images/java-script.png" alt=""><span>JavaScript</span></a>
+            <a href="https://react.dev/" target="_blank" rel="noopener"><img src="./assets/images/react.png" alt=""><span>React</span></a>
+            <a href="https://unity.com/" target="_blank" rel="noopener"><img src="./assets/images/unity3d.png" alt=""><span>Unity</span></a>
+            <a href="https://nodejs.org/" target="_blank" rel="noopener"><img src="./assets/images/node.png" alt=""><span>Node.js</span></a>
+            <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener"><img src="./assets/images/typescript.png" alt=""><span>TypeScript</span></a>
+            <a href="https://azure.microsoft.com/" target="_blank" rel="noopener"><img src="./assets/images/Azure.png" alt=""><span>Azure</span></a>
+            <a href="https://code.visualstudio.com/" target="_blank" rel="noopener"><img src="./assets/images/vs-code.png" alt=""><span>VS Code</span></a>
+            <a href="https://www.mysql.com/" target="_blank" rel="noopener"><img src="./assets/images/mysql.png" alt=""><span>MySQL</span></a>
+            <a href="https://www.python.org/" target="_blank" rel="noopener"><img src="./assets/images/python.png" alt=""><span>Python</span></a>
+            <a href="https://www.linux.org/" target="_blank" rel="noopener"><img src="./assets/images/linux.png" alt=""><span>Linux</span></a>
+            <a href="https://www.tensorflow.org/" target="_blank" rel="noopener"><img src="./assets/images/tensor.png" alt=""><span>TensorFlow</span></a>
+            <a href="https://git-scm.com/" target="_blank" rel="noopener"><img src="./assets/images/git.png" alt=""><span>Git</span></a>
+            <a href="https://www.r-project.org/" target="_blank" rel="noopener"><img src="./assets/images/R.png" alt=""><span>R</span></a>
+            <a href="https://www.adobe.com/" target="_blank" rel="noopener"><img src="./assets/images/adobe.png" alt=""><span>Adobe</span></a>
+            <a href="https://www.microsoft.com/microsoft-365" target="_blank" rel="noopener"><img src="./assets/images/365.png" alt=""><span>M365</span></a>
+            <a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank" rel="noopener"><img src="./assets/images/c.png" alt=""><span>C</span></a>
+            <a href="https://en.wikipedia.org/wiki/C%2B%2B" target="_blank" rel="noopener"><img src="./assets/images/c++.png" alt=""><span>C++</span></a>
+            <a href="https://en.wikipedia.org/wiki/C_Sharp_(programming_language)" target="_blank" rel="noopener"><img src="./assets/images/cs.png" alt=""><span>C#</span></a>
+          </div>
+        </div>
+      </section>
 
-      </article>
+      <!-- =================== PROJECTS =================== -->
+      <section class="win" data-app="projects" data-title="Projects" role="dialog" aria-label="Projects">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-grid" xlink:href="#i-grid"/></svg>
+          <span class="win-title">Projects</span>
+        </header>
+        <div class="win-body">
+          <h2 class="h-title">My <span class="accent">Projects</span></h2>
+          <div class="filters" style="margin-top:18px">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="ai">AI</button>
+            <button class="filter-btn" data-filter="data">Data</button>
+            <button class="filter-btn" data-filter="apps">Apps</button>
+          </div>
+          <div class="proj-grid">
 
-    </div>
+            <div class="proj" data-category="ai">
+              <a class="proj-img" href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images" target="_blank" rel="noopener"><img src="./assets/images/projects/AI.png" alt="AI Disease Detection" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>AI-Powered Disease Detection (X-Ray)</h4>
+                <p class="cat">Deep-learning model · Solo</p>
+                <p class="stack">Python · TensorFlow · OpenVINO</p>
+                <a class="btn" href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
-  </main>
+            <div class="proj" data-category="data">
+              <a class="proj-img" href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis" target="_blank" rel="noopener"><img src="./assets/images/projects/sql.png" alt="Spotify Data Analysis" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>Spotify Top Songs 2021 Analysis</h4>
+                <p class="cat">Data analysis · Solo</p>
+                <p class="stack">SQL · Python · matplotlib</p>
+                <a class="btn" href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
+            <div class="proj" data-category="apps data">
+              <a class="proj-img" href="https://github.com/osu/Beartracks/" target="_blank" rel="noopener"><img src="./assets/images/projects/beartrack.jpeg" alt="Mini BearTracks" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>Mini BearTracks</h4>
+                <p class="cat">Timetable management · Solo</p>
+                <p class="stack">Python · Streamlit · Pandas</p>
+                <a class="btn" href="https://github.com/osu/Beartracks/" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
+            <div class="proj" data-category="apps">
+              <a class="proj-img" href="https://github.com/osu/Maze-Pathfinder" target="_blank" rel="noopener"><img src="./assets/images/projects/Maze.jpeg" alt="Maze Pathfinder" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>Maze Pathfinder</h4>
+                <p class="cat">Pathfinding algorithms · Solo</p>
+                <p class="stack">JavaScript · HTML</p>
+                <a class="btn" href="https://github.com/osu/Maze-Pathfinder" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
+            <div class="proj" data-category="ai data">
+              <a class="proj-img" href="https://github.com/adnansami1992sami/QNNGPD/" target="_blank" rel="noopener"><img src="./assets/images/projects/Normal%20vs%20AIPC%20enchanced%20matrixes.png" alt="Quantum Neural Networks" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>Quantum NN for Genomic Pattern Detection</h4>
+                <p class="cat">Intel Fall 2024 Hackathon · Team</p>
+                <p class="stack">Python · Jupyter</p>
+                <a class="btn" href="https://github.com/adnansami1992sami/QNNGPD" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
+            <div class="proj" data-category="apps ai">
+              <a class="proj-img" href="https://github.com/daksh3333/Neuro-Stress-Monitor" target="_blank" rel="noopener"><img src="./assets/images/projects/focusboost.gif" alt="FocusBoost" loading="lazy"></a>
+              <div class="proj-info">
+                <h4>FocusBoost — EEG Productivity App</h4>
+                <p class="cat">natHACKS Fall 2024 · Real-time EEG</p>
+                <p class="stack">Electron · JavaScript · Python</p>
+                <a class="btn" href="https://github.com/daksh3333/Neuro-Stress-Monitor" target="_blank" rel="noopener"><svg><use href="#i-github" xlink:href="#i-github"/></svg> GitHub</a>
+              </div>
+            </div>
 
+          </div>
+        </div>
+      </section>
 
-  <!--
-    - custom js link
-  -->
-  <script src="./assets/js/script.js"></script>
+      <!-- =================== CERTIFICATES =================== -->
+      <section class="win" data-app="certificates" data-title="Certificates" role="dialog" aria-label="Certificates">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-award" xlink:href="#i-award"/></svg>
+          <span class="win-title">Certificates</span>
+        </header>
+        <div class="win-body">
+          <h2 class="h-title">My <span class="accent">Certificates</span></h2>
+          <div class="cert-grid" style="margin-top:20px">
+            <div class="cert"><img data-zoom src="./assets/images/certificates/softwarespec.jpeg" alt="Software Product Management"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/specialization/XJSN1YN4D0VK" target="_blank" rel="noopener">Software Product Management</a></h4><p>University of Alberta</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/lambdatest.jpeg" alt="Test Automation"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/62071e091fb90401a5378c6ebe1dc04880c8d74dd9dca21405d00d68dda56cac" target="_blank" rel="noopener">Test Automation Professional</a></h4><p>LambdaTest</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/Cybersec_microsoft.jpeg" alt="Cybersecurity"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/4aa644556bb204964e44d860ef3a21bc502fb6d133d023ce00ad200c31cf47f0" target="_blank" rel="noopener">Career Essentials in Cybersecurity</a></h4><p>Microsoft · LinkedIn</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/github.jpeg" alt="GitHub"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/feb078c04d2cd23003d5fd1c547ef27400c236179a0a3a29a11d213895a16a38" target="_blank" rel="noopener">Career Essentials in GitHub</a></h4><p>GitHub</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/selenium.jpeg" alt="Selenium"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/5ea9835e1d448c7a819475ecec44ba1ab8543d8e41e1504e79e5f3cdc03a593d" target="_blank" rel="noopener">Selenium Essential Training</a></h4><p>LinkedIn Learning</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/teamwork.jpeg" alt="Teamwork"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/116db0466cce40ad5ab8e7be286f8e2ea41beb13e7a966aa03a54cb0a9c5e9a8" target="_blank" rel="noopener">Teamwork Foundations</a></h4><p>LinkedIn Learning</p></div></div>
+            <div class="cert"><img data-zoom src="./assets/images/certificates/ibm_agile.jpeg" alt="Agile & Scrum"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/verify/ZAJMG7R2BRNH" target="_blank" rel="noopener">Intro to Agile Development &amp; Scrum</a></h4><p>IBM</p></div></div>
+          </div>
+        </div>
+      </section>
 
-  <!--
-    - ionicon link
-  -->
-  <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
-  <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+      <!-- =================== SIDE PROJECTS =================== -->
+      <section class="win" data-app="sideprojects" data-title="Side Projects" role="dialog" aria-label="Side projects">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-rocket" xlink:href="#i-rocket"/></svg>
+          <span class="win-title">Side Projects</span>
+        </header>
+        <div class="win-body">
+          <h2 class="h-title">Side <span class="accent">Projects</span></h2>
+          <div class="card side-card" style="margin-top:20px">
+            <div class="banner"><img src="./assets/images/projects/kuudragang.gif" alt="Kuudra Gang"></div>
+            <div class="body">
+              <div><span class="tag">Co-Founder</span><span class="tag">Server Co-owner</span></div>
+              <h3 style="font-family:var(--font-ui);font-size:1.2rem;margin:6px 0 8px">Kuudra Gang</h3>
+              <p class="lead">
+                Co-created this Minecraft Discord server from scratch and grew it to <strong>36,000+ members</strong> in two years through giveaways and partnerships with
+                large servers and YouTubers. The community's Patreon has <strong>200+ paid members</strong>.
+              </p>
+              <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">
+                <a class="btn" href="https://discord.com/invite/kuudra" target="_blank" rel="noopener"><svg><use href="#i-discord" xlink:href="#i-discord"/></svg> Discord</a>
+                <a class="btn" href="https://www.patreon.com/kuudragang" target="_blank" rel="noopener">Patreon</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
+      <!-- =================== TERMINAL =================== -->
+      <section class="win" data-app="terminal" data-title="Terminal — hasansh" role="dialog" aria-label="Terminal">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-terminal" xlink:href="#i-terminal"/></svg>
+          <span class="win-title">hasan@geforce-os: ~</span>
+        </header>
+        <div class="win-body">
+          <div class="term">
+            <div class="term-output" aria-live="polite"></div>
+            <div class="term-inputline">
+              <span class="term-prompt">hasan@geforce-os:~$</span>
+              <input class="term-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal input">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== GPU STATS =================== -->
+      <section class="win" data-app="gpu" data-title="GPU — nvidia-smi" role="dialog" aria-label="GPU statistics">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-activity" xlink:href="#i-activity"/></svg>
+          <span class="win-title">GPU — nvidia-smi</span>
+        </header>
+        <div class="win-body">
+          <div class="gpu">
+            <div class="gpu-head">
+              <div class="name">GeForce RTX <span>4090</span></div>
+              <div class="badge">● LIVE · portfolio.v2</div>
+            </div>
+            <div class="gauges">
+              <div class="gauge" data-g="util"><div class="lbl">GPU Util</div><div class="num">0 <small>%</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+              <div class="gauge" data-g="temp"><div class="lbl">Temp</div><div class="num">0 <small>°C</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+              <div class="gauge" data-g="mem"><div class="lbl">VRAM</div><div class="num">0 <small>/ 24 GB</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+              <div class="gauge" data-g="fan"><div class="lbl">Fan</div><div class="num">0 <small>%</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+              <div class="gauge" data-g="power"><div class="lbl">Power</div><div class="num">0 <small>W</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+              <div class="gauge" data-g="clock"><div class="lbl">Core Clock</div><div class="num">0 <small>MHz</small></div><div class="gauge-bar"><div class="gauge-fill"></div></div></div>
+            </div>
+            <div class="gpu-procs">
+              <h5>Processes</h5>
+              <div class="row"><span>Process</span><span>Type</span><span>Mem</span></div>
+              <div class="row"><b>portfolio.exe</b><span class="g">C+G</span><span>1024MiB</span></div>
+              <div class="row"><b>creativity.dll</b><span class="g">C</span><span>768MiB</span></div>
+              <div class="row"><b>caffeine.daemon</b><span class="g">G</span><span>512MiB</span></div>
+              <div class="row"><b>shipping.service</b><span class="g">C+G</span><span>2048MiB</span></div>
+            </div>
+            <p class="lead" style="font-size:.82rem">Tip: run <a data-open-app="terminal" href="#">nvidia-smi</a> in the terminal for the classic table view.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== CONTACT =================== -->
+      <section class="win" data-app="contact" data-title="Contact" role="dialog" aria-label="Contact">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-mail" xlink:href="#i-mail"/></svg>
+          <span class="win-title">Contact</span>
+        </header>
+        <div class="win-body">
+          <h2 class="h-title">Get in <span class="accent">Touch</span></h2>
+          <h3 class="h-sub">Email</h3>
+          <div class="copy-field">
+            <span class="val">hkhan7@ualberta.ca</span>
+            <button class="copy-btn" data-copy="hkhan7@ualberta.ca" data-copy-label="Email copied">Copy</button>
+          </div>
+          <h3 class="h-sub">Socials</h3>
+          <div class="socials">
+            <a href="https://github.com/osu/" target="_blank" rel="noopener" aria-label="GitHub"><svg><use href="#i-github" xlink:href="#i-github"/></svg></a>
+            <a href="https://www.linkedin.com/in/hasan-khan-412b5829a/" target="_blank" rel="noopener" aria-label="LinkedIn"><svg><use href="#i-linkedin" xlink:href="#i-linkedin"/></svg></a>
+            <a href="https://discord.com/invite/kuudra" target="_blank" rel="noopener" aria-label="Discord"><svg><use href="#i-discord" xlink:href="#i-discord"/></svg></a>
+            <a href="mailto:hkhan7@ualberta.ca" aria-label="Email"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg></a>
+          </div>
+          <div class="divider"></div>
+          <p class="lead">Open to collaborating on hackathons, CTF events, and ambitious tech projects. Let's build something. 🚀</p>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- DOCK -->
+    <nav class="dock" aria-label="Application dock">
+      <div class="dock-inner">
+        <button class="dock-item" data-app="about"><svg><use href="#i-user" xlink:href="#i-user"/></svg><span class="dock-tooltip">About</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg><span class="dock-tooltip">Experience</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="skills"><svg><use href="#i-cpu" xlink:href="#i-cpu"/></svg><span class="dock-tooltip">Skills</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="projects"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span class="dock-tooltip">Projects</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="certificates"><svg><use href="#i-award" xlink:href="#i-award"/></svg><span class="dock-tooltip">Certificates</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="sideprojects"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Side Projects</span><span class="dock-indicator"></span></button>
+        <span class="dock-sep"></span>
+        <button class="dock-item" data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Terminal</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="gpu"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="contact"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg><span class="dock-tooltip">Contact</span><span class="dock-indicator"></span></button>
+      </div>
+    </nav>
+
+  </div>
+
+  <script src="./assets/js/geforce-os.js"></script>
 </body>
-
 </html>
