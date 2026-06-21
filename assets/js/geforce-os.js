@@ -606,9 +606,9 @@
   })();
 
   /* =============================================================
-     BLACK HOLE
+     SPACE WELLS
      ============================================================= */
-  const BLACK_HOLE = (function () {
+  const SPACE_WELLS = (function () {
     const SPEED = 20; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const PANE_WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
@@ -640,41 +640,45 @@
       ".win.is-open:not(.is-min):not(.is-max) .term-output .ln",
       ".win.is-open:not(.is-min):not(.is-max) .term-inputline",
     ].join(", ");
-    let el, desk, startTime, lastTime, baseSize, cx, cy, vx, vy;
+    const WELL_CONFIGS = [
+      { id: "blackhole", x: 0.72, y: 0.24, vx: SPEED * 0.8, vy: SPEED * 0.6, gravity: 1, spin: 1 },
+      { id: "whitehole", x: 0.26, y: 0.72, vx: -SPEED * 0.55, vy: SPEED * 0.84, gravity: -1, spin: -1 },
+    ];
+    let desk, wells = [];
 
     function getBaseSize() {
       if (!desk) return 105;
       return isMobile() ? 92 : clamp(desk.clientWidth * 0.098, 105, 168);
     }
 
-    function getSize(now) {
-      const seconds = Math.floor((now - startTime) / 1000);
-      return baseSize * (1 + seconds * GROWTH_PER_SECOND);
+    function getSize(well, now) {
+      const seconds = Math.floor((now - well.startTime) / 1000);
+      return well.baseSize * (1 + seconds * GROWTH_PER_SECOND);
     }
 
-    function keepInBounds(size) {
+    function keepInBounds(well) {
       const dw = desk.clientWidth;
       const dh = desk.clientHeight;
-      if (size >= dw) cx = dw / 2;
+      if (well.size >= dw) well.cx = dw / 2;
       else {
-        const minX = size / 2;
-        const maxX = dw - size / 2;
-        if (cx < minX) { cx = minX; vx = Math.abs(vx); }
-        if (cx > maxX) { cx = maxX; vx = -Math.abs(vx); }
+        const minX = well.size / 2;
+        const maxX = dw - well.size / 2;
+        if (well.cx < minX) { well.cx = minX; well.vx = Math.abs(well.vx); }
+        if (well.cx > maxX) { well.cx = maxX; well.vx = -Math.abs(well.vx); }
       }
 
-      if (size >= dh) cy = dh / 2;
+      if (well.size >= dh) well.cy = dh / 2;
       else {
-        const minY = size / 2;
-        const maxY = dh - size / 2;
-        if (cy < minY) { cy = minY; vy = Math.abs(vy); }
-        if (cy > maxY) { cy = maxY; vy = -Math.abs(vy); }
+        const minY = well.size / 2;
+        const maxY = dh - well.size / 2;
+        if (well.cy < minY) { well.cy = minY; well.vy = Math.abs(well.vy); }
+        if (well.cy > maxY) { well.cy = maxY; well.vy = -Math.abs(well.vy); }
       }
     }
 
-    function paint(size) {
-      el.style.width = size.toFixed(2) + "px";
-      el.style.transform = "translate3d(" + (cx - size / 2).toFixed(2) + "px, " + (cy - size / 2).toFixed(2) + "px, 0)";
+    function paint(well) {
+      well.el.style.width = well.size.toFixed(2) + "px";
+      well.el.style.transform = "translate3d(" + (well.cx - well.size / 2).toFixed(2) + "px, " + (well.cy - well.size / 2).toFixed(2) + "px, 0)";
     }
 
     function resetTarget(target) {
@@ -696,7 +700,9 @@
       target.style.removeProperty("--bh-text-shadow-y");
     }
 
-    function measureWarp(target, holeX, holeY, influence) {
+    function measureWarp(target, well, deskRect, influence) {
+      const holeX = deskRect.left + well.cx;
+      const holeY = deskRect.top + well.cy;
       const rect = target.getBoundingClientRect();
       const nearestX = clamp(holeX, rect.left, rect.right);
       const nearestY = clamp(holeY, rect.top, rect.bottom);
@@ -711,14 +717,48 @@
       const nx = dx / centerDistance;
       const ny = dy / centerDistance;
       const strength = Math.pow(1 - edgeDistance / influence, 2);
-      return { nx, ny, strength };
+      return { nx, ny, strength, well };
     }
 
-    function warpNearby(size) {
+    function getWarpContributions(target, deskRect, influenceScale) {
+      return wells.map((well) => {
+        const influence = (well.size * 0.63 + 126) * influenceScale;
+        return measureWarp(target, well, deskRect, influence);
+      }).filter(Boolean);
+    }
+
+    function repelBlackHole(dt) {
+      const black = wells.find((well) => well.id === "blackhole");
+      const white = wells.find((well) => well.id === "whitehole");
+      if (!black || !white) return;
+
+      const dx = black.cx - white.cx;
+      const dy = black.cy - white.cy;
+      const distance = Math.max(Math.hypot(dx, dy), 1);
+      const influence = (black.size + white.size) * 1.25;
+      if (distance > influence) return;
+
+      const strength = Math.pow(1 - distance / influence, 2);
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const acceleration = 72 * strength;
+      black.vx += nx * acceleration * dt;
+      black.vy += ny * acceleration * dt;
+
+      const overlap = (black.size + white.size) * 0.56 - distance;
+      if (overlap > 0) {
+        black.cx += nx * overlap * 0.45;
+        black.cy += ny * overlap * 0.45;
+      }
+
+      const speed = Math.max(Math.hypot(black.vx, black.vy), 1);
+      const clampedSpeed = clamp(speed, SPEED * 0.75, SPEED * 1.55);
+      black.vx = (black.vx / speed) * clampedSpeed;
+      black.vy = (black.vy / speed) * clampedSpeed;
+    }
+
+    function warpNearby() {
       const deskRect = desk.getBoundingClientRect();
-      const holeX = deskRect.left + cx;
-      const holeY = deskRect.top + cy;
-      const influence = size * 0.63 + 126;
       const activeTargets = new Set($$(PANE_WARP_TARGET_SELECTOR));
 
       $$(".blackhole-warped").forEach((target) => {
@@ -726,29 +766,33 @@
       });
 
       activeTargets.forEach((target) => {
-        const warp = measureWarp(target, holeX, holeY, influence);
-        if (!warp) {
+        const warps = getWarpContributions(target, deskRect, 1);
+        if (!warps.length) {
           resetTarget(target);
           return;
         }
 
-        const orbitPull = Math.min(24, size * 0.112) * warp.strength;
-        const inwardPull = Math.min(13, size * 0.056) * warp.strength;
-        const warpX = (-warp.ny * orbitPull) - (warp.nx * inwardPull);
-        const warpY = (warp.nx * orbitPull) - (warp.ny * inwardPull);
+        let warpX = 0, warpY = 0, maxStrength = 0;
+        warps.forEach((warp) => {
+          const orbitPull = Math.min(24, warp.well.size * 0.112) * warp.strength;
+          const inwardPull = Math.min(13, warp.well.size * 0.056) * warp.strength;
+          warpX += (-warp.ny * orbitPull * warp.well.spin) - (warp.nx * inwardPull * warp.well.gravity);
+          warpY += (warp.nx * orbitPull * warp.well.spin) - (warp.ny * inwardPull * warp.well.gravity);
+          maxStrength = Math.max(maxStrength, warp.strength);
+        });
         const rotate = clamp((warpX + warpY) * 0.045, -3.5, 3.5);
 
         target.classList.add("blackhole-warped");
         target.style.setProperty("--bh-warp-x", warpX.toFixed(2) + "px");
         target.style.setProperty("--bh-warp-y", warpY.toFixed(2) + "px");
         target.style.setProperty("--bh-warp-r", rotate.toFixed(2) + "deg");
-        target.style.setProperty("--bh-warp-brightness", (1 + warp.strength * 0.16).toFixed(3));
+        target.style.setProperty("--bh-warp-brightness", (1 + maxStrength * 0.16).toFixed(3));
       });
 
-      warpText(size, holeX, holeY, influence * 0.82);
+      warpText(deskRect);
     }
 
-    function warpText(size, holeX, holeY, influence) {
+    function warpText(deskRect) {
       const activeTargets = new Set($$(TEXT_WARP_TARGET_SELECTOR));
 
       $$(".blackhole-text-warped").forEach((target) => {
@@ -756,16 +800,20 @@
       });
 
       activeTargets.forEach((target) => {
-        const warp = measureWarp(target, holeX, holeY, influence);
-        if (!warp) {
+        const warps = getWarpContributions(target, deskRect, 0.82);
+        if (!warps.length) {
           resetTextTarget(target);
           return;
         }
 
-        const orbitPull = Math.min(13, size * 0.085) * warp.strength;
-        const inwardPull = Math.min(7, size * 0.04) * warp.strength;
-        const warpX = (-warp.ny * orbitPull) - (warp.nx * inwardPull);
-        const warpY = (warp.nx * orbitPull) - (warp.ny * inwardPull);
+        let warpX = 0, warpY = 0, maxStrength = 0;
+        warps.forEach((warp) => {
+          const orbitPull = Math.min(13, warp.well.size * 0.085) * warp.strength;
+          const inwardPull = Math.min(7, warp.well.size * 0.04) * warp.strength;
+          warpX += (-warp.ny * orbitPull * warp.well.spin) - (warp.nx * inwardPull * warp.well.gravity);
+          warpY += (warp.nx * orbitPull * warp.well.spin) - (warp.ny * inwardPull * warp.well.gravity);
+          maxStrength = Math.max(maxStrength, warp.strength);
+        });
         const rotate = clamp((warpX + warpY) * 0.08, -3.2, 3.2);
         const skew = clamp((warpX - warpY) * 0.1, -5, 5);
 
@@ -774,48 +822,68 @@
         target.style.setProperty("--bh-text-warp-y", warpY.toFixed(2) + "px");
         target.style.setProperty("--bh-text-skew", skew.toFixed(2) + "deg");
         target.style.setProperty("--bh-text-r", rotate.toFixed(2) + "deg");
-        target.style.setProperty("--bh-text-brightness", (1 + warp.strength * 0.22).toFixed(3));
+        target.style.setProperty("--bh-text-brightness", (1 + maxStrength * 0.22).toFixed(3));
         target.style.setProperty("--bh-text-shadow-x", (warpX * 0.34).toFixed(2) + "px");
         target.style.setProperty("--bh-text-shadow-y", (warpY * 0.34).toFixed(2) + "px");
       });
     }
 
     function frame(now) {
-      const dt = Math.min((now - lastTime) / 1000, 0.25);
-      lastTime = now;
-      const size = getSize(now);
-      cx += vx * dt;
-      cy += vy * dt;
-      keepInBounds(size);
-      paint(size);
-      warpNearby(size);
+      let frameDt = 0;
+      wells.forEach((well) => {
+        const dt = Math.min((now - well.lastTime) / 1000, 0.25);
+        frameDt = Math.max(frameDt, dt);
+        well.lastTime = now;
+        well.size = getSize(well, now);
+      });
+      repelBlackHole(frameDt);
+      wells.forEach((well) => {
+        const dt = frameDt;
+        well.cx += well.vx * dt;
+        well.cy += well.vy * dt;
+        keepInBounds(well);
+        paint(well);
+      });
+      warpNearby();
       requestAnimationFrame(frame);
     }
 
     function resize() {
-      if (!el || !desk) return;
-      baseSize = getBaseSize();
-      const size = getSize(performance.now());
-      keepInBounds(size);
-      paint(size);
-      warpNearby(size);
+      if (!desk || !wells.length) return;
+      const now = performance.now();
+      wells.forEach((well) => {
+        well.baseSize = getBaseSize();
+        well.size = getSize(well, now);
+        keepInBounds(well);
+        paint(well);
+      });
+      warpNearby();
     }
 
     function init() {
-      el = $("#blackhole");
       desk = $(".desktop");
-      if (!el || !desk) return;
+      if (!desk) return;
 
-      startTime = performance.now();
-      lastTime = startTime;
-      baseSize = getBaseSize();
-      cx = clamp(desk.clientWidth * 0.72, baseSize / 2, desk.clientWidth - baseSize / 2);
-      cy = clamp(desk.clientHeight * 0.24, baseSize / 2, desk.clientHeight - baseSize / 2);
-      vx = SPEED * 0.8;
-      vy = SPEED * 0.6;
+      const now = performance.now();
+      wells = WELL_CONFIGS.map((config) => {
+        const el = $("#" + config.id);
+        if (!el) return null;
+        const baseSize = getBaseSize();
+        return {
+          ...config,
+          el,
+          startTime: now,
+          lastTime: now,
+          baseSize,
+          size: baseSize,
+          cx: clamp(desk.clientWidth * config.x, baseSize / 2, desk.clientWidth - baseSize / 2),
+          cy: clamp(desk.clientHeight * config.y, baseSize / 2, desk.clientHeight - baseSize / 2),
+        };
+      }).filter(Boolean);
+      if (!wells.length) return;
 
       if (reduceMotion) {
-        paint(baseSize);
+        wells.forEach((well) => paint(well));
         return;
       }
 
@@ -844,7 +912,7 @@
     copyHooks();
     GPU.start();
     TERM.init();
-    BLACK_HOLE.init();
+    SPACE_WELLS.init();
 
     // default windows on first load (open About last so it takes focus)
     if (!isMobile()) {
