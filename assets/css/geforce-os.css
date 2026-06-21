@@ -1022,16 +1022,29 @@ body.theme-macos .boot-bar-fill {
 
 body.theme-macos .desktop-video { opacity: 0; }
 body.theme-macos .desktop-bg::before {
-  inset: -12%;
+  top: -12%;
+  right: 50%;
+  bottom: -12%;
+  left: -12%;
   background:
-    linear-gradient(90deg, transparent calc(50% - 1px), rgba(255,255,255,0.52) 50%, transparent calc(50% + 1px)),
-    radial-gradient(circle at 21% 24%, rgba(247,185,210,0.52), transparent 24%),
-    radial-gradient(circle at 35% 70%, rgba(152,230,236,0.36), transparent 26%),
-    radial-gradient(circle at 72% 35%, rgba(0,120,212,0.62), transparent 22%),
-    radial-gradient(circle at 86% 66%, rgba(100,210,255,0.28), transparent 27%),
-    linear-gradient(90deg, #eef4ff 0 50%, #061532 50% 100%);
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(218,231,255,0.20)),
+    url("../images/macos_bg.jpg") left center / cover no-repeat;
   filter: saturate(1.08) contrast(1.02);
   animation: macos-wallpaper 30s ease-in-out infinite alternate;
+}
+body.theme-macos .desktop-bg::after {
+  content: "";
+  position: absolute;
+  top: -12%;
+  right: -12%;
+  bottom: -12%;
+  left: 50%;
+  background:
+    linear-gradient(180deg, rgba(8, 24, 54, 0.10), rgba(3, 10, 28, 0.22)),
+    url("../images/windows_bg.jpeg") right center / cover no-repeat;
+  border-left: 1px solid rgba(255,255,255,0.52);
+  filter: saturate(1.06) contrast(1.02);
+  animation: windows-wallpaper 34s ease-in-out infinite alternate;
 }
 body.theme-macos .desktop-watermark > img { display: none; }
 body.theme-macos .desktop-split-logo {
@@ -1210,6 +1223,9 @@ body.theme-macos .dock-inner {
 
 @keyframes macos-wallpaper {
   to { transform: translate(1.5%, -1.25%) scale(1.04); }
+}
+@keyframes windows-wallpaper {
+  to { transform: translate(-1%, -1.2%) scale(1.03); }
 }
 
 @media (max-width: 620px) {
