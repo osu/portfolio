@@ -568,11 +568,11 @@ img { max-width: 100%; display: block; }
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, transparent 0 18%, rgba(255, 64, 255, 0.0) 24%, rgba(255, 64, 255, 0.72) 38%, rgba(0, 225, 255, 0.82) 50%, rgba(118, 185, 0, 0.82) 62%, rgba(255, 64, 255, 0.0) 76%, transparent 100%);
-  filter: blur(0.3px) drop-shadow(0 0 8px rgba(0,225,255,0.48)) drop-shadow(0 0 10px rgba(255,64,255,0.38));
+    linear-gradient(90deg, transparent 0 14%, #60dd8e 24%, #3f9f7f 38%, #188a8d 52%, #17577e 66%, #141163 80%, transparent 92%);
+  filter: blur(0.3px) drop-shadow(0 0 8px rgba(96,221,142,0.48)) drop-shadow(0 0 10px rgba(20,17,99,0.38));
   opacity: 0;
   transform: translateX(-120%);
-  animation: menubar-electric 9s ease-in-out infinite;
+  animation: menubar-electric 15.75s ease-in-out infinite;
 }
 @keyframes menubar-electric {
   0%, 68%, 100% { opacity: 0; transform: translateX(-120%); }
