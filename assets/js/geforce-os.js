@@ -612,6 +612,17 @@
     const SPEED = 20; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const BIG_BANG_DURATION = 20000;
+    const PRE_EXPLOSION_PULL_DURATION = 1180;
+    const BLAST_DELAY = PRE_EXPLOSION_PULL_DURATION + 420;
+    const BIG_BANG_TARGET_SELECTOR = [
+      ".desktop-video",
+      ".desktop-bg",
+      ".desktop-watermark",
+      ".menubar",
+      ".dock",
+      ".win.is-open:not(.is-min)",
+      ".toast.show",
+    ].join(", ");
     const PANE_WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
     const TEXT_WARP_TARGET_SELECTOR = [
       ".desktop-watermark p",
@@ -880,42 +891,55 @@
       $$(".blackhole-text-warped").forEach(resetTextTarget);
     }
 
-    function getOpenPanels() {
-      return $$(".win.is-open").filter((panel) => !panel.classList.contains("is-min"));
+    function getBigBangTargets() {
+      const targets = $$(BIG_BANG_TARGET_SELECTOR).filter((target) => {
+        const rect = target.getBoundingClientRect();
+        return rect.width > 0 && rect.height > 0;
+      });
+      return Array.from(new Set(targets));
     }
 
-    function clearPanelMotion(panel) {
-      panel.classList.remove("bigbang-pulled", "bigbang-blasted", "bigbang-hidden");
-      panel.style.removeProperty("--bb-pull-x");
-      panel.style.removeProperty("--bb-pull-y");
-      panel.style.removeProperty("--bb-blast-x");
-      panel.style.removeProperty("--bb-blast-y");
-      panel.style.removeProperty("--bb-rot");
-      delete panel._bbVector;
+    function clearBigBangMotion(target) {
+      target.classList.remove("bigbang-target", "bigbang-pulled", "bigbang-blasted", "bigbang-hidden");
+      target.style.removeProperty("--bb-base-transform");
+      target.style.removeProperty("--bb-pull-x");
+      target.style.removeProperty("--bb-pull-y");
+      target.style.removeProperty("--bb-blast-x");
+      target.style.removeProperty("--bb-blast-y");
+      target.style.removeProperty("--bb-rot");
+      delete target._bbVector;
     }
 
-    function pullPanelsToImpact(cx, cy) {
+    function getBaseTransform(target) {
+      const transform = getComputedStyle(target).transform;
+      return transform && transform !== "none" ? transform : "translate3d(0, 0, 0)";
+    }
+
+    function outwardVector(centerX, centerY, impactX, impactY) {
+      const dx = centerX - impactX;
+      const dy = centerY - impactY;
+      const distance = Math.hypot(dx, dy);
+      if (distance >= 1) return { nx: dx / distance, ny: dy / distance };
+      const angle = Math.random() * Math.PI * 2;
+      return { nx: Math.cos(angle), ny: Math.sin(angle) };
+    }
+
+    function pullEverythingToImpact(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
       const impactY = deskRect.top + cy;
 
       clearWarpClasses();
-      getOpenPanels().forEach((panel) => {
-        clearPanelMotion(panel);
-        const rect = panel.getBoundingClientRect();
+      getBigBangTargets().forEach((target) => {
+        clearBigBangMotion(target);
+        const rect = target.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        const dx = centerX - impactX;
-        const dy = centerY - impactY;
-        const distance = Math.max(Math.hypot(dx, dy), 1);
-        panel._bbVector = {
-          nx: dx / distance,
-          ny: dy / distance,
-          hitWall: false,
-        };
-        panel.style.setProperty("--bb-pull-x", ((impactX - centerX) * 0.72).toFixed(2) + "px");
-        panel.style.setProperty("--bb-pull-y", ((impactY - centerY) * 0.72).toFixed(2) + "px");
-        panel.classList.add("bigbang-pulled");
+        target._bbVector = outwardVector(centerX, centerY, impactX, impactY);
+        target.style.setProperty("--bb-base-transform", getBaseTransform(target));
+        target.style.setProperty("--bb-pull-x", ((impactX - centerX) * 0.9).toFixed(2) + "px");
+        target.style.setProperty("--bb-pull-y", ((impactY - centerY) * 0.9).toFixed(2) + "px");
+        target.classList.add("bigbang-target", "bigbang-pulled");
       });
     }
 
@@ -956,10 +980,10 @@
       window.setTimeout(() => overlay.remove(), 1700);
     }
 
-    function blastPanelsFromImpact() {
-      getOpenPanels().forEach((panel) => {
-        const vector = panel._bbVector || { nx: Math.random() > 0.5 ? 1 : -1, ny: Math.random() > 0.5 ? 1 : -1 };
-        const rect = panel.getBoundingClientRect();
+    function blastEverythingFromImpact() {
+      getBigBangTargets().forEach((target) => {
+        const vector = target._bbVector || { nx: Math.random() > 0.5 ? 1 : -1, ny: Math.random() > 0.5 ? 1 : -1 };
+        const rect = target.getBoundingClientRect();
         const blast = Math.max(window.innerWidth, window.innerHeight) * 0.9 + Math.random() * 260;
         const blastX = vector.nx * blast;
         const blastY = vector.ny * blast;
@@ -969,16 +993,16 @@
         const finalBottom = rect.bottom + blastY;
         const hitWall = finalLeft < 0 || finalRight > window.innerWidth || finalTop < 0 || finalBottom > window.innerHeight;
 
-        panel.style.setProperty("--bb-blast-x", blastX.toFixed(2) + "px");
-        panel.style.setProperty("--bb-blast-y", blastY.toFixed(2) + "px");
-        panel.style.setProperty("--bb-rot", ((Math.random() - 0.5) * 28).toFixed(2) + "deg");
-        panel.classList.remove("bigbang-pulled");
-        panel.classList.add("bigbang-blasted");
+        target.style.setProperty("--bb-blast-x", blastX.toFixed(2) + "px");
+        target.style.setProperty("--bb-blast-y", blastY.toFixed(2) + "px");
+        target.style.setProperty("--bb-rot", ((Math.random() - 0.5) * 28).toFixed(2) + "deg");
+        target.classList.remove("bigbang-pulled");
+        target.classList.add("bigbang-blasted");
 
         if (hitWall) {
           window.setTimeout(() => {
-            createPanelShatter(panel.getBoundingClientRect(), vector.nx, vector.ny);
-            panel.classList.add("bigbang-hidden");
+            createPanelShatter(target.getBoundingClientRect(), vector.nx, vector.ny);
+            target.classList.add("bigbang-hidden");
           }, 1250);
         }
       });
@@ -986,8 +1010,8 @@
 
     function resetPanelsToStartup() {
       $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
+      $$(".bigbang-target, .bigbang-pulled, .bigbang-blasted, .bigbang-hidden").forEach(clearBigBangMotion);
       $$(".win").forEach((panel) => {
-        clearPanelMotion(panel);
         panel.classList.remove("is-open", "is-focused", "is-min", "is-max");
         panel.style.removeProperty("transform");
         panel.style.removeProperty("filter");
@@ -1053,14 +1077,16 @@
       black.el.classList.add("is-collapsed");
       white.el.classList.add("is-collapsed");
       wells = [];
-      pullPanelsToImpact(cx, cy);
-      createShatterOverlay(cx, cy);
-      createBigBangOverlay(cx, cy);
-      window.setTimeout(blastPanelsFromImpact, 1150);
+      pullEverythingToImpact(cx, cy);
+      window.setTimeout(() => {
+        createShatterOverlay(cx, cy);
+        createBigBangOverlay(cx, cy);
+      }, PRE_EXPLOSION_PULL_DURATION);
+      window.setTimeout(blastEverythingFromImpact, BLAST_DELAY);
       window.setTimeout(() => {
         resetPanelsToStartup();
         resetSpaceWells();
-      }, BIG_BANG_DURATION);
+      }, PRE_EXPLOSION_PULL_DURATION + BIG_BANG_DURATION);
 
       if (!grey) return;
       grey.el.style.width = grey.size.toFixed(2) + "px";
@@ -1084,7 +1110,7 @@
       if (!black || !white) return false;
 
       const distance = Math.hypot(black.cx - white.cx, black.cy - white.cy);
-      const threshold = Math.max(6, Math.min(black.size, white.size) * 0.06);
+      const threshold = Math.max(12, black.size * 0.1 + white.size * 0.11);
       if (distance > threshold) return false;
 
       triggerCollision(black, white, now);
