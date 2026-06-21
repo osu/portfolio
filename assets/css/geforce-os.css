@@ -133,7 +133,7 @@ img { max-width: 100%; display: block; }
   top: 0;
   left: 0;
   z-index: 480;
-  width: clamp(150px, 14vw, 240px);
+  width: clamp(105px, 9.8vw, 168px);
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: visible;
@@ -150,14 +150,14 @@ img { max-width: 100%; display: block; }
 .blackhole-lens {
   inset: 0;
   background:
-    radial-gradient(circle, transparent 0 24%, rgba(255,255,255,0.85) 25% 28%, rgba(255,255,255,0.26) 31%, rgba(255,255,255,0.14) 47%, rgba(255,255,255,0.06) 62%, transparent 76%),
-    conic-gradient(from 35deg, transparent 0 10%, rgba(255,255,255,0.25) 14%, transparent 23%, rgba(118,185,0,0.14) 31%, transparent 45%, rgba(255,255,255,0.18) 58%, transparent 74%, rgba(255,255,255,0.2) 83%, transparent 100%);
+    radial-gradient(circle, transparent 0 24%, rgba(255,255,255,0.85) 25% 28%, rgba(255,255,255,0.10) 31%, rgba(255,255,255,0.06) 47%, rgba(255,255,255,0.03) 62%, transparent 76%),
+    conic-gradient(from 35deg, transparent 0 10%, rgba(255,255,255,0.10) 14%, transparent 23%, rgba(118,185,0,0.06) 31%, transparent 45%, rgba(255,255,255,0.08) 58%, transparent 74%, rgba(255,255,255,0.08) 83%, transparent 100%);
   filter: blur(0.4px) drop-shadow(0 0 22px rgba(255, 255, 255, 0.22)) drop-shadow(0 0 34px rgba(118, 185, 0, 0.18));
   -webkit-backdrop-filter: blur(5px) brightness(1.28) contrast(1.16) saturate(1.12);
   backdrop-filter: blur(5px) brightness(1.28) contrast(1.16) saturate(1.12);
   -webkit-mask-image: radial-gradient(circle, transparent 0 21%, #000 24% 78%, transparent 84%);
   mask-image: radial-gradient(circle, transparent 0 21%, #000 24% 78%, transparent 84%);
-  opacity: 0.9;
+  opacity: 0.1;
   animation: blackhole-spin 18s linear infinite;
 }
 .blackhole-ring {
@@ -190,6 +190,23 @@ img { max-width: 100%; display: block; }
   transform: translate3d(var(--bh-warp-x), var(--bh-warp-y), 0) rotate(var(--bh-warp-r));
   filter: brightness(var(--bh-warp-brightness));
   transition: filter 0.08s linear;
+}
+.blackhole-text-warped {
+  --bh-text-warp-x: 0px;
+  --bh-text-warp-y: 0px;
+  --bh-text-skew: 0deg;
+  --bh-text-r: 0deg;
+  --bh-text-brightness: 1;
+  --bh-text-shadow-x: 0px;
+  --bh-text-shadow-y: 0px;
+  transform:
+    translate3d(var(--bh-text-warp-x), var(--bh-text-warp-y), 0)
+    skew(var(--bh-text-skew))
+    rotate(var(--bh-text-r));
+  filter: brightness(var(--bh-text-brightness));
+  text-shadow:
+    var(--bh-text-shadow-x) var(--bh-text-shadow-y) 5px rgba(255,255,255,0.34),
+    calc(var(--bh-text-shadow-x) * -0.55) calc(var(--bh-text-shadow-y) * -0.55) 7px rgba(118,185,0,0.2);
 }
 @keyframes blackhole-spin { to { transform: rotate(360deg); } }
 
@@ -574,7 +591,7 @@ img { max-width: 100%; display: block; }
   .win-titlebar { cursor: default; }
   .win-body { padding: 18px 16px calc(var(--dock-h) + 24px); }
   .desktop-watermark img { width: 84px; }
-  .blackhole { width: 132px; }
+  .blackhole { width: 92px; }
   .about-avatar { width: 72px; height: 72px; }
   .about-id .name { font-size: 1.5rem; }
   .dock { bottom: 8px; left: 8px; right: 8px; transform: none; max-width: none; }

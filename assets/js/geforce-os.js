@@ -611,12 +611,40 @@
   const BLACK_HOLE = (function () {
     const SPEED = 20; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
-    const WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
+    const PANE_WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
+    const TEXT_WARP_TARGET_SELECTOR = [
+      ".desktop-watermark p",
+      ".win.is-open:not(.is-min):not(.is-max) .win-title",
+      ".win.is-open:not(.is-min):not(.is-max) .h-title",
+      ".win.is-open:not(.is-min):not(.is-max) .h-sub",
+      ".win.is-open:not(.is-min):not(.is-max) .lead",
+      ".win.is-open:not(.is-min):not(.is-max) .name",
+      ".win.is-open:not(.is-min):not(.is-max) .role",
+      ".win.is-open:not(.is-min):not(.is-max) .meta",
+      ".win.is-open:not(.is-min):not(.is-max) .goals li",
+      ".win.is-open:not(.is-min):not(.is-max) .xp-head",
+      ".win.is-open:not(.is-min):not(.is-max) .xp-when",
+      ".win.is-open:not(.is-min):not(.is-max) .xp-team",
+      ".win.is-open:not(.is-min):not(.is-max) .xp-body li",
+      ".win.is-open:not(.is-min):not(.is-max) .skill-top",
+      ".win.is-open:not(.is-min):not(.is-max) .tech-grid span",
+      ".win.is-open:not(.is-min):not(.is-max) .proj-info h4",
+      ".win.is-open:not(.is-min):not(.is-max) .proj-info .cat",
+      ".win.is-open:not(.is-min):not(.is-max) .proj-info .stack",
+      ".win.is-open:not(.is-min):not(.is-max) .cert-cap h4",
+      ".win.is-open:not(.is-min):not(.is-max) .cert-cap p",
+      ".win.is-open:not(.is-min):not(.is-max) .copy-field .val",
+      ".win.is-open:not(.is-min):not(.is-max) .gauge .lbl",
+      ".win.is-open:not(.is-min):not(.is-max) .gauge .num",
+      ".win.is-open:not(.is-min):not(.is-max) .gpu-procs .row",
+      ".win.is-open:not(.is-min):not(.is-max) .term-output .ln",
+      ".win.is-open:not(.is-min):not(.is-max) .term-inputline",
+    ].join(", ");
     let el, desk, startTime, lastTime, baseSize, cx, cy, vx, vy;
 
     function getBaseSize() {
-      if (!desk) return 150;
-      return isMobile() ? 132 : clamp(desk.clientWidth * 0.14, 150, 240);
+      if (!desk) return 105;
+      return isMobile() ? 92 : clamp(desk.clientWidth * 0.098, 105, 168);
     }
 
     function getSize(now) {
@@ -657,46 +685,98 @@
       target.style.removeProperty("--bh-warp-brightness");
     }
 
+    function resetTextTarget(target) {
+      target.classList.remove("blackhole-text-warped");
+      target.style.removeProperty("--bh-text-warp-x");
+      target.style.removeProperty("--bh-text-warp-y");
+      target.style.removeProperty("--bh-text-skew");
+      target.style.removeProperty("--bh-text-r");
+      target.style.removeProperty("--bh-text-brightness");
+      target.style.removeProperty("--bh-text-shadow-x");
+      target.style.removeProperty("--bh-text-shadow-y");
+    }
+
+    function measureWarp(target, holeX, holeY, influence) {
+      const rect = target.getBoundingClientRect();
+      const nearestX = clamp(holeX, rect.left, rect.right);
+      const nearestY = clamp(holeY, rect.top, rect.bottom);
+      const edgeDistance = Math.hypot(nearestX - holeX, nearestY - holeY);
+      if (edgeDistance > influence) return null;
+
+      const targetX = rect.left + rect.width / 2;
+      const targetY = rect.top + rect.height / 2;
+      const dx = targetX - holeX;
+      const dy = targetY - holeY;
+      const centerDistance = Math.max(Math.hypot(dx, dy), 1);
+      const nx = dx / centerDistance;
+      const ny = dy / centerDistance;
+      const strength = Math.pow(1 - edgeDistance / influence, 2);
+      return { nx, ny, strength };
+    }
+
     function warpNearby(size) {
       const deskRect = desk.getBoundingClientRect();
       const holeX = deskRect.left + cx;
       const holeY = deskRect.top + cy;
-      const influence = size * 0.9 + 180;
-      const activeTargets = new Set($$(WARP_TARGET_SELECTOR));
+      const influence = size * 0.63 + 126;
+      const activeTargets = new Set($$(PANE_WARP_TARGET_SELECTOR));
 
       $$(".blackhole-warped").forEach((target) => {
         if (!activeTargets.has(target)) resetTarget(target);
       });
 
       activeTargets.forEach((target) => {
-        const rect = target.getBoundingClientRect();
-        const nearestX = clamp(holeX, rect.left, rect.right);
-        const nearestY = clamp(holeY, rect.top, rect.bottom);
-        const edgeDistance = Math.hypot(nearestX - holeX, nearestY - holeY);
-        if (edgeDistance > influence) {
+        const warp = measureWarp(target, holeX, holeY, influence);
+        if (!warp) {
           resetTarget(target);
           return;
         }
 
-        const targetX = rect.left + rect.width / 2;
-        const targetY = rect.top + rect.height / 2;
-        const dx = targetX - holeX;
-        const dy = targetY - holeY;
-        const centerDistance = Math.max(Math.hypot(dx, dy), 1);
-        const nx = dx / centerDistance;
-        const ny = dy / centerDistance;
-        const strength = Math.pow(1 - edgeDistance / influence, 2);
-        const orbitPull = Math.min(34, size * 0.16) * strength;
-        const inwardPull = Math.min(18, size * 0.08) * strength;
-        const warpX = (-ny * orbitPull) - (nx * inwardPull);
-        const warpY = (nx * orbitPull) - (ny * inwardPull);
+        const orbitPull = Math.min(24, size * 0.112) * warp.strength;
+        const inwardPull = Math.min(13, size * 0.056) * warp.strength;
+        const warpX = (-warp.ny * orbitPull) - (warp.nx * inwardPull);
+        const warpY = (warp.nx * orbitPull) - (warp.ny * inwardPull);
         const rotate = clamp((warpX + warpY) * 0.045, -3.5, 3.5);
 
         target.classList.add("blackhole-warped");
         target.style.setProperty("--bh-warp-x", warpX.toFixed(2) + "px");
         target.style.setProperty("--bh-warp-y", warpY.toFixed(2) + "px");
         target.style.setProperty("--bh-warp-r", rotate.toFixed(2) + "deg");
-        target.style.setProperty("--bh-warp-brightness", (1 + strength * 0.16).toFixed(3));
+        target.style.setProperty("--bh-warp-brightness", (1 + warp.strength * 0.16).toFixed(3));
+      });
+
+      warpText(size, holeX, holeY, influence * 0.82);
+    }
+
+    function warpText(size, holeX, holeY, influence) {
+      const activeTargets = new Set($$(TEXT_WARP_TARGET_SELECTOR));
+
+      $$(".blackhole-text-warped").forEach((target) => {
+        if (!activeTargets.has(target)) resetTextTarget(target);
+      });
+
+      activeTargets.forEach((target) => {
+        const warp = measureWarp(target, holeX, holeY, influence);
+        if (!warp) {
+          resetTextTarget(target);
+          return;
+        }
+
+        const orbitPull = Math.min(13, size * 0.085) * warp.strength;
+        const inwardPull = Math.min(7, size * 0.04) * warp.strength;
+        const warpX = (-warp.ny * orbitPull) - (warp.nx * inwardPull);
+        const warpY = (warp.nx * orbitPull) - (warp.ny * inwardPull);
+        const rotate = clamp((warpX + warpY) * 0.08, -3.2, 3.2);
+        const skew = clamp((warpX - warpY) * 0.1, -5, 5);
+
+        target.classList.add("blackhole-text-warped");
+        target.style.setProperty("--bh-text-warp-x", warpX.toFixed(2) + "px");
+        target.style.setProperty("--bh-text-warp-y", warpY.toFixed(2) + "px");
+        target.style.setProperty("--bh-text-skew", skew.toFixed(2) + "deg");
+        target.style.setProperty("--bh-text-r", rotate.toFixed(2) + "deg");
+        target.style.setProperty("--bh-text-brightness", (1 + warp.strength * 0.22).toFixed(3));
+        target.style.setProperty("--bh-text-shadow-x", (warpX * 0.34).toFixed(2) + "px");
+        target.style.setProperty("--bh-text-shadow-y", (warpY * 0.34).toFixed(2) + "px");
       });
     }
 
