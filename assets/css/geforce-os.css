@@ -366,6 +366,35 @@ img { max-width: 100%; display: block; }
   opacity: 0;
   visibility: hidden;
 }
+.reconstruct-shell-muted {
+  background: rgba(8, 10, 8, 0) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(0) saturate(100%) !important;
+  backdrop-filter: blur(0) saturate(100%) !important;
+}
+.dock.reconstruct-shell-muted .dock-inner {
+  background: rgba(10, 13, 10, 0) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: blur(0) saturate(100%) !important;
+  backdrop-filter: blur(0) saturate(100%) !important;
+}
+.reconstruct-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translate3d(0, var(--reconstruct-y, 14px), 0) scale(var(--reconstruct-scale, 0.94)) !important;
+  filter: blur(8px) brightness(1.55);
+  pointer-events: none;
+}
+.reconstructing {
+  visibility: visible !important;
+  transform-origin: center center;
+  animation: reconstruct-pop 0.82s cubic-bezier(0.17, 0.88, 0.2, 1) both;
+}
+.dock-inner.reconstructing {
+  transform-origin: center bottom;
+}
 .panel-shatter {
   position: fixed;
   inset: 0;
@@ -488,6 +517,23 @@ img { max-width: 100%; display: block; }
   5% { opacity: var(--particle-opacity); }
   62% { opacity: calc(var(--particle-opacity) * 0.55); transform: translate(calc(-50% + var(--dx-mid)), calc(-50% + var(--dy-mid))) scale(1); filter: brightness(1.2); }
   100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.35); filter: brightness(0.8); }
+}
+@keyframes reconstruct-pop {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, var(--reconstruct-y, 12px), 0) scale(var(--reconstruct-scale, 0.94));
+    filter: blur(10px) brightness(1.8);
+  }
+  42% {
+    opacity: 1;
+    transform: translate3d(0, -2px, 0) scale(1.025);
+    filter: blur(1px) brightness(1.35);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0) brightness(1);
+  }
 }
 
 .desktop-watermark {

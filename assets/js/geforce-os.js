@@ -755,25 +755,6 @@
       }).filter(Boolean);
     }
 
-    function createGreyWell(cx, cy, size, now) {
-      const el = $("#greyhole");
-      if (!el) return null;
-      return {
-        id: "greyhole",
-        el,
-        startTime: now,
-        lastTime: now,
-        baseSize: size,
-        size,
-        cx,
-        cy,
-        vx: SPEED * 0.22,
-        vy: -SPEED * 0.18,
-        gravity: 0.18,
-        spin: 0.45,
-      };
-    }
-
     function createShatterOverlay(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
@@ -910,6 +891,35 @@
       delete target._bbVector;
     }
 
+    function clearReconstructState(target) {
+      target.classList.remove("reconstruct-hidden", "reconstructing");
+      target.style.removeProperty("--reconstruct-y");
+      target.style.removeProperty("--reconstruct-scale");
+    }
+
+    function cleanupBigBangState() {
+      $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
+      $$(".bigbang-target, .bigbang-pulled, .bigbang-blasted, .bigbang-hidden").forEach(clearBigBangMotion);
+      clearWarpClasses();
+    }
+
+    function hideForReconstruct(target, y = 14, scale = 0.94) {
+      if (!target) return;
+      clearReconstructState(target);
+      target.style.setProperty("--reconstruct-y", y + "px");
+      target.style.setProperty("--reconstruct-scale", scale.toString());
+      target.classList.add("reconstruct-hidden");
+    }
+
+    function revealForReconstruct(target, delay = 0) {
+      if (!target) return;
+      window.setTimeout(() => {
+        target.classList.remove("reconstruct-hidden");
+        target.classList.add("reconstructing");
+        window.setTimeout(() => target.classList.remove("reconstructing"), 900);
+      }, delay);
+    }
+
     function getBaseTransform(target) {
       const transform = getComputedStyle(target).transform;
       return transform && transform !== "none" ? transform : "translate3d(0, 0, 0)";
@@ -1008,102 +1018,114 @@
       });
     }
 
-    function resetPanelsToStartup() {
-      $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
-      $$(".bigbang-target, .bigbang-pulled, .bigbang-blasted, .bigbang-hidden").forEach(clearBigBangMotion);
+    function closePanelsForReconstruct() {
       $$(".win").forEach((panel) => {
+        clearReconstructState(panel);
         panel.classList.remove("is-open", "is-focused", "is-min", "is-max");
         panel.style.removeProperty("transform");
         panel.style.removeProperty("filter");
       });
-
-      if (isMobile()) {
-        WM.open("about");
-        return;
-      }
-
-      const gpu = WM.wins["gpu"];
-      const about = WM.wins["about"];
-      if (gpu) {
-        gpu.style.left = "60px";
-        gpu.style.top = "30px";
-      }
-      if (about) {
-        about.style.left = "94px";
-        about.style.top = "60px";
-      }
-      WM.open("gpu");
-      WM.open("about");
+      const label = $("#mb-app");
+      if (label) label.textContent = "Finder";
+      WM.syncDock();
     }
 
-    function resetSpaceWells() {
-      const now = performance.now();
+    function dismissSpaceWells() {
       const black = $("#blackhole");
       const white = $("#whitehole");
       const grey = $("#greyhole");
-      if (black) black.classList.remove("is-collapsed");
-      if (white) white.classList.remove("is-collapsed");
-      if (grey) grey.classList.remove("is-formed", "is-active");
-
-      collisionDone = false;
-      wells = WELL_CONFIGS.map((config) => {
-        const el = $("#" + config.id);
-        if (!el) return null;
-        const baseSize = getBaseSize();
-        return {
-          ...config,
-          el,
-          startTime: now,
-          lastTime: now,
-          baseSize,
-          size: baseSize,
-          cx: clamp(desk.clientWidth * config.x, baseSize / 2, desk.clientWidth - baseSize / 2),
-          cy: clamp(desk.clientHeight * config.y, baseSize / 2, desk.clientHeight - baseSize / 2),
-        };
-      }).filter(Boolean);
-      aimPrimaryWellsAtEachOther();
-      wells.forEach(paint);
+      if (black) black.classList.add("is-collapsed");
+      if (white) white.classList.add("is-collapsed");
+      if (grey) {
+        grey.classList.remove("is-formed", "is-active");
+        grey.style.removeProperty("--gh-x");
+        grey.style.removeProperty("--gh-y");
+      }
+      wells = [];
     }
 
-    function triggerCollision(black, white, now) {
+    function restoreStartupWindowsStaged(startDelay) {
+      const startup = isMobile()
+        ? [{ id: "about", delay: startDelay }]
+        : [
+          { id: "gpu", left: "60px", top: "30px", delay: startDelay },
+          { id: "about", left: "94px", top: "60px", delay: startDelay + 360 },
+        ];
+
+      startup.forEach((item) => {
+        const win = WM.wins[item.id];
+        if (!win) return;
+        if (item.left) win.style.left = item.left;
+        if (item.top) win.style.top = item.top;
+        hideForReconstruct(win, 18, 0.96);
+        window.setTimeout(() => {
+          WM.open(item.id);
+          revealForReconstruct(win, 0);
+        }, item.delay);
+      });
+    }
+
+    function reconstructScene() {
+      cleanupBigBangState();
+      closePanelsForReconstruct();
+
+      const backgrounds = $$(".desktop-video, .desktop-bg, .desktop-watermark");
+      const menubar = $(".menubar");
+      const brand = $$(".menubar-logo, .menubar-os");
+      const topContents = $$(".menubar-app, .menubar-stat, .mb-sep, .menubar-date, .menubar-clock");
+      const dock = $(".dock");
+      const dockInner = $(".dock-inner");
+      const dockContents = $$(".dock-item, .dock-sep");
+
+      backgrounds.forEach((target) => hideForReconstruct(target, 20, 0.985));
+      brand.forEach((target) => hideForReconstruct(target, 11, 0.9));
+      topContents.forEach((target) => hideForReconstruct(target, 10, 0.92));
+      dockContents.forEach((target) => hideForReconstruct(target, 14, 0.86));
+
+      if (menubar) menubar.classList.add("reconstruct-shell-muted");
+      if (dock) dock.classList.add("reconstruct-shell-muted");
+
+      backgrounds.forEach((target, index) => revealForReconstruct(target, 140 + index * 150));
+      brand.forEach((target, index) => revealForReconstruct(target, 900 + index * 130));
+
+      window.setTimeout(() => {
+        if (!menubar) return;
+        menubar.classList.remove("reconstruct-shell-muted");
+        menubar.classList.add("reconstructing");
+        window.setTimeout(() => menubar.classList.remove("reconstructing"), 900);
+      }, 1420);
+
+      topContents.forEach((target, index) => revealForReconstruct(target, 1900 + index * 110));
+
+      window.setTimeout(() => {
+        if (dock) dock.classList.remove("reconstruct-shell-muted");
+        if (!dockInner) return;
+        dockInner.classList.add("reconstructing");
+        window.setTimeout(() => dockInner.classList.remove("reconstructing"), 900);
+      }, 2760);
+
+      dockContents.forEach((target, index) => revealForReconstruct(target, 3260 + index * 85));
+      restoreStartupWindowsStaged(3260 + dockContents.length * 85 + 520);
+    }
+
+    function triggerCollision(black, white) {
       if (collisionDone) return;
       collisionDone = true;
 
       const cx = (black.cx + white.cx) / 2;
       const cy = (black.cy + white.cy) / 2;
-      const greySize = clamp((black.size + white.size) * 0.62, getBaseSize() * 0.95, getBaseSize() * 1.6);
-      const grey = createGreyWell(cx, cy, greySize, now);
 
-      black.el.classList.add("is-collapsed");
-      white.el.classList.add("is-collapsed");
-      wells = [];
+      dismissSpaceWells();
       pullEverythingToImpact(cx, cy);
       window.setTimeout(() => {
         createShatterOverlay(cx, cy);
         createBigBangOverlay(cx, cy);
       }, PRE_EXPLOSION_PULL_DURATION);
       window.setTimeout(blastEverythingFromImpact, BLAST_DELAY);
-      window.setTimeout(() => {
-        resetPanelsToStartup();
-        resetSpaceWells();
-      }, PRE_EXPLOSION_PULL_DURATION + BIG_BANG_DURATION);
-
-      if (!grey) return;
-      grey.el.style.width = grey.size.toFixed(2) + "px";
-      grey.el.style.setProperty("--gh-x", (grey.cx - grey.size / 2).toFixed(2) + "px");
-      grey.el.style.setProperty("--gh-y", (grey.cy - grey.size / 2).toFixed(2) + "px");
-      grey.el.classList.add("is-formed");
-
-      window.setTimeout(() => {
-        grey.lastTime = performance.now();
-        wells = [grey];
-        grey.el.classList.remove("is-formed");
-        grey.el.classList.add("is-active");
-        paint(grey);
-      }, 1500);
+      window.setTimeout(reconstructScene, PRE_EXPLOSION_PULL_DURATION + BIG_BANG_DURATION);
     }
 
-    function checkCollision(now) {
+    function checkCollision() {
       if (collisionDone) return false;
       const black = wells.find((well) => well.id === "blackhole");
       const white = wells.find((well) => well.id === "whitehole");
@@ -1113,7 +1135,7 @@
       const threshold = Math.max(12, black.size * 0.1 + white.size * 0.11);
       if (distance > threshold) return false;
 
-      triggerCollision(black, white, now);
+      triggerCollision(black, white);
       return true;
     }
 
@@ -1226,7 +1248,7 @@
         well.lastTime = now;
         well.size = getSize(well, now);
       });
-      if (checkCollision(now)) {
+      if (checkCollision()) {
         warpNearby();
         requestAnimationFrame(frame);
         return;
