@@ -606,6 +606,95 @@
   })();
 
   /* =============================================================
+     BLACK HOLE
+     ============================================================= */
+  const BLACK_HOLE = (function () {
+    const SPEED = 20; // pixels per second
+    const GROWTH_PER_SECOND = 0.01;
+    let el, desk, startTime, lastTime, baseSize, cx, cy, vx, vy;
+
+    function getBaseSize() {
+      if (!desk) return 120;
+      return isMobile() ? 78 : clamp(desk.clientWidth * 0.09, 78, 150);
+    }
+
+    function getSize(now) {
+      const seconds = Math.floor((now - startTime) / 1000);
+      return baseSize * (1 + seconds * GROWTH_PER_SECOND);
+    }
+
+    function keepInBounds(size) {
+      const dw = desk.clientWidth;
+      const dh = desk.clientHeight;
+      if (size >= dw) cx = dw / 2;
+      else {
+        const minX = size / 2;
+        const maxX = dw - size / 2;
+        if (cx < minX) { cx = minX; vx = Math.abs(vx); }
+        if (cx > maxX) { cx = maxX; vx = -Math.abs(vx); }
+      }
+
+      if (size >= dh) cy = dh / 2;
+      else {
+        const minY = size / 2;
+        const maxY = dh - size / 2;
+        if (cy < minY) { cy = minY; vy = Math.abs(vy); }
+        if (cy > maxY) { cy = maxY; vy = -Math.abs(vy); }
+      }
+    }
+
+    function paint(size) {
+      el.style.width = size.toFixed(2) + "px";
+      el.style.transform = "translate3d(" + (cx - size / 2).toFixed(2) + "px, " + (cy - size / 2).toFixed(2) + "px, 0)";
+    }
+
+    function frame(now) {
+      const dt = Math.min((now - lastTime) / 1000, 0.25);
+      lastTime = now;
+      const size = getSize(now);
+      cx += vx * dt;
+      cy += vy * dt;
+      keepInBounds(size);
+      paint(size);
+      requestAnimationFrame(frame);
+    }
+
+    function resize() {
+      if (!el || !desk) return;
+      baseSize = getBaseSize();
+      const size = getSize(performance.now());
+      keepInBounds(size);
+      paint(size);
+    }
+
+    function init() {
+      el = $("#blackhole");
+      desk = $(".desktop");
+      if (!el || !desk) return;
+
+      startTime = performance.now();
+      lastTime = startTime;
+      baseSize = getBaseSize();
+      cx = clamp(desk.clientWidth * 0.72, baseSize / 2, desk.clientWidth - baseSize / 2);
+      cy = clamp(desk.clientHeight * 0.24, baseSize / 2, desk.clientHeight - baseSize / 2);
+      vx = SPEED * 0.8;
+      vy = SPEED * 0.6;
+
+      if (reduceMotion) {
+        const video = $("video", el);
+        if (video) { video.removeAttribute("autoplay"); video.pause(); }
+        paint(baseSize);
+        return;
+      }
+
+      window.addEventListener("resize", resize);
+      requestAnimationFrame(frame);
+    }
+
+    return { init };
+  })();
+
+  /* =============================================================
      INIT
      ============================================================= */
   function init() {
@@ -623,6 +712,7 @@
     copyHooks();
     GPU.start();
     TERM.init();
+    BLACK_HOLE.init();
 
     // default windows on first load (open About last so it takes focus)
     if (!isMobile()) {
