@@ -165,7 +165,7 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(5px) brightness(1.28) contrast(1.16) saturate(1.12);
   -webkit-mask-image: radial-gradient(circle, transparent 0 21%, #000 24% 78%, transparent 84%);
   mask-image: radial-gradient(circle, transparent 0 21%, #000 24% 78%, transparent 84%);
-  opacity: 0.1;
+  opacity: 0.06;
   animation: blackhole-spin 18s linear infinite;
 }
 .blackhole-ring {
@@ -202,7 +202,7 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(4px) brightness(1.38) contrast(0.95) saturate(1.08);
   -webkit-mask-image: radial-gradient(circle, #000 0 68%, transparent 84%);
   mask-image: radial-gradient(circle, #000 0 68%, transparent 84%);
-  opacity: 0.45;
+  opacity: 0.22;
   filter: drop-shadow(0 0 20px rgba(255,255,255,0.42)) drop-shadow(0 0 42px rgba(140,210,255,0.25));
   animation: blackhole-spin 14s linear infinite reverse;
 }
@@ -257,7 +257,7 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(6px) brightness(1.14) contrast(1.05) grayscale(0.55);
   -webkit-mask-image: radial-gradient(circle, transparent 0 19%, #000 24% 76%, transparent 86%);
   mask-image: radial-gradient(circle, transparent 0 19%, #000 24% 76%, transparent 86%);
-  opacity: 0.78;
+  opacity: 0.34;
   filter: drop-shadow(0 0 28px rgba(220,220,220,0.36)) drop-shadow(0 0 58px rgba(118,185,0,0.14));
   animation: blackhole-spin 20s linear infinite;
 }
