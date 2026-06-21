@@ -832,7 +832,7 @@
       if (!black || !white) return false;
 
       const distance = Math.hypot(black.cx - white.cx, black.cy - white.cy);
-      const threshold = (black.size + white.size) * 1.18;
+      const threshold = Math.max(6, Math.min(black.size, white.size) * 0.06);
       if (distance > threshold) return false;
 
       triggerCollision(black, white, now);
