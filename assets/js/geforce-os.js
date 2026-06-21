@@ -796,6 +796,68 @@
       window.setTimeout(() => overlay.remove(), 2600);
     }
 
+    function createBigBangOverlay(cx, cy) {
+      const deskRect = desk.getBoundingClientRect();
+      const impactX = deskRect.left + cx;
+      const impactY = deskRect.top + cy;
+      const overlay = document.createElement("div");
+      overlay.className = "cosmic-bigbang";
+      overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+
+      const rings = [
+        { size: "10vmin", delay: "0s", color: "rgba(255,255,255,0.58)", mid: 6, end: 13 },
+        { size: "18vmin", delay: "0.7s", color: "rgba(118,185,0,0.28)", mid: 5.4, end: 10 },
+        { size: "26vmin", delay: "1.4s", color: "rgba(185,225,255,0.30)", mid: 4.8, end: 8.6 },
+        { size: "34vmin", delay: "2.1s", color: "rgba(255,255,255,0.18)", mid: 4.2, end: 7.4 },
+      ];
+      rings.forEach((ring) => {
+        const el = document.createElement("div");
+        el.className = "bigbang-ring";
+        el.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+        el.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+        el.style.setProperty("--ring-size", ring.size);
+        el.style.setProperty("--ring-color", ring.color);
+        el.style.setProperty("--ring-scale-mid", ring.mid);
+        el.style.setProperty("--ring-scale-end", ring.end);
+        el.style.setProperty("--delay", ring.delay);
+        overlay.appendChild(el);
+      });
+
+      const colors = [
+        "rgba(255,255,255,0.88)",
+        "rgba(185,225,255,0.76)",
+        "rgba(118,185,0,0.58)",
+        "rgba(210,216,214,0.64)",
+      ];
+      const particleCount = Math.min(180, Math.max(96, Math.floor((window.innerWidth * window.innerHeight) / 11000)));
+      const maxTravel = Math.hypot(window.innerWidth, window.innerHeight) * 0.86;
+      for (let i = 0; i < particleCount; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const travel = maxTravel * (0.18 + Math.random() * 0.82);
+        const drift = (Math.random() - 0.5) * 130;
+        const dx = Math.cos(angle) * travel + Math.cos(angle + Math.PI / 2) * drift;
+        const dy = Math.sin(angle) * travel + Math.sin(angle + Math.PI / 2) * drift;
+        const particle = document.createElement("div");
+        particle.className = "bigbang-particle";
+        particle.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+        particle.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+        particle.style.setProperty("--dx", dx.toFixed(2) + "px");
+        particle.style.setProperty("--dy", dy.toFixed(2) + "px");
+        particle.style.setProperty("--dx-mid", (dx * (0.42 + Math.random() * 0.18)).toFixed(2) + "px");
+        particle.style.setProperty("--dy-mid", (dy * (0.42 + Math.random() * 0.18)).toFixed(2) + "px");
+        particle.style.setProperty("--particle-size", (1.5 + Math.random() * 4.5).toFixed(2) + "px");
+        particle.style.setProperty("--particle-glow", (8 + Math.random() * 22).toFixed(2) + "px");
+        particle.style.setProperty("--particle-color", colors[Math.floor(Math.random() * colors.length)]);
+        particle.style.setProperty("--particle-opacity", (0.36 + Math.random() * 0.5).toFixed(2));
+        particle.style.setProperty("--delay", (Math.random() * 2.8).toFixed(3) + "s");
+        overlay.appendChild(particle);
+      }
+
+      document.body.appendChild(overlay);
+      window.setTimeout(() => overlay.remove(), 20500);
+    }
+
     function triggerCollision(black, white, now) {
       if (collisionDone) return;
       collisionDone = true;
@@ -809,6 +871,7 @@
       white.el.classList.add("is-collapsed");
       wells = [];
       createShatterOverlay(cx, cy);
+      createBigBangOverlay(cx, cy);
 
       if (!grey) return;
       grey.el.style.width = grey.size.toFixed(2) + "px";

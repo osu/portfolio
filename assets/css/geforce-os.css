@@ -290,6 +290,40 @@ img { max-width: 100%; display: block; }
   overflow: hidden;
   pointer-events: none;
 }
+.cosmic-bigbang {
+  position: fixed;
+  inset: 0;
+  z-index: 9550;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cosmic-bigbang::before {
+  content: "";
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(circle at var(--impact-x, 50%) var(--impact-y, 50%), rgba(255,255,255,0.88) 0 1.5%, rgba(185,225,255,0.44) 5%, rgba(118,185,0,0.20) 11%, rgba(70,95,150,0.10) 24%, transparent 44%),
+    radial-gradient(circle at calc(var(--impact-x, 50%) + 12vw) calc(var(--impact-y, 50%) - 16vh), rgba(255,255,255,0.13), transparent 24%),
+    radial-gradient(circle at calc(var(--impact-x, 50%) - 18vw) calc(var(--impact-y, 50%) + 14vh), rgba(118,185,0,0.10), transparent 28%);
+  mix-blend-mode: screen;
+  animation: bigbang-nebula 20s ease-out forwards;
+}
+.cosmic-bigbang::after {
+  content: "";
+  position: absolute;
+  left: var(--impact-x, 50%);
+  top: var(--impact-y, 50%);
+  width: 18vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.7);
+  box-shadow:
+    0 0 0 1px rgba(118,185,0,0.16),
+    0 0 54px rgba(255,255,255,0.36),
+    inset 0 0 26px rgba(255,255,255,0.32);
+  transform: translate(-50%, -50%) scale(0.05);
+  animation: bigbang-shockwave 20s cubic-bezier(0.08, 0.74, 0.1, 1) forwards;
+}
 .cosmic-shatter::before {
   content: "";
   position: absolute;
@@ -312,6 +346,34 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(5px) brightness(1.35) contrast(1.12);
   clip-path: polygon(var(--p1), var(--p2), var(--p3), var(--p4));
   animation: shard-explode 2.15s cubic-bezier(0.16, 0.72, 0.24, 1) forwards;
+  animation-delay: var(--delay);
+}
+.bigbang-particle {
+  position: absolute;
+  left: var(--impact-x, 50%);
+  top: var(--impact-y, 50%);
+  width: var(--particle-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--particle-color);
+  box-shadow: 0 0 var(--particle-glow) var(--particle-color);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.3);
+  animation: bigbang-particle-flight 20s cubic-bezier(0.08, 0.66, 0.08, 1) forwards;
+  animation-delay: var(--delay);
+}
+.bigbang-ring {
+  position: absolute;
+  left: var(--impact-x, 50%);
+  top: var(--impact-y, 50%);
+  width: var(--ring-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid var(--ring-color);
+  box-shadow: 0 0 24px var(--ring-color), inset 0 0 24px rgba(255,255,255,0.12);
+  transform: translate(-50%, -50%) scale(0.05);
+  opacity: 0;
+  animation: bigbang-ring-expand 20s cubic-bezier(0.07, 0.76, 0.12, 1) forwards;
   animation-delay: var(--delay);
 }
 .blackhole-warped {
@@ -356,6 +418,30 @@ img { max-width: 100%; display: block; }
   12% { opacity: 1; }
   68% { opacity: 0.94; transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot)) scale(1.08); }
   100% { opacity: 0; transform: translate3d(var(--dx-end), var(--dy-end), 0) rotate(var(--rot-end)) scale(1); }
+}
+@keyframes bigbang-nebula {
+  0% { opacity: 0; transform: scale(0.35) rotate(0deg); filter: saturate(1.8) brightness(2.2); }
+  6% { opacity: 0.92; }
+  45% { opacity: 0.42; transform: scale(1.15) rotate(18deg); filter: saturate(1.2) brightness(1.15); }
+  100% { opacity: 0; transform: scale(1.55) rotate(42deg); filter: saturate(0.8) brightness(0.9); }
+}
+@keyframes bigbang-shockwave {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.05); }
+  4% { opacity: 0.9; }
+  42% { opacity: 0.24; transform: translate(-50%, -50%) scale(9.5); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(14); }
+}
+@keyframes bigbang-ring-expand {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.05); }
+  5% { opacity: 0.78; }
+  54% { opacity: 0.22; transform: translate(-50%, -50%) scale(var(--ring-scale-mid)); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(var(--ring-scale-end)); }
+}
+@keyframes bigbang-particle-flight {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25); filter: brightness(2); }
+  5% { opacity: var(--particle-opacity); }
+  62% { opacity: calc(var(--particle-opacity) * 0.55); transform: translate(calc(-50% + var(--dx-mid)), calc(-50% + var(--dy-mid))) scale(1); filter: brightness(1.2); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.35); filter: brightness(0.8); }
 }
 
 .desktop-watermark {
