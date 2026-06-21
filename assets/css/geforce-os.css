@@ -943,9 +943,9 @@ body.theme-macos .boot {
 }
 body.theme-macos .boot-logo {
   position: relative;
-  width: 168px;
-  height: 108px;
-  border-radius: 28px;
+  width: 132px;
+  height: 84px;
+  border-radius: 22px;
   display: block;
   overflow: hidden;
   background:
@@ -981,11 +981,11 @@ body.theme-macos .split-logo-half img {
 }
 body.theme-macos .split-logo-apple img {
   left: 100%;
-  width: 220px;
+  width: 44px;
 }
 body.theme-macos .split-logo-msft img {
   left: 0;
-  width: 70px;
+  width: 54px;
 }
 body.theme-macos .boot-logo::after {
   content: "";
@@ -1035,9 +1035,9 @@ body.theme-macos .desktop-bg::before {
 }
 body.theme-macos .desktop-watermark > img { display: none; }
 body.theme-macos .desktop-split-logo {
-  width: 168px;
-  height: 126px;
-  border-radius: 32px;
+  width: 132px;
+  height: 96px;
+  border-radius: 24px;
   display: block;
   position: relative;
   overflow: hidden;
@@ -1059,10 +1059,10 @@ body.theme-macos .desktop-split-logo::after {
   pointer-events: none;
 }
 body.theme-macos .desktop-split-logo .split-logo-apple img {
-  width: 228px;
+  width: 52px;
 }
 body.theme-macos .desktop-split-logo .split-logo-msft img {
-  width: 78px;
+  width: 58px;
 }
 body.theme-macos .desktop-watermark p {
   color: rgba(248, 251, 255, 0.72);
@@ -1086,7 +1086,7 @@ body.theme-macos .menubar-left::before {
   width: 18px;
   height: 18px;
   flex: 0 0 auto;
-  background: url("../images/apple_logo.png") center / 46px 26px no-repeat;
+  background: url("../images/apple-logo.svg") center / contain no-repeat;
 }
 body.theme-macos .menubar-left::after {
   content: "File Edit View Window Help";
@@ -1225,15 +1225,15 @@ body.theme-macos .dock-inner {
     display: none;
   }
   body.theme-macos .desktop-split-logo {
-    width: 118px;
-    height: 88px;
-    border-radius: 22px;
+    width: 104px;
+    height: 76px;
+    border-radius: 20px;
   }
   body.theme-macos .desktop-split-logo .split-logo-apple img {
-    width: 160px;
+    width: 40px;
   }
   body.theme-macos .desktop-split-logo .split-logo-msft img {
-    width: 54px;
+    width: 46px;
   }
 }
 
