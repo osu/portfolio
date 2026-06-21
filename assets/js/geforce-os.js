@@ -77,17 +77,49 @@
     schedule();
   }
 
-  function switchToDgxTheme() {
-    document.body.classList.remove("theme-macos");
-    document.body.classList.add("theme-dgx");
+  function syncOsSwitcher(mode) {
+    $$("[data-os-mode]").forEach((button) => {
+      const active = button.dataset.osMode === mode;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function setOsMode(mode) {
+    document.body.classList.remove("theme-macos", "theme-dgx", "theme-mac-only", "theme-windows-only");
 
     const osLabel = $(".menubar-os");
-    if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
-
     const themeColor = $('meta[name="theme-color"]');
-    if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
+
+    if (mode === "macos") {
+      document.body.classList.add("theme-macos", "theme-mac-only");
+      if (osLabel) osLabel.textContent = "macOS";
+      if (themeColor) themeColor.setAttribute("content", "#eff4ff");
+    } else if (mode === "windows") {
+      document.body.classList.add("theme-macos", "theme-windows-only");
+      if (osLabel) osLabel.textContent = "Windows 11";
+      if (themeColor) themeColor.setAttribute("content", "#071839");
+    } else {
+      document.body.classList.add("theme-dgx");
+      if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
+      if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
+      mode = "nvidia";
+    }
+
+    syncOsSwitcher(mode);
 
     if (typeof GPU !== "undefined") GPU.refreshMenubar();
+  }
+
+  function switchToDgxTheme() {
+    setOsMode("nvidia");
+  }
+
+  function osSwitcher() {
+    $$("[data-os-mode]").forEach((button) => {
+      button.addEventListener("click", () => setOsMode(button.dataset.osMode));
+    });
+    syncOsSwitcher(document.body.classList.contains("theme-dgx") ? "nvidia" : "");
   }
 
   /* =============================================================
@@ -1427,6 +1459,7 @@
     clock();
     WM.init();
     dock();
+    osSwitcher();
     globalHooks();
     skillBars();
     projectFilters();
