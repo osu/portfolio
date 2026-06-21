@@ -644,7 +644,7 @@
       { id: "blackhole", x: 0.72, y: 0.24, vx: SPEED * 0.8, vy: SPEED * 0.6, gravity: 1, spin: 1 },
       { id: "whitehole", x: 0.26, y: 0.72, vx: -SPEED * 0.55, vy: SPEED * 0.84, gravity: -1, spin: -1 },
     ];
-    let desk, wells = [];
+    let desk, wells = [], collisionDone = false;
 
     function getBaseSize() {
       if (!desk) return 105;
@@ -725,6 +725,118 @@
         const influence = (well.size * 0.63 + 126) * influenceScale;
         return measureWarp(target, well, deskRect, influence);
       }).filter(Boolean);
+    }
+
+    function createGreyWell(cx, cy, size, now) {
+      const el = $("#greyhole");
+      if (!el) return null;
+      return {
+        id: "greyhole",
+        el,
+        startTime: now,
+        lastTime: now,
+        baseSize: size,
+        size,
+        cx,
+        cy,
+        vx: SPEED * 0.22,
+        vy: -SPEED * 0.18,
+        gravity: 0.18,
+        spin: 0.45,
+      };
+    }
+
+    function createShatterOverlay(cx, cy) {
+      const deskRect = desk.getBoundingClientRect();
+      const impactX = deskRect.left + cx;
+      const impactY = deskRect.top + cy;
+      const overlay = document.createElement("div");
+      overlay.className = "cosmic-shatter";
+      overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+
+      const columns = Math.max(6, Math.ceil(window.innerWidth / 170));
+      const rows = Math.max(4, Math.ceil(window.innerHeight / 145));
+      const shardW = 100 / columns;
+      const shardH = 100 / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          const centerX = (col + 0.5) * window.innerWidth / columns;
+          const centerY = (row + 0.5) * window.innerHeight / rows;
+          const dx = centerX - impactX;
+          const dy = centerY - impactY;
+          const dist = Math.max(Math.hypot(dx, dy), 1);
+          const blast = 190 + Math.random() * 280;
+          const burstX = (dx / dist) * blast + (Math.random() - 0.5) * 150;
+          const burstY = (dy / dist) * blast + (Math.random() - 0.5) * 150;
+          const rot = (Math.random() - 0.5) * 110;
+          const shard = document.createElement("div");
+          shard.className = "shatter-shard";
+          shard.style.setProperty("--sx", (col * shardW).toFixed(3) + "vw");
+          shard.style.setProperty("--sy", (row * shardH).toFixed(3) + "vh");
+          shard.style.setProperty("--sw", "calc(" + shardW.toFixed(3) + "vw + 1px)");
+          shard.style.setProperty("--sh", "calc(" + shardH.toFixed(3) + "vh + 1px)");
+          shard.style.setProperty("--dx", burstX.toFixed(2) + "px");
+          shard.style.setProperty("--dy", burstY.toFixed(2) + "px");
+          shard.style.setProperty("--dx-end", (burstX * 0.18).toFixed(2) + "px");
+          shard.style.setProperty("--dy-end", (burstY * 0.18).toFixed(2) + "px");
+          shard.style.setProperty("--rot", rot.toFixed(2) + "deg");
+          shard.style.setProperty("--rot-end", (rot * 0.28).toFixed(2) + "deg");
+          shard.style.setProperty("--delay", (Math.random() * 0.12).toFixed(3) + "s");
+          shard.style.setProperty("--p1", Math.floor(Math.random() * 10) + "% " + Math.floor(Math.random() * 8) + "%");
+          shard.style.setProperty("--p2", (90 + Math.floor(Math.random() * 10)) + "% " + Math.floor(Math.random() * 12) + "%");
+          shard.style.setProperty("--p3", (88 + Math.floor(Math.random() * 12)) + "% " + (88 + Math.floor(Math.random() * 12)) + "%");
+          shard.style.setProperty("--p4", Math.floor(Math.random() * 12) + "% " + (86 + Math.floor(Math.random() * 14)) + "%");
+          overlay.appendChild(shard);
+        }
+      }
+
+      document.body.appendChild(overlay);
+      window.setTimeout(() => overlay.remove(), 2600);
+    }
+
+    function triggerCollision(black, white, now) {
+      if (collisionDone) return;
+      collisionDone = true;
+
+      const cx = (black.cx + white.cx) / 2;
+      const cy = (black.cy + white.cy) / 2;
+      const greySize = clamp((black.size + white.size) * 0.62, getBaseSize() * 0.95, getBaseSize() * 1.6);
+      const grey = createGreyWell(cx, cy, greySize, now);
+
+      black.el.classList.add("is-collapsed");
+      white.el.classList.add("is-collapsed");
+      wells = [];
+      createShatterOverlay(cx, cy);
+
+      if (!grey) return;
+      grey.el.style.width = grey.size.toFixed(2) + "px";
+      grey.el.style.setProperty("--gh-x", (grey.cx - grey.size / 2).toFixed(2) + "px");
+      grey.el.style.setProperty("--gh-y", (grey.cy - grey.size / 2).toFixed(2) + "px");
+      grey.el.classList.add("is-formed");
+
+      window.setTimeout(() => {
+        grey.lastTime = performance.now();
+        wells = [grey];
+        grey.el.classList.remove("is-formed");
+        grey.el.classList.add("is-active");
+        paint(grey);
+      }, 1500);
+    }
+
+    function checkCollision(now) {
+      if (collisionDone) return false;
+      const black = wells.find((well) => well.id === "blackhole");
+      const white = wells.find((well) => well.id === "whitehole");
+      if (!black || !white) return false;
+
+      const distance = Math.hypot(black.cx - white.cx, black.cy - white.cy);
+      const threshold = (black.size + white.size) * 1.18;
+      if (distance > threshold) return false;
+
+      triggerCollision(black, white, now);
+      return true;
     }
 
     function repelBlackHole(dt) {
@@ -836,6 +948,11 @@
         well.lastTime = now;
         well.size = getSize(well, now);
       });
+      if (checkCollision(now)) {
+        warpNearby();
+        requestAnimationFrame(frame);
+        return;
+      }
       repelBlackHole(frameDt);
       wells.forEach((well) => {
         const dt = frameDt;
