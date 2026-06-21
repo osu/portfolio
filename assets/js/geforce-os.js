@@ -85,11 +85,12 @@
     });
   }
 
-  function setOsMode(mode) {
+  function setOsMode(mode, options = {}) {
     document.body.classList.remove("theme-macos", "theme-dgx", "theme-mac-only", "theme-windows-only");
 
     const osLabel = $(".menubar-os");
     const themeColor = $('meta[name="theme-color"]');
+    let activeMode = mode;
 
     if (mode === "macos") {
       document.body.classList.add("theme-macos", "theme-mac-only");
@@ -103,16 +104,18 @@
       document.body.classList.add("theme-dgx");
       if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
       if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
-      mode = "nvidia";
+      activeMode = "nvidia";
     }
 
-    syncOsSwitcher(mode);
+    syncOsSwitcher(activeMode);
+
+    if (options.layout !== false) applyOsWindowLayout(activeMode);
 
     if (typeof GPU !== "undefined") GPU.refreshMenubar();
   }
 
   function switchToDgxTheme() {
-    setOsMode("nvidia");
+    setOsMode("nvidia", { layout: false });
   }
 
   function osSwitcher() {
@@ -211,6 +214,18 @@
       if (!restoreOpener(id)) focusTopMost();
     }
 
+    function closeAll() {
+      Object.keys(wins).forEach((id) => {
+        const win = wins[id];
+        win.classList.remove("is-open", "is-focused", "is-min", "is-max");
+        delete openers[id];
+      });
+      z = 20;
+      const label = $("#mb-app");
+      if (label) label.textContent = "Finder";
+      syncDock();
+    }
+
     function minimize(id) {
       const win = wins[id];
       if (!win) return;
@@ -261,6 +276,28 @@
       else open(id);
     }
 
+    function openAt(item) {
+      const win = wins[item.id];
+      if (!win) return;
+      win.classList.remove("is-min", "is-max");
+      if (item.left) win.style.left = item.left;
+      if (item.top) win.style.top = item.top;
+      if (item.width) win.style.width = item.width;
+      if (item.height) win.style.height = item.height;
+      placed[item.id] = true;
+      open(item.id);
+      if (item.maximized && !isMobile()) win.classList.add("is-max");
+    }
+
+    function arrange(items) {
+      closeAll();
+      cascade.n = 0;
+      items.forEach((item) => {
+        const delay = reduceMotion ? 0 : item.delay || 0;
+        window.setTimeout(() => openAt(item), delay);
+      });
+    }
+
     function makeDraggable(win) {
       const bar = $(".win-titlebar", win);
       if (!bar) return;
@@ -299,8 +336,30 @@
       });
     }
 
-    return { init, open, close, minimize, toggleMax, focus, toggle: toggleApp, syncDock, wins };
+    return { init, open, close, closeAll, arrange, minimize, toggleMax, focus, toggle: toggleApp, syncDock, wins };
   })();
+
+  function applyOsWindowLayout(mode) {
+    if (!WM || isMobile()) return;
+    const layouts = {
+      macos: [
+        { id: "about", left: "6vw", top: "72px", delay: 20 },
+        { id: "contact", left: "54vw", top: "124px", delay: 180 },
+        { id: "certificates", left: "13vw", top: "34vh", delay: 340 },
+      ],
+      windows: [
+        { id: "projects", left: "7vw", top: "92px", width: "min(680px, 48vw)", delay: 20 },
+        { id: "terminal", left: "52vw", top: "122px", width: "min(620px, 42vw)", delay: 180 },
+        { id: "skills", left: "18vw", top: "44vh", delay: 340 },
+      ],
+      nvidia: [
+        { id: "gpu", left: "60px", top: "42px", delay: 20 },
+        { id: "terminal", left: "calc(100vw - min(620px, 44vw) - 56px)", top: "72px", width: "min(620px, 44vw)", delay: 180 },
+        { id: "about", left: "104px", top: "96px", delay: 340 },
+      ],
+    };
+    WM.arrange(layouts[mode] || layouts.nvidia);
+  }
 
   /* =============================================================
      DOCK
@@ -309,6 +368,60 @@
     $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app], .win-search[data-app]").forEach((it) => {
       it.addEventListener("click", () => WM.toggle(it.dataset.app));
     });
+  }
+
+  function taskbarPlacement() {
+    const taskbar = $(".windows-taskbar");
+    if (!taskbar) return;
+    const edges = ["bottom", "top", "left", "right"];
+    const key = "portfolio-windows-taskbar-edge";
+
+    function setEdge(edge) {
+      const next = edges.includes(edge) ? edge : "bottom";
+      edges.forEach((item) => document.body.classList.remove("taskbar-" + item));
+      document.body.classList.add("taskbar-" + next);
+      try { window.localStorage.setItem(key, next); } catch (_) {}
+    }
+
+    function nearestEdge(x, y) {
+      const distances = [
+        { edge: "top", value: y },
+        { edge: "bottom", value: window.innerHeight - y },
+        { edge: "left", value: x },
+        { edge: "right", value: window.innerWidth - x },
+      ];
+      distances.sort((a, b) => a.value - b.value);
+      return distances[0].edge;
+    }
+
+    let startX = 0, startY = 0, dragging = false;
+    try { setEdge(window.localStorage.getItem(key) || "bottom"); } catch (_) { setEdge("bottom"); }
+
+    taskbar.addEventListener("pointerdown", (e) => {
+      if (isMobile() || e.button !== 0 || e.target.closest("button")) return;
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      taskbar.classList.add("is-dragging");
+      taskbar.setPointerCapture(e.pointerId);
+    });
+
+    taskbar.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) < 18) return;
+      setEdge(nearestEdge(e.clientX, e.clientY));
+    });
+
+    function finish(e) {
+      if (!dragging) return;
+      dragging = false;
+      setEdge(nearestEdge(e.clientX, e.clientY));
+      taskbar.classList.remove("is-dragging");
+      try { taskbar.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+
+    taskbar.addEventListener("pointerup", finish);
+    taskbar.addEventListener("pointercancel", finish);
   }
 
   /* =============================================================
@@ -968,6 +1081,41 @@
         overlay.appendChild(el);
       });
 
+      const rippleOrigins = [
+        { x: -90, y: impactY },
+        { x: window.innerWidth + 90, y: impactY },
+        { x: impactX, y: -90 },
+        { x: impactX, y: window.innerHeight + 90 },
+        { x: -70, y: -70 },
+        { x: window.innerWidth + 70, y: -70 },
+        { x: -70, y: window.innerHeight + 70 },
+        { x: window.innerWidth + 70, y: window.innerHeight + 70 },
+        { x: window.innerWidth * 0.18, y: window.innerHeight + 76 },
+        { x: window.innerWidth * 0.82, y: -76 },
+      ];
+      rippleOrigins.forEach((origin, index) => {
+        const ripple = document.createElement("div");
+        const orbitScale = 0.18 + (index % 4) * 0.055;
+        const orbitX = (impactX - origin.x) * orbitScale + (index % 2 ? 80 : -80);
+        const orbitY = (impactY - origin.y) * orbitScale + (index % 3 ? -62 : 62);
+        ripple.className = "bigbang-green-ripple";
+        ripple.style.setProperty("--start-x", origin.x.toFixed(2) + "px");
+        ripple.style.setProperty("--start-y", origin.y.toFixed(2) + "px");
+        ripple.style.setProperty("--to-x", (impactX - origin.x).toFixed(2) + "px");
+        ripple.style.setProperty("--to-y", (impactY - origin.y).toFixed(2) + "px");
+        ripple.style.setProperty("--orbit-x", orbitX.toFixed(2) + "px");
+        ripple.style.setProperty("--orbit-y", orbitY.toFixed(2) + "px");
+        ripple.style.setProperty("--ripple-size", (18 + (index % 5) * 4).toFixed(2) + "vmin");
+        ripple.style.setProperty("--delay", (0.18 + index * 0.16).toFixed(2) + "s");
+        overlay.appendChild(ripple);
+      });
+
+      const core = document.createElement("div");
+      core.className = "bigbang-green-core";
+      core.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      core.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+      overlay.appendChild(core);
+
       const colors = [
         "rgba(255,255,255,0.88)",
         "rgba(185,225,255,0.76)",
@@ -1283,26 +1431,50 @@
       const dx = black.cx - white.cx;
       const dy = black.cy - white.cy;
       const distance = Math.max(Math.hypot(dx, dy), 1);
-      const influence = (black.size + white.size) * 0.3;
+      const influence = (black.size + white.size) * 0.16;
       if (distance > influence) return;
 
       const strength = Math.pow(1 - distance / influence, 2);
       const nx = dx / distance;
       const ny = dy / distance;
-      const acceleration = 4 * strength;
+      const acceleration = 0.8 * strength;
       black.vx += nx * acceleration * dt;
       black.vy += ny * acceleration * dt;
 
-      const overlap = (black.size + white.size) * 0.08 - distance;
+      const overlap = (black.size + white.size) * 0.035 - distance;
       if (overlap > 0) {
-        black.cx += nx * overlap * 0.12;
-        black.cy += ny * overlap * 0.12;
+        black.cx += nx * overlap * 0.035;
+        black.cy += ny * overlap * 0.035;
       }
 
       const speed = Math.max(Math.hypot(black.vx, black.vy), 1);
-      const clampedSpeed = clamp(speed, SPEED * 0.75, SPEED * 1.55);
+      const clampedSpeed = clamp(speed, SPEED * 0.88, SPEED * 1.22);
       black.vx = (black.vx / speed) * clampedSpeed;
       black.vy = (black.vy / speed) * clampedSpeed;
+    }
+
+    function steerPrimaryWellsTogether(dt) {
+      const black = wells.find((well) => well.id === "blackhole");
+      const white = wells.find((well) => well.id === "whitehole");
+      if (!black || !white) return;
+
+      const dx = white.cx - black.cx;
+      const dy = white.cy - black.cy;
+      const distance = Math.max(Math.hypot(dx, dy), 1);
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const steer = 0.55 * dt;
+      black.vx += nx * steer;
+      black.vy += ny * steer;
+      white.vx -= nx * steer;
+      white.vy -= ny * steer;
+
+      [black, white].forEach((well) => {
+        const speed = Math.max(Math.hypot(well.vx, well.vy), 1);
+        const clampedSpeed = clamp(speed, SPEED * 0.92, SPEED * 1.18);
+        well.vx = (well.vx / speed) * clampedSpeed;
+        well.vy = (well.vy / speed) * clampedSpeed;
+      });
     }
 
     function warpNearby() {
@@ -1390,6 +1562,7 @@
         return;
       }
       repelBlackHole(frameDt);
+      steerPrimaryWellsTogether(frameDt);
       wells.forEach((well) => {
         const dt = frameDt;
         well.cx += well.vx * dt;
@@ -1460,6 +1633,7 @@
     WM.init();
     dock();
     osSwitcher();
+    taskbarPlacement();
     globalHooks();
     skillBars();
     projectFilters();

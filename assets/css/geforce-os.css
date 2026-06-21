@@ -449,6 +449,42 @@ img { max-width: 100%; display: block; }
   animation: bigbang-ring-expand 20s cubic-bezier(0.07, 0.76, 0.12, 1) forwards;
   animation-delay: var(--delay);
 }
+.bigbang-green-ripple {
+  position: absolute;
+  left: var(--start-x);
+  top: var(--start-y);
+  width: var(--ripple-size);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 1px solid rgba(118,185,0,0.58);
+  box-shadow:
+    0 0 18px rgba(118,185,0,0.34),
+    0 0 42px rgba(96,221,142,0.18),
+    inset 0 0 22px rgba(118,185,0,0.20);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%) scale(0.28);
+  animation: green-ripple-converge 20s cubic-bezier(0.11, 0.78, 0.14, 1) forwards;
+  animation-delay: var(--delay);
+}
+.bigbang-green-core {
+  position: absolute;
+  left: var(--impact-x, 50%);
+  top: var(--impact-y, 50%);
+  width: 16vmin;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(242,255,231,0.95) 0 11%, rgba(118,185,0,0.72) 19%, rgba(96,221,142,0.34) 42%, transparent 72%);
+  box-shadow:
+    0 0 34px rgba(118,185,0,0.74),
+    0 0 86px rgba(96,221,142,0.42),
+    0 0 140px rgba(20,17,99,0.28);
+  opacity: 0;
+  mix-blend-mode: screen;
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: green-core-collapse 20s ease-in-out forwards;
+}
 .blackhole-warped {
   --bh-warp-x: 0px;
   --bh-warp-y: 0px;
@@ -515,6 +551,20 @@ img { max-width: 100%; display: block; }
   5% { opacity: 0.78; }
   54% { opacity: 0.22; transform: translate(-50%, -50%) scale(var(--ring-scale-mid)); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(var(--ring-scale-end)); }
+}
+@keyframes green-ripple-converge {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25) rotate(0deg); filter: blur(0) brightness(1.5); }
+  8% { opacity: 0.74; }
+  46% { opacity: 0.34; transform: translate(calc(-50% + var(--orbit-x)), calc(-50% + var(--orbit-y))) scale(2.8) rotate(120deg); filter: blur(0.3px) brightness(1.25); }
+  78% { opacity: 0.66; transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.56) rotate(260deg); filter: blur(0) brightness(1.9); }
+  88% { opacity: 0.18; transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.2) rotate(330deg); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--to-x)), calc(-50% + var(--to-y))) scale(0.08) rotate(360deg); }
+}
+@keyframes green-core-collapse {
+  0%, 70% { opacity: 0; transform: translate(-50%, -50%) scale(0.18); filter: blur(8px) brightness(2); }
+  80% { opacity: 0.95; transform: translate(-50%, -50%) scale(1); filter: blur(0) brightness(1.6); }
+  91% { opacity: 0.92; transform: translate(-50%, -50%) scale(0.68); filter: blur(0.5px) brightness(2.1); }
+  98%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.08); filter: blur(9px) brightness(2.6); }
 }
 @keyframes bigbang-particle-flight {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25); filter: brightness(2); }
@@ -618,6 +668,16 @@ img { max-width: 100%; display: block; }
   color: #08120a;
   background: var(--green);
   box-shadow: var(--glow);
+}
+body.theme-mac-only .os-switcher button.is-active {
+  color: #fff;
+  background: #1d1d1f;
+  box-shadow: 0 8px 20px rgba(29,29,31,0.18);
+}
+body.theme-windows-only .os-switcher button.is-active {
+  color: #082f65;
+  background: rgba(238,247,255,0.96);
+  box-shadow: 0 10px 26px rgba(0, 120, 212, 0.26);
 }
 .os-switcher-sep { display: none; }
 body.theme-dgx .os-switcher,
@@ -1228,7 +1288,16 @@ body.theme-macos .dock-item:hover {
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 16px 30px rgba(36, 50, 74, 0.20);
 }
-body.theme-macos .dock-item svg { color: #76B900; }
+body.theme-macos .dock-item svg { color: #263244; }
+body.theme-mac-only .dock-item:nth-of-type(1) svg { color: #007aff; }
+body.theme-mac-only .dock-item:nth-of-type(2) svg { color: #ff9f0a; }
+body.theme-mac-only .dock-item:nth-of-type(3) svg { color: #af52de; }
+body.theme-mac-only .dock-item:nth-of-type(4) svg { color: #0a84ff; }
+body.theme-mac-only .dock-item:nth-of-type(5) svg { color: #ff453a; }
+body.theme-mac-only .dock-item:nth-of-type(6) svg { color: #ff375f; }
+body.theme-mac-only .dock-item:nth-of-type(7) svg { color: #5e5ce6; }
+body.theme-mac-only .dock-item:nth-of-type(8) svg { color: #64d2ff; }
+body.theme-mac-only .dock-item:nth-of-type(9) svg { color: #0a84ff; }
 body.theme-macos .dock-indicator {
   background: rgba(29, 29, 31, 0.68);
   box-shadow: none;
@@ -1270,22 +1339,47 @@ body.theme-macos .windows-taskbar {
   height: 58px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
   padding: 8px 14px;
   color: #f7fbff;
-  background: rgba(12, 34, 78, 0.78);
+  background: rgba(16, 48, 92, 0.66);
   border-top: 1px solid rgba(255,255,255,0.20);
   box-shadow: 0 -18px 48px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   backdrop-filter: blur(24px) saturate(160%);
   font-family: "Segoe UI", var(--font-body);
+  cursor: grab;
+  user-select: none;
+}
+body.theme-macos .windows-taskbar.is-dragging {
+  cursor: grabbing;
+  box-shadow: 0 -22px 60px rgba(0,120,212,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
+}
+body.theme-macos .windows-taskbar .win-taskbar-left {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+body.theme-macos .windows-taskbar .win-taskbar-tray {
+  position: absolute;
+  right: 14px;
 }
 
 body.theme-mac-only .menubar {
   right: 0;
   border-right: none;
 }
+body.theme-mac-only {
+  --green: #0a84ff;
+  --green-bright: #0a84ff;
+  --green-neon: #64d2ff;
+  --green-dim: #2563eb;
+  --glow: 0 12px 32px rgba(10, 132, 255, 0.20);
+}
+body.theme-mac-only .win-close { background: #ff5f57; }
+body.theme-mac-only .win-min { background: #ffbd2e; }
+body.theme-mac-only .win-max { background: #28c840; }
 body.theme-mac-only .desktop-bg::before {
   right: -12%;
 }
@@ -1305,17 +1399,28 @@ body.theme-mac-only .dock-inner {
 }
 
 body.theme-windows-only .menubar {
-  right: 0;
+  left: 50%;
+  right: auto;
+  top: 10px;
+  width: max-content;
+  height: 38px;
+  padding: 0 8px;
+  transform: translateX(-50%);
+  border-radius: 14px;
   color: rgba(247,251,255,0.92);
-  background: rgba(8, 20, 48, 0.42);
-  border-right: none;
-  border-bottom-color: rgba(255,255,255,0.14);
+  background: rgba(15, 41, 80, 0.34);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: 0 18px 50px rgba(0,0,0,0.18), inset 0 1px 0 rgba(255,255,255,0.12);
 }
-body.theme-windows-only .menubar-left::before {
-  background: url("../images/Microsoft_icon.svg.png") center / contain no-repeat;
+body.theme-windows-only {
+  --green: #0078d4;
+  --green-bright: #3aa7ff;
+  --green-neon: #60cdff;
+  --green-dim: #005a9e;
+  --glow: 0 12px 32px rgba(0, 120, 212, 0.22);
 }
-body.theme-windows-only .menubar-left::after {
-  content: "";
+body.theme-windows-only .menubar-left {
+  display: none;
 }
 body.theme-windows-only .menubar-app,
 body.theme-windows-only .menubar-clock {
@@ -1334,7 +1439,81 @@ body.theme-windows-only .desktop-bg::after {
   border-left: none;
 }
 body.theme-windows-only .windows-taskbar {
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
+  height: 56px;
+  border-radius: 0;
+  background: rgba(22, 52, 96, 0.58);
+  border-top-color: rgba(255,255,255,0.22);
+}
+body.theme-windows-only .win {
+  background: rgba(247, 250, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  color: #172033;
+  box-shadow: 0 24px 70px -22px rgba(7, 24, 57, 0.56), 0 0 0 1px rgba(255,255,255,0.34);
+}
+body.theme-windows-only .win.is-focused {
+  box-shadow: 0 28px 76px -24px rgba(7, 24, 57, 0.68), 0 0 0 1px rgba(0, 120, 212, 0.34);
+}
+body.theme-windows-only .win-titlebar {
+  height: 38px;
+  padding: 0 0 0 12px;
+  background: rgba(248, 251, 255, 0.72);
+  border-bottom: 1px solid rgba(36, 50, 74, 0.10);
+  cursor: grab;
+}
+body.theme-windows-only .win-title {
+  color: #172033;
+  font-family: "Segoe UI", var(--font-body);
+  font-size: 0.82rem;
+  letter-spacing: 0;
+}
+body.theme-windows-only .win-titlebar .win-ico {
+  color: #2563eb;
+}
+body.theme-windows-only .win-lights {
+  order: 3;
+  margin-left: auto;
+  gap: 0;
+  height: 100%;
+}
+body.theme-windows-only .win-light {
+  width: 46px;
+  height: 100%;
+  border-radius: 0;
+  background: transparent;
+  color: #263244;
+}
+body.theme-windows-only .win-light::after {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  font-family: "Segoe UI", var(--font-body);
+  font-size: 0.94rem;
+  line-height: 1;
+}
+body.theme-windows-only .win-close::after { content: "×"; }
+body.theme-windows-only .win-min::after { content: "–"; transform: translateY(-2px); }
+body.theme-windows-only .win-max::after { content: "□"; font-size: 0.72rem; }
+body.theme-windows-only .win-light:hover {
+  background: rgba(0, 120, 212, 0.10);
+  box-shadow: none;
+}
+body.theme-windows-only .win-close:hover {
+  color: #fff;
+  background: #c42b1c;
+}
+body.theme-windows-only .win-body {
+  color: #172033;
+}
+body.theme-windows-only .term {
+  background: #0c0f18;
+  color: #d8e6ff;
 }
 body.theme-windows-only .os-switcher {
   background: rgba(255,255,255,0.08);
@@ -1358,7 +1537,6 @@ body.theme-mac-only .os-switcher {
   min-width: 0;
 }
 .win-taskbar-tray {
-  margin-left: auto;
   gap: 10px;
   font-size: 0.72rem;
   line-height: 1.15;
@@ -1373,8 +1551,8 @@ body.theme-mac-only .os-switcher {
   align-items: center;
   justify-content: center;
   color: #eff7ff;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.14);
   transition: background 0.16s, transform 0.16s, box-shadow 0.16s;
 }
 .win-taskbar-button:hover,
@@ -1390,9 +1568,10 @@ body.theme-mac-only .os-switcher {
   flex: 0 0 auto;
 }
 .win-start img {
-  width: 21px;
-  height: 21px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
+  border-radius: 4px;
 }
 .win-taskbar-app svg,
 .win-search svg {
@@ -1404,7 +1583,7 @@ body.theme-mac-only .os-switcher {
   box-shadow: inset 0 -2px 0 rgba(126, 206, 255, 0.92);
 }
 .win-search {
-  width: min(192px, 18vw);
+  width: min(210px, 20vw);
   justify-content: flex-start;
   gap: 9px;
   padding: 0 13px;
@@ -1423,6 +1602,66 @@ body.theme-mac-only .os-switcher {
   display: block;
   font-variant-numeric: tabular-nums;
   color: rgba(247,251,255,0.94);
+}
+
+body.theme-windows-only.taskbar-top .windows-taskbar {
+  top: 54px;
+  bottom: auto;
+  border-top: none;
+  border-bottom: 1px solid rgba(255,255,255,0.20);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.20), inset 0 -1px 0 rgba(255,255,255,0.08);
+}
+body.theme-windows-only.taskbar-left .windows-taskbar,
+body.theme-windows-only.taskbar-right .windows-taskbar {
+  top: 54px;
+  bottom: 0;
+  width: 66px;
+  height: auto;
+  padding: 12px 8px;
+  flex-direction: column;
+  border-top: none;
+  box-shadow: 18px 0 48px rgba(0,0,0,0.18), inset 1px 0 0 rgba(255,255,255,0.08);
+}
+body.theme-windows-only.taskbar-left .windows-taskbar {
+  left: 0;
+  right: auto;
+  border-right: 1px solid rgba(255,255,255,0.18);
+}
+body.theme-windows-only.taskbar-right .windows-taskbar {
+  left: auto;
+  right: 0;
+  border-left: 1px solid rgba(255,255,255,0.18);
+}
+body.theme-windows-only.taskbar-left .win-taskbar-left,
+body.theme-windows-only.taskbar-right .win-taskbar-left,
+body.theme-windows-only.taskbar-left .win-taskbar-tray,
+body.theme-windows-only.taskbar-right .win-taskbar-tray {
+  position: static;
+  transform: none;
+  flex-direction: column;
+}
+body.theme-windows-only.taskbar-left .win-taskbar-left,
+body.theme-windows-only.taskbar-right .win-taskbar-left {
+  margin: auto 0;
+}
+body.theme-windows-only.taskbar-left .win-taskbar-tray,
+body.theme-windows-only.taskbar-right .win-taskbar-tray {
+  margin-top: auto;
+  right: auto;
+}
+body.theme-windows-only.taskbar-left .win-search,
+body.theme-windows-only.taskbar-right .win-search {
+  width: 42px;
+  padding: 0;
+  justify-content: center;
+}
+body.theme-windows-only.taskbar-left .win-search span,
+body.theme-windows-only.taskbar-right .win-search span,
+body.theme-windows-only.taskbar-left .win-tray-date,
+body.theme-windows-only.taskbar-right .win-tray-date,
+body.theme-windows-only.taskbar-left .win-tray-chip,
+body.theme-windows-only.taskbar-right .win-tray-chip {
+  display: none;
 }
 
 @keyframes macos-wallpaper {
