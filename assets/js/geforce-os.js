@@ -611,6 +611,7 @@
   const SPACE_WELLS = (function () {
     const SPEED = 20; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
+    const BIG_BANG_DURATION = 20000;
     const PANE_WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
     const TEXT_WARP_TARGET_SELECTOR = [
       ".desktop-watermark p",
@@ -641,8 +642,8 @@
       ".win.is-open:not(.is-min):not(.is-max) .term-inputline",
     ].join(", ");
     const WELL_CONFIGS = [
-      { id: "blackhole", x: 0.72, y: 0.24, vx: SPEED * 0.8, vy: SPEED * 0.6, gravity: 1, spin: 1 },
-      { id: "whitehole", x: 0.26, y: 0.72, vx: -SPEED * 0.55, vy: SPEED * 0.84, gravity: -1, spin: -1 },
+      { id: "blackhole", x: 0.72, y: 0.24, vx: -SPEED * 0.72, vy: SPEED * 0.7, gravity: 1, spin: 1 },
+      { id: "whitehole", x: 0.28, y: 0.72, vx: SPEED * 0.72, vy: -SPEED * 0.7, gravity: -1, spin: -1 },
     ];
     let desk, wells = [], collisionDone = false;
 
@@ -679,6 +680,22 @@
     function paint(well) {
       well.el.style.width = well.size.toFixed(2) + "px";
       well.el.style.transform = "translate3d(" + (well.cx - well.size / 2).toFixed(2) + "px, " + (well.cy - well.size / 2).toFixed(2) + "px, 0)";
+    }
+
+    function aimPrimaryWellsAtEachOther() {
+      const black = wells.find((well) => well.id === "blackhole");
+      const white = wells.find((well) => well.id === "whitehole");
+      if (!black || !white) return;
+
+      const dx = white.cx - black.cx;
+      const dy = white.cy - black.cy;
+      const distance = Math.max(Math.hypot(dx, dy), 1);
+      const vx = (dx / distance) * SPEED;
+      const vy = (dy / distance) * SPEED;
+      black.vx = vx;
+      black.vy = vy;
+      white.vx = -vx;
+      white.vy = -vy;
     }
 
     function resetTarget(target) {
@@ -855,7 +872,173 @@
       }
 
       document.body.appendChild(overlay);
-      window.setTimeout(() => overlay.remove(), 20500);
+      window.setTimeout(() => overlay.remove(), BIG_BANG_DURATION + 500);
+    }
+
+    function clearWarpClasses() {
+      $$(".blackhole-warped").forEach(resetTarget);
+      $$(".blackhole-text-warped").forEach(resetTextTarget);
+    }
+
+    function getOpenPanels() {
+      return $$(".win.is-open").filter((panel) => !panel.classList.contains("is-min"));
+    }
+
+    function clearPanelMotion(panel) {
+      panel.classList.remove("bigbang-pulled", "bigbang-blasted", "bigbang-hidden");
+      panel.style.removeProperty("--bb-pull-x");
+      panel.style.removeProperty("--bb-pull-y");
+      panel.style.removeProperty("--bb-blast-x");
+      panel.style.removeProperty("--bb-blast-y");
+      panel.style.removeProperty("--bb-rot");
+      delete panel._bbVector;
+    }
+
+    function pullPanelsToImpact(cx, cy) {
+      const deskRect = desk.getBoundingClientRect();
+      const impactX = deskRect.left + cx;
+      const impactY = deskRect.top + cy;
+
+      clearWarpClasses();
+      getOpenPanels().forEach((panel) => {
+        clearPanelMotion(panel);
+        const rect = panel.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = centerX - impactX;
+        const dy = centerY - impactY;
+        const distance = Math.max(Math.hypot(dx, dy), 1);
+        panel._bbVector = {
+          nx: dx / distance,
+          ny: dy / distance,
+          hitWall: false,
+        };
+        panel.style.setProperty("--bb-pull-x", ((impactX - centerX) * 0.72).toFixed(2) + "px");
+        panel.style.setProperty("--bb-pull-y", ((impactY - centerY) * 0.72).toFixed(2) + "px");
+        panel.classList.add("bigbang-pulled");
+      });
+    }
+
+    function createPanelShatter(rect, nx, ny) {
+      const overlay = document.createElement("div");
+      overlay.className = "panel-shatter";
+      const columns = 4;
+      const rows = 3;
+      const pieceW = rect.width / columns;
+      const pieceH = rect.height / rows;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < columns; col++) {
+          const shard = document.createElement("div");
+          const dx = nx * (130 + Math.random() * 180) + (Math.random() - 0.5) * 140;
+          const dy = ny * (130 + Math.random() * 180) + (Math.random() - 0.5) * 140;
+          const rot = (Math.random() - 0.5) * 120;
+          shard.className = "panel-shard";
+          shard.style.setProperty("--psx", (rect.left + col * pieceW).toFixed(2) + "px");
+          shard.style.setProperty("--psy", (rect.top + row * pieceH).toFixed(2) + "px");
+          shard.style.setProperty("--psw", (pieceW + 1).toFixed(2) + "px");
+          shard.style.setProperty("--psh", (pieceH + 1).toFixed(2) + "px");
+          shard.style.setProperty("--pdx", dx.toFixed(2) + "px");
+          shard.style.setProperty("--pdy", dy.toFixed(2) + "px");
+          shard.style.setProperty("--pdx-end", (dx * 0.35).toFixed(2) + "px");
+          shard.style.setProperty("--pdy-end", (dy * 0.35).toFixed(2) + "px");
+          shard.style.setProperty("--prot", rot.toFixed(2) + "deg");
+          shard.style.setProperty("--prot-end", (rot * 0.45).toFixed(2) + "deg");
+          shard.style.setProperty("--p1", Math.floor(Math.random() * 10) + "% " + Math.floor(Math.random() * 8) + "%");
+          shard.style.setProperty("--p2", (90 + Math.floor(Math.random() * 10)) + "% " + Math.floor(Math.random() * 12) + "%");
+          shard.style.setProperty("--p3", (88 + Math.floor(Math.random() * 12)) + "% " + (88 + Math.floor(Math.random() * 12)) + "%");
+          shard.style.setProperty("--p4", Math.floor(Math.random() * 12) + "% " + (86 + Math.floor(Math.random() * 14)) + "%");
+          overlay.appendChild(shard);
+        }
+      }
+
+      document.body.appendChild(overlay);
+      window.setTimeout(() => overlay.remove(), 1700);
+    }
+
+    function blastPanelsFromImpact() {
+      getOpenPanels().forEach((panel) => {
+        const vector = panel._bbVector || { nx: Math.random() > 0.5 ? 1 : -1, ny: Math.random() > 0.5 ? 1 : -1 };
+        const rect = panel.getBoundingClientRect();
+        const blast = Math.max(window.innerWidth, window.innerHeight) * 0.9 + Math.random() * 260;
+        const blastX = vector.nx * blast;
+        const blastY = vector.ny * blast;
+        const finalLeft = rect.left + blastX;
+        const finalRight = rect.right + blastX;
+        const finalTop = rect.top + blastY;
+        const finalBottom = rect.bottom + blastY;
+        const hitWall = finalLeft < 0 || finalRight > window.innerWidth || finalTop < 0 || finalBottom > window.innerHeight;
+
+        panel.style.setProperty("--bb-blast-x", blastX.toFixed(2) + "px");
+        panel.style.setProperty("--bb-blast-y", blastY.toFixed(2) + "px");
+        panel.style.setProperty("--bb-rot", ((Math.random() - 0.5) * 28).toFixed(2) + "deg");
+        panel.classList.remove("bigbang-pulled");
+        panel.classList.add("bigbang-blasted");
+
+        if (hitWall) {
+          window.setTimeout(() => {
+            createPanelShatter(panel.getBoundingClientRect(), vector.nx, vector.ny);
+            panel.classList.add("bigbang-hidden");
+          }, 1250);
+        }
+      });
+    }
+
+    function resetPanelsToStartup() {
+      $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
+      $$(".win").forEach((panel) => {
+        clearPanelMotion(panel);
+        panel.classList.remove("is-open", "is-focused", "is-min", "is-max");
+        panel.style.removeProperty("transform");
+        panel.style.removeProperty("filter");
+      });
+
+      if (isMobile()) {
+        WM.open("about");
+        return;
+      }
+
+      const gpu = WM.wins["gpu"];
+      const about = WM.wins["about"];
+      if (gpu) {
+        gpu.style.left = "60px";
+        gpu.style.top = "30px";
+      }
+      if (about) {
+        about.style.left = "94px";
+        about.style.top = "60px";
+      }
+      WM.open("gpu");
+      WM.open("about");
+    }
+
+    function resetSpaceWells() {
+      const now = performance.now();
+      const black = $("#blackhole");
+      const white = $("#whitehole");
+      const grey = $("#greyhole");
+      if (black) black.classList.remove("is-collapsed");
+      if (white) white.classList.remove("is-collapsed");
+      if (grey) grey.classList.remove("is-formed", "is-active");
+
+      collisionDone = false;
+      wells = WELL_CONFIGS.map((config) => {
+        const el = $("#" + config.id);
+        if (!el) return null;
+        const baseSize = getBaseSize();
+        return {
+          ...config,
+          el,
+          startTime: now,
+          lastTime: now,
+          baseSize,
+          size: baseSize,
+          cx: clamp(desk.clientWidth * config.x, baseSize / 2, desk.clientWidth - baseSize / 2),
+          cy: clamp(desk.clientHeight * config.y, baseSize / 2, desk.clientHeight - baseSize / 2),
+        };
+      }).filter(Boolean);
+      aimPrimaryWellsAtEachOther();
+      wells.forEach(paint);
     }
 
     function triggerCollision(black, white, now) {
@@ -870,8 +1053,14 @@
       black.el.classList.add("is-collapsed");
       white.el.classList.add("is-collapsed");
       wells = [];
+      pullPanelsToImpact(cx, cy);
       createShatterOverlay(cx, cy);
       createBigBangOverlay(cx, cy);
+      window.setTimeout(blastPanelsFromImpact, 1150);
+      window.setTimeout(() => {
+        resetPanelsToStartup();
+        resetSpaceWells();
+      }, BIG_BANG_DURATION);
 
       if (!grey) return;
       grey.el.style.width = grey.size.toFixed(2) + "px";
@@ -910,20 +1099,20 @@
       const dx = black.cx - white.cx;
       const dy = black.cy - white.cy;
       const distance = Math.max(Math.hypot(dx, dy), 1);
-      const influence = (black.size + white.size) * 1.25;
+      const influence = (black.size + white.size) * 0.3;
       if (distance > influence) return;
 
       const strength = Math.pow(1 - distance / influence, 2);
       const nx = dx / distance;
       const ny = dy / distance;
-      const acceleration = 72 * strength;
+      const acceleration = 4 * strength;
       black.vx += nx * acceleration * dt;
       black.vy += ny * acceleration * dt;
 
-      const overlap = (black.size + white.size) * 0.56 - distance;
+      const overlap = (black.size + white.size) * 0.08 - distance;
       if (overlap > 0) {
-        black.cx += nx * overlap * 0.45;
-        black.cy += ny * overlap * 0.45;
+        black.cx += nx * overlap * 0.12;
+        black.cy += ny * overlap * 0.12;
       }
 
       const speed = Math.max(Math.hypot(black.vx, black.vy), 1);
@@ -1061,6 +1250,7 @@
         };
       }).filter(Boolean);
       if (!wells.length) return;
+      aimPrimaryWellsAtEachOther();
 
       if (reduceMotion) {
         wells.forEach((well) => paint(well));
