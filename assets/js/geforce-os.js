@@ -393,7 +393,7 @@
       const el = $("#mb-gpu");
       if (!el) return;
       if (document.body.classList.contains("theme-macos")) {
-        el.textContent = "Wi-Fi · 100%";
+        el.textContent = "Wi-Fi · Widgets";
         return;
       }
       el.textContent = "GPU " + Math.round(state.util) + "% · " + Math.round(state.temp) + "°C";
@@ -630,6 +630,8 @@
     const SPEED = 20; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const BIG_BANG_DURATION = 20000;
+    const SCREEN_SHATTER_DURATION = 7600;
+    const PANEL_SHATTER_DURATION = 6700;
     const PRE_EXPLOSION_PULL_DURATION = 1180;
     const BLAST_DELAY = PRE_EXPLOSION_PULL_DURATION + 420;
     const BIG_BANG_TARGET_SELECTOR = [
@@ -820,7 +822,7 @@
       }
 
       document.body.appendChild(overlay);
-      window.setTimeout(() => overlay.remove(), 2600);
+      window.setTimeout(() => overlay.remove(), SCREEN_SHATTER_DURATION);
     }
 
     function createBigBangOverlay(cx, cy) {
@@ -1005,7 +1007,7 @@
       }
 
       document.body.appendChild(overlay);
-      window.setTimeout(() => overlay.remove(), 1700);
+      window.setTimeout(() => overlay.remove(), PANEL_SHATTER_DURATION);
     }
 
     function blastEverythingFromImpact() {
