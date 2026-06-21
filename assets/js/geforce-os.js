@@ -56,10 +56,14 @@
     const t = $("#mb-clock");
     const d = $("#mb-date");
     const dock = $(".dock");
+    const winTime = $("#win-taskbar-time");
+    const winDate = $("#win-taskbar-date");
     function tick() {
       const now = new Date();
       if (t) t.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       if (d) d.textContent = now.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+      if (winTime) winTime.textContent = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      if (winDate) winDate.textContent = now.toLocaleDateString([], { month: "numeric", day: "numeric", year: "numeric" });
       if (dock) {
         dock.dataset.winTime = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
         dock.dataset.winDate = now.toLocaleDateString([], { month: "numeric", day: "numeric", year: "numeric" });
@@ -255,7 +259,7 @@
     }
 
     function syncDock() {
-      $$(".dock-item").forEach((it) => {
+      $$(".dock-item, .win-taskbar-app").forEach((it) => {
         const id = it.dataset.app;
         const w = wins[id];
         const live = w && w.classList.contains("is-open") && !w.classList.contains("is-min");
@@ -270,7 +274,7 @@
      DOCK
      ============================================================= */
   function dock() {
-    $$(".dock-item").forEach((it) => {
+    $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app], .win-search[data-app]").forEach((it) => {
       it.addEventListener("click", () => WM.toggle(it.dataset.app));
     });
   }
@@ -449,7 +453,7 @@
      TERMINAL
      ============================================================= */
   const TERM = (function () {
-    let out, input, hist = [], hi = -1, booted = false;
+    let out, input, promptEl, hist = [], hi = -1, booted = false, pythonMode = false;
 
     const NEOFETCH = [
       "        <span class='green'>.::////::.</span>          <span class='cmd'>hasan@dgx-os</span>",
@@ -478,6 +482,8 @@
           "  contact          how to reach me",
           "  nvidia-smi       GPU status table",
           "  neofetch         system info",
+          "  python3          open a tiny Python-style REPL",
+          "  python3 -c ...   run print() or basic math",
           "  open &lt;app&gt;       launch an app window",
           "  ls               list apps",
           "  date             current date/time",
@@ -574,13 +580,82 @@
       out.scrollTop = out.scrollHeight;
     }
 
+    function setPrompt() {
+      if (promptEl) promptEl.textContent = pythonMode ? ">>>" : "hasan@dgx-os:~$";
+    }
+
+    function stripPythonString(value) {
+      const trimmed = value.trim();
+      const quoted = trimmed.match(/^(['"])([\s\S]*)\1$/);
+      if (!quoted) return null;
+      return quoted[2].replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\(["'\\])/g, "$1");
+    }
+
+    function evalPythonExpr(expr) {
+      const stringValue = stripPythonString(expr);
+      if (stringValue !== null) return stringValue;
+      const normalized = expr.replace(/\*\*/g, "^");
+      if (/^[\d\s+\-*/%().,^]+$/.test(normalized)) {
+        const jsExpr = normalized.replace(/\^/g, "**");
+        const result = Function('"use strict"; return (' + jsExpr + ');')();
+        if (Number.isFinite(result)) return String(result);
+      }
+      throw new Error("NameError: name '" + escapeHtml(expr.split(/\W+/)[0] || expr) + "' is not defined");
+    }
+
+    function runPythonSnippet(code) {
+      const trimmed = code.trim();
+      if (!trimmed) return [];
+      const printMatch = trimmed.match(/^print\(([\s\S]*)\)$/);
+      if (printMatch) {
+        try { return [escapeHtml(evalPythonExpr(printMatch[1]))]; }
+        catch (err) { return ["<span class='err'>" + err.message + "</span>"]; }
+      }
+      try { return [escapeHtml(evalPythonExpr(trimmed))]; }
+      catch (err) { return ["<span class='err'>" + err.message + "</span>"]; }
+    }
+
+    function runPythonCommand(args, raw) {
+      const first = (args[0] || "").toLowerCase();
+      if (first === "--version" || first === "-v") {
+        return ["Python 3.13.0 (portfolio sandbox)"];
+      }
+      if (first === "-c") {
+        const code = raw.replace(/^python3\s+-c\s+/, "").trim();
+        return runPythonSnippet(stripPythonString(code) || code);
+      }
+      if (args.length) return ["<span class='err'>python3: unsupported option in portfolio terminal</span>"];
+      pythonMode = true;
+      setPrompt();
+      return [
+        "Python 3.13.0 (portfolio sandbox)",
+        "Type <span class='green'>exit()</span> to return to hasansh.",
+      ];
+    }
+
+    function runPythonRepl(line) {
+      if (/^(exit|quit)\(\)$/.test(line)) {
+        pythonMode = false;
+        setPrompt();
+        print("<span class='dim'>Returned to hasansh.</span>");
+        return;
+      }
+      print(runPythonSnippet(line));
+    }
+
     function run(raw) {
       const line = raw.trim();
-      print("<span class='term-prompt'>hasan@dgx-os:~$</span> <span class='cmd'>" + escapeHtml(raw) + "</span>");
+      const promptText = pythonMode ? ">>>" : "hasan@dgx-os:~$";
+      print("<span class='term-prompt'>" + promptText + "</span> <span class='cmd'>" + escapeHtml(raw) + "</span>");
       if (!line) return;
       hist.unshift(raw); hi = -1;
+      if (pythonMode) {
+        runPythonRepl(line);
+        return;
+      }
       const [cmd, ...args] = line.split(/\s+/);
       const key = cmd.toLowerCase();
+      if (key === "python3") { print(runPythonCommand(args, line)); return; }
       if (key === "open") {
         const target = APP_ALIASES[(args[0] || "").toLowerCase()];
         if (target) { WM.open(target); print("<span class='green'>Opening " + escapeHtml(args[0]) + "…</span>"); }
@@ -608,7 +683,9 @@
       if (!win) return;
       out = $(".term-output", win);
       input = $(".term-input", win);
+      promptEl = $(".term-inputline .term-prompt", win);
       if (!out || !input) return;
+      setPrompt();
 
       input.addEventListener("keydown", (e) => {
         if (e.key === "Enter") { run(input.value); input.value = ""; }
@@ -632,7 +709,7 @@
      SPACE WELLS
      ============================================================= */
   const SPACE_WELLS = (function () {
-    const SPEED = 20; // pixels per second
+    const SPEED = 10; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const BIG_BANG_DURATION = 20000;
     const SCREEN_SHATTER_DURATION = 7600;
@@ -645,6 +722,7 @@
       ".desktop-watermark",
       ".menubar",
       ".dock",
+      ".windows-taskbar",
       ".win.is-open:not(.is-min)",
       ".toast.show",
     ].join(", ");

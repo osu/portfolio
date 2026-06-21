@@ -107,8 +107,6 @@
           <span class="split-logo-half split-logo-apple"><img src="./assets/images/apple-logo.svg" alt=""></span>
           <span class="split-logo-half split-logo-msft"><img src="./assets/images/Microsoft_icon.svg.png" alt=""></span>
         </div>
-        <img src="./assets/images/nvda-eye.png" alt="">
-        <p>// double-click the dock to launch apps</p>
       </div>
 
       <!-- =================== ABOUT =================== -->
@@ -578,6 +576,29 @@
         <button class="dock-item" data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Terminal</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="gpu"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="contact"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg><span class="dock-tooltip">Contact</span><span class="dock-indicator"></span></button>
+      </div>
+    </nav>
+
+    <!-- WINDOWS TASKBAR -->
+    <nav class="windows-taskbar" aria-label="Windows taskbar">
+      <div class="win-taskbar-left">
+        <button class="win-taskbar-button win-start" data-app="projects" aria-label="Start">
+          <img src="./assets/images/Microsoft_icon.svg.png" alt="">
+        </button>
+        <button class="win-search" data-app="projects" aria-label="Search projects">
+          <svg><use href="#i-grid" xlink:href="#i-grid"/></svg>
+          <span>Search</span>
+        </button>
+        <button class="win-taskbar-app" data-app="about" aria-label="About"><svg><use href="#i-user" xlink:href="#i-user"/></svg></button>
+        <button class="win-taskbar-app" data-app="experience" aria-label="Experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg></button>
+        <button class="win-taskbar-app" data-app="terminal" aria-label="Terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg></button>
+        <button class="win-taskbar-app" data-app="gpu" aria-label="GPU Stats"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg></button>
+      </div>
+      <div class="win-taskbar-tray">
+        <span class="win-tray-chip">ENG</span>
+        <span class="win-tray-chip">RTX</span>
+        <span class="win-tray-time" id="win-taskbar-time"></span>
+        <span class="win-tray-date" id="win-taskbar-date"></span>
       </div>
     </nav>
 

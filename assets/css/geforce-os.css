@@ -5,17 +5,17 @@
 
 /* ---------- Design tokens ---------- */
 :root {
-  --green:        #76b900;   /* NVIDIA brand green            */
-  --green-bright: #9bea00;   /* hover / glow                  */
-  --green-neon:   #b6ff00;   /* highlights                    */
+  --green:        #76B900;   /* NVIDIA brand green            */
+  --green-bright: #76B900;   /* hover / glow                  */
+  --green-neon:   #76B900;   /* highlights                    */
   --green-dim:    #4d7a00;
 
   --bg-0: #050606;           /* deepest background            */
   --bg-1: #0c0e0c;           /* desktop base                  */
-  --panel: rgba(18, 22, 18, 0.78);
+  --panel: rgba(18, 22, 18, 0.66);
   --panel-solid: #121612;
   --panel-2: #181d18;
-  --titlebar: rgba(10, 12, 10, 0.92);
+  --titlebar: rgba(10, 12, 10, 0.78);
 
   --line: rgba(118, 185, 0, 0.22);
   --line-soft: rgba(255, 255, 255, 0.07);
@@ -560,6 +560,25 @@ img { max-width: 100%; display: block; }
   backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
   border-bottom: 1px solid var(--line);
   font-family: var(--font-ui); font-size: 0.86rem;
+  overflow: hidden;
+}
+.menubar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent 0 18%, rgba(255, 64, 255, 0.0) 24%, rgba(255, 64, 255, 0.72) 38%, rgba(0, 225, 255, 0.82) 50%, rgba(118, 185, 0, 0.82) 62%, rgba(255, 64, 255, 0.0) 76%, transparent 100%);
+  filter: blur(0.3px) drop-shadow(0 0 8px rgba(0,225,255,0.48)) drop-shadow(0 0 10px rgba(255,64,255,0.38));
+  opacity: 0;
+  transform: translateX(-120%);
+  animation: menubar-electric 9s ease-in-out infinite;
+}
+@keyframes menubar-electric {
+  0%, 68%, 100% { opacity: 0; transform: translateX(-120%); }
+  72% { opacity: 0.95; }
+  82% { opacity: 0.95; transform: translateX(120%); }
+  86% { opacity: 0; transform: translateX(120%); }
 }
 .menubar-left, .menubar-right { display: flex; align-items: center; gap: 16px; }
 .menubar-logo { height: 20px; width: auto; filter: drop-shadow(0 0 6px rgba(118,185,0,0.6)); }
@@ -819,7 +838,7 @@ img { max-width: 100%; display: block; }
 /* =================================================================
    TERMINAL
    ================================================================= */
-.win[data-app="terminal"] .win-body { padding: 0; background: rgba(4, 6, 4, 0.92); }
+.win[data-app="terminal"] .win-body { padding: 0; background: rgba(4, 6, 4, 0.84); }
 .term {
   height: 100%; display: flex; flex-direction: column;
   font-family: var(--font-mono); font-size: 0.85rem; line-height: 1.55;
@@ -909,30 +928,35 @@ img { max-width: 100%; display: block; }
 .dock-item:hover .dock-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
 .dock-sep { width: 1px; align-self: center; height: 32px; background: var(--line); margin: 0 4px; flex: 0 0 auto; }
 
+.windows-taskbar {
+  display: none;
+}
+
 /* =================================================================
    SPLIT OS PRE-COLLISION SKIN
    ================================================================= */
 body.theme-macos {
-  --green: #0a84ff;
-  --green-bright: #0071e3;
-  --green-neon: #64d2ff;
-  --green-dim: #386fa8;
+  --green: #76B900;
+  --green-bright: #76B900;
+  --green-neon: #76B900;
+  --green-dim: #4d7a00;
   --bg-0: #eff4ff;
   --bg-1: #dce7ff;
-  --panel: rgba(250, 252, 255, 0.78);
+  --panel: rgba(250, 252, 255, 0.62);
   --panel-solid: #f6f8fc;
   --panel-2: #eef2f8;
-  --titlebar: rgba(242, 245, 250, 0.78);
+  --titlebar: rgba(242, 245, 250, 0.64);
   --line: rgba(36, 50, 74, 0.16);
   --line-soft: rgba(36, 50, 74, 0.10);
   --txt: #1d1d1f;
   --txt-dim: #4b5565;
   --txt-faint: #6e7480;
-  --glow: 0 12px 36px rgba(56, 113, 188, 0.22);
+  --glow: 0 12px 36px rgba(118, 185, 0, 0.22);
   --shadow-win: 0 26px 70px -24px rgba(36, 50, 74, 0.58),
                 0 0 0 1px rgba(255, 255, 255, 0.58);
   background: linear-gradient(90deg, #eff4ff 0 50%, #071839 50% 100%);
 }
+body.theme-macos .desktop { margin-top: 0; }
 
 body.theme-macos .boot {
   background:
@@ -1016,8 +1040,8 @@ body.theme-macos .boot-hint {
 }
 body.theme-macos .boot-bar { background: rgba(29, 29, 31, 0.11); }
 body.theme-macos .boot-bar-fill {
-  background: linear-gradient(90deg, #007aff, #64d2ff);
-  box-shadow: 0 0 18px rgba(0, 122, 255, 0.36);
+  background: linear-gradient(90deg, #76B900, #76B900);
+  box-shadow: 0 0 18px rgba(118, 185, 0, 0.36);
 }
 
 body.theme-macos .desktop-video { opacity: 0; }
@@ -1041,7 +1065,7 @@ body.theme-macos .desktop-bg::after {
   left: 50%;
   background:
     linear-gradient(180deg, rgba(8, 24, 54, 0.10), rgba(3, 10, 28, 0.22)),
-    url("../images/windows_bg.jpeg") right center / cover no-repeat;
+    url("../images/window-11-bg.jpg") right center / cover no-repeat;
   border-left: 1px solid rgba(255,255,255,0.52);
   filter: saturate(1.06) contrast(1.02);
   animation: windows-wallpaper 34s ease-in-out infinite alternate;
@@ -1084,8 +1108,10 @@ body.theme-macos .desktop-watermark p {
 }
 
 body.theme-macos .menubar {
-  background: linear-gradient(90deg, rgba(247, 249, 253, 0.76) 0 50%, rgba(10, 31, 72, 0.76) 50% 100%);
+  right: 50%;
+  background: rgba(247, 249, 253, 0.76);
   border-bottom: 1px solid rgba(36, 50, 74, 0.12);
+  border-right: 1px solid rgba(255, 255, 255, 0.52);
   box-shadow: 0 1px 14px rgba(36, 50, 74, 0.10);
   color: #1d1d1f;
   font-family: var(--font-body);
@@ -1115,13 +1141,15 @@ body.theme-macos .menubar-app {
   font-weight: 700;
 }
 body.theme-macos .menubar-right {
-  display: none;
-  color: rgba(248, 251, 255, 0.78);
+  display: flex;
+  margin-left: auto;
+  color: #2d3340;
   font-family: var(--font-body);
   font-size: 0.78rem;
 }
-body.theme-macos .menubar-stat .dot { display: none; }
-body.theme-macos .menubar-clock { color: #fff; }
+body.theme-macos .menubar-stat,
+body.theme-macos .menubar-right .mb-sep { display: none; }
+body.theme-macos .menubar-clock { color: #1d1d1f; }
 
 body.theme-macos .win {
   background: var(--panel);
@@ -1131,7 +1159,7 @@ body.theme-macos .win {
   color: var(--txt);
 }
 body.theme-macos .win.is-focused {
-  box-shadow: 0 30px 76px -22px rgba(36, 50, 74, 0.68), 0 0 0 1px rgba(10, 132, 255, 0.36);
+  box-shadow: 0 30px 76px -22px rgba(36, 50, 74, 0.68), 0 0 0 1px rgba(118, 185, 0, 0.36);
 }
 body.theme-macos .win-titlebar {
   background: var(--titlebar);
@@ -1163,7 +1191,7 @@ body.theme-macos .dock-item:hover {
   background: rgba(255, 255, 255, 0.82);
   box-shadow: 0 16px 30px rgba(36, 50, 74, 0.20);
 }
-body.theme-macos .dock-item svg { color: #0a84ff; }
+body.theme-macos .dock-item svg { color: #76B900; }
 body.theme-macos .dock-indicator {
   background: rgba(29, 29, 31, 0.68);
   box-shadow: none;
@@ -1179,46 +1207,116 @@ body.theme-macos .dock-tooltip {
 
 body.theme-macos .dock {
   left: 0;
-  right: 0;
+  right: 50%;
   bottom: 0;
   height: 76px;
   max-width: none;
   transform: none;
   pointer-events: none;
 }
-body.theme-macos .dock::before {
-  content: "";
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 50%;
-  height: 58px;
-  background: rgba(12, 34, 78, 0.78);
-  border-top: 1px solid rgba(255,255,255,0.20);
-  box-shadow: 0 -18px 48px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
-}
-body.theme-macos .dock::after {
-  content: attr(data-win-time) "\A" attr(data-win-date);
-  position: absolute;
-  right: 18px;
-  bottom: 9px;
-  min-width: 96px;
-  color: rgba(248, 251, 255, 0.92);
-  font-family: "Segoe UI", var(--font-body);
-  font-size: 0.72rem;
-  line-height: 1.35;
-  white-space: pre;
-  text-align: right;
-  letter-spacing: 0;
-}
+body.theme-macos .dock::before,
+body.theme-macos .dock::after { content: none; }
 body.theme-macos .dock-inner {
   position: absolute;
   left: max(14px, calc(25vw - 250px));
   bottom: 10px;
   width: min(500px, calc(50vw - 28px));
   pointer-events: auto;
+}
+
+body.theme-macos .windows-taskbar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  z-index: 610;
+  width: 50%;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
+  color: #f7fbff;
+  background: rgba(12, 34, 78, 0.78);
+  border-top: 1px solid rgba(255,255,255,0.20);
+  box-shadow: 0 -18px 48px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+  font-family: "Segoe UI", var(--font-body);
+}
+.win-taskbar-left,
+.win-taskbar-tray {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.win-taskbar-tray {
+  margin-left: auto;
+  gap: 10px;
+  font-size: 0.72rem;
+  line-height: 1.15;
+  text-align: right;
+}
+.win-taskbar-button,
+.win-taskbar-app,
+.win-search {
+  height: 38px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #eff7ff;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: background 0.16s, transform 0.16s, box-shadow 0.16s;
+}
+.win-taskbar-button:hover,
+.win-taskbar-app:hover,
+.win-search:hover {
+  background: rgba(255,255,255,0.18);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
+}
+.win-taskbar-button,
+.win-taskbar-app {
+  width: 42px;
+  flex: 0 0 auto;
+}
+.win-start img {
+  width: 21px;
+  height: 21px;
+  object-fit: contain;
+}
+.win-taskbar-app svg,
+.win-search svg {
+  width: 19px;
+  height: 19px;
+}
+.win-taskbar-app.is-open {
+  background: rgba(255,255,255,0.22);
+  box-shadow: inset 0 -2px 0 rgba(126, 206, 255, 0.92);
+}
+.win-search {
+  width: min(192px, 18vw);
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 0 13px;
+  color: rgba(247,251,255,0.86);
+}
+.win-search span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.win-tray-chip {
+  color: rgba(247,251,255,0.86);
+}
+.win-tray-time,
+.win-tray-date {
+  display: block;
+  font-variant-numeric: tabular-nums;
+  color: rgba(247,251,255,0.94);
 }
 
 @keyframes macos-wallpaper {
@@ -1237,6 +1335,16 @@ body.theme-macos .dock-inner {
 }
 
 @media (max-width: 768px) {
+  body.theme-macos .menubar {
+    right: 0;
+    border-right: none;
+  }
+  body.theme-macos .dock {
+    right: 0;
+  }
+  body.theme-macos .windows-taskbar {
+    display: none;
+  }
   body.theme-macos .desktop-watermark::before {
     display: none;
   }
