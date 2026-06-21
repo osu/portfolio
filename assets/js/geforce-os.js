@@ -68,6 +68,19 @@
     schedule();
   }
 
+  function switchToDgxTheme() {
+    document.body.classList.remove("theme-macos");
+    document.body.classList.add("theme-dgx");
+
+    const osLabel = $(".menubar-os");
+    if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
+
+    const themeColor = $('meta[name="theme-color"]');
+    if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
+
+    if (typeof GPU !== "undefined") GPU.refreshMenubar();
+  }
+
   /* =============================================================
      WINDOW MANAGER
      ============================================================= */
@@ -378,7 +391,12 @@
     }
     function paintMenubar() {
       const el = $("#mb-gpu");
-      if (el) el.textContent = "GPU " + Math.round(state.util) + "% · " + Math.round(state.temp) + "°C";
+      if (!el) return;
+      if (document.body.classList.contains("theme-macos")) {
+        el.textContent = "Wi-Fi · 100%";
+        return;
+      }
+      el.textContent = "GPU " + Math.round(state.util) + "% · " + Math.round(state.temp) + "°C";
     }
     function paintPanel() {
       const win = WM.wins["gpu"];
@@ -419,7 +437,7 @@
       }
       window.setInterval(tick, 1400);
     }
-    return { start, snapshot: () => ({ ...state, memTotal: MEM_TOTAL }) };
+    return { start, refreshMenubar: paintMenubar, snapshot: () => ({ ...state, memTotal: MEM_TOTAL }) };
   })();
 
   /* =============================================================
@@ -1066,6 +1084,7 @@
     }
 
     function reconstructScene() {
+      switchToDgxTheme();
       cleanupBigBangState();
       closePanelsForReconstruct();
 
