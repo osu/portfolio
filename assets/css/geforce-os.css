@@ -545,7 +545,8 @@ img { max-width: 100%; display: block; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 10px; pointer-events: none; user-select: none; text-align: center;
 }
-.desktop-watermark img { width: 132px; opacity: 0.10; filter: grayscale(0.1); }
+.desktop-split-logo { display: none; }
+.desktop-watermark > img { width: 132px; opacity: 0.10; filter: grayscale(0.1); }
 .desktop-watermark p { color: var(--txt-faint); font-family: var(--font-mono); font-size: 0.78rem; letter-spacing: 0.15em; opacity: 0.5; }
 
 /* =================================================================
@@ -954,18 +955,37 @@ body.theme-macos .boot-logo {
   -webkit-backdrop-filter: blur(18px) saturate(150%);
   backdrop-filter: blur(18px) saturate(150%);
 }
-body.theme-macos .boot-logo img { display: none; }
-body.theme-macos .boot-logo::before {
-  content: "";
+.split-logo-half {
+  display: none;
+}
+body.theme-macos .split-logo-half {
+  display: block;
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(circle at 45% 48%, rgba(255,255,255,0.82) 0 9px, transparent 10px),
-    radial-gradient(ellipse 12px 18px at 39% 25%, #1d1d1f 0 64%, transparent 66%),
-    radial-gradient(ellipse 28px 36px at 29% 58%, #1d1d1f 0 65%, transparent 67%),
-    radial-gradient(ellipse 24px 32px at 41% 55%, #1d1d1f 0 62%, transparent 64%),
-    linear-gradient(#7fba00 0 0) 64% 32% / 34px 34px no-repeat,
-    linear-gradient(#ffb900 0 0) 64% 66% / 34px 34px no-repeat;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  overflow: hidden;
+}
+body.theme-macos .split-logo-apple {
+  left: 0;
+}
+body.theme-macos .split-logo-msft {
+  right: 0;
+}
+body.theme-macos .split-logo-half img {
+  display: block;
+  position: absolute;
+  top: 50%;
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+body.theme-macos .split-logo-apple img {
+  left: 100%;
+  width: 220px;
+}
+body.theme-macos .split-logo-msft img {
+  left: 0;
+  width: 70px;
 }
 body.theme-macos .boot-logo::after {
   content: "";
@@ -1013,13 +1033,14 @@ body.theme-macos .desktop-bg::before {
   filter: saturate(1.08) contrast(1.02);
   animation: macos-wallpaper 30s ease-in-out infinite alternate;
 }
-body.theme-macos .desktop-watermark img { display: none; }
-body.theme-macos .desktop-watermark::before {
-  content: "";
+body.theme-macos .desktop-watermark > img { display: none; }
+body.theme-macos .desktop-split-logo {
   width: 168px;
   height: 126px;
   border-radius: 32px;
   display: block;
+  position: relative;
+  overflow: hidden;
   background:
     linear-gradient(90deg, rgba(255,255,255,0.24) 0 50%, rgba(0,120,212,0.18) 50% 100%);
   border: 1px solid rgba(255,255,255,0.32);
@@ -1027,19 +1048,21 @@ body.theme-macos .desktop-watermark::before {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
-body.theme-macos .desktop-watermark::after {
+body.theme-macos .desktop-split-logo::after {
   content: "";
-  width: 168px;
-  height: 126px;
-  margin-top: -136px;
-  background:
-    radial-gradient(circle at 45% 48%, rgba(255,255,255,0.66) 0 10px, transparent 11px),
-    radial-gradient(ellipse 12px 18px at 39% 25%, rgba(29,29,31,0.42) 0 64%, transparent 66%),
-    radial-gradient(ellipse 30px 38px at 29% 58%, rgba(29,29,31,0.42) 0 65%, transparent 67%),
-    radial-gradient(ellipse 25px 34px at 41% 55%, rgba(29,29,31,0.42) 0 62%, transparent 64%),
-    linear-gradient(rgba(127,186,0,0.78) 0 0) 64% 32% / 38px 38px no-repeat,
-    linear-gradient(rgba(255,185,0,0.78) 0 0) 64% 66% / 38px 38px no-repeat;
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  left: 50%;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(255,255,255,0.42), transparent);
   pointer-events: none;
+}
+body.theme-macos .desktop-split-logo .split-logo-apple img {
+  width: 228px;
+}
+body.theme-macos .desktop-split-logo .split-logo-msft img {
+  width: 78px;
 }
 body.theme-macos .desktop-watermark p {
   color: rgba(248, 251, 255, 0.72);
@@ -1059,11 +1082,11 @@ body.theme-macos .menubar {
 body.theme-macos .menubar-left,
 body.theme-macos .menubar-right { gap: 14px; }
 body.theme-macos .menubar-left::before {
-  content: "⌘";
-  font-family: var(--font-ui);
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1d1d1f;
+  content: "";
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  background: url("../images/apple_logo.png") center / 46px 26px no-repeat;
 }
 body.theme-macos .menubar-left::after {
   content: "File Edit View Window Help";
@@ -1079,6 +1102,7 @@ body.theme-macos .menubar-app {
   font-weight: 700;
 }
 body.theme-macos .menubar-right {
+  display: none;
   color: rgba(248, 251, 255, 0.78);
   font-family: var(--font-body);
   font-size: 0.78rem;
@@ -1109,7 +1133,7 @@ body.theme-macos .win-titlebar .win-ico { color: #5d6675; }
 body.theme-macos .win-body { color: var(--txt); }
 
 body.theme-macos .dock-inner {
-  background: linear-gradient(90deg, rgba(255,255,255,0.48) 0 50%, rgba(15,36,82,0.62) 50% 100%);
+  background: rgba(255,255,255,0.48);
   border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 22px;
   box-shadow: 0 26px 60px -18px rgba(36, 50, 74, 0.46), inset 0 1px 0 rgba(255,255,255,0.72);
@@ -1140,6 +1164,50 @@ body.theme-macos .dock-tooltip {
   box-shadow: 0 12px 30px rgba(36, 50, 74, 0.18);
 }
 
+body.theme-macos .dock {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 76px;
+  max-width: none;
+  transform: none;
+  pointer-events: none;
+}
+body.theme-macos .dock::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  height: 58px;
+  background: rgba(12, 34, 78, 0.78);
+  border-top: 1px solid rgba(255,255,255,0.20);
+  box-shadow: 0 -18px 48px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.08);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+body.theme-macos .dock::after {
+  content: attr(data-win-time) "\A" attr(data-win-date);
+  position: absolute;
+  right: 18px;
+  bottom: 9px;
+  min-width: 96px;
+  color: rgba(248, 251, 255, 0.92);
+  font-family: "Segoe UI", var(--font-body);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  white-space: pre;
+  text-align: right;
+  letter-spacing: 0;
+}
+body.theme-macos .dock-inner {
+  position: absolute;
+  left: max(14px, calc(25vw - 250px));
+  bottom: 10px;
+  width: min(500px, calc(50vw - 28px));
+  pointer-events: auto;
+}
+
 @keyframes macos-wallpaper {
   to { transform: translate(1.5%, -1.25%) scale(1.04); }
 }
@@ -1154,21 +1222,18 @@ body.theme-macos .dock-tooltip {
 
 @media (max-width: 768px) {
   body.theme-macos .desktop-watermark::before {
+    display: none;
+  }
+  body.theme-macos .desktop-split-logo {
     width: 118px;
     height: 88px;
     border-radius: 22px;
   }
-  body.theme-macos .desktop-watermark::after {
-    width: 118px;
-    height: 88px;
-    margin-top: -98px;
-    background:
-      radial-gradient(circle at 45% 48%, rgba(255,255,255,0.66) 0 7px, transparent 8px),
-      radial-gradient(ellipse 9px 13px at 39% 25%, rgba(29,29,31,0.42) 0 64%, transparent 66%),
-      radial-gradient(ellipse 20px 27px at 29% 58%, rgba(29,29,31,0.42) 0 65%, transparent 67%),
-      radial-gradient(ellipse 18px 24px at 41% 55%, rgba(29,29,31,0.42) 0 62%, transparent 64%),
-      linear-gradient(rgba(127,186,0,0.78) 0 0) 64% 32% / 26px 26px no-repeat,
-      linear-gradient(rgba(255,185,0,0.78) 0 0) 64% 66% / 26px 26px no-repeat;
+  body.theme-macos .desktop-split-logo .split-logo-apple img {
+    width: 160px;
+  }
+  body.theme-macos .desktop-split-logo .split-logo-msft img {
+    width: 54px;
   }
 }
 
@@ -1184,7 +1249,7 @@ body.theme-macos .dock-tooltip {
   }
   .win-titlebar { cursor: default; }
   .win-body { padding: 18px 16px calc(var(--dock-h) + 24px); }
-  .desktop-watermark img { width: 84px; }
+  .desktop-watermark > img { width: 84px; }
   .blackhole,
   .whitehole,
   .greyhole { width: 92px; }

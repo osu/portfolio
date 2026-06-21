@@ -55,10 +55,15 @@
   function clock() {
     const t = $("#mb-clock");
     const d = $("#mb-date");
+    const dock = $(".dock");
     function tick() {
       const now = new Date();
       if (t) t.textContent = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       if (d) d.textContent = now.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" });
+      if (dock) {
+        dock.dataset.winTime = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+        dock.dataset.winDate = now.toLocaleDateString([], { month: "numeric", day: "numeric", year: "numeric" });
+      }
     }
     function schedule() {
       tick();
