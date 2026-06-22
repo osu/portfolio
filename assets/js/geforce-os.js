@@ -2417,6 +2417,11 @@
       iris.appendChild(pupil);
       overlay.appendChild(iris);
 
+      if (typeof IRIS_WEBGL !== "undefined" && IRIS_WEBGL.mount(overlay, impactX, impactY)) {
+        iris.classList.add("bigbang-iris--webgl");
+        iris.querySelectorAll(".bigbang-iris-blade, .bigbang-iris-spoke").forEach((el) => { el.style.display = "none"; });
+      }
+
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
       marketChart.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
@@ -2734,6 +2739,7 @@
 
       dismissSpaceWells();
       pullEverythingToImpact(cx, cy);
+      window.dispatchEvent(new CustomEvent("portfolio:iris-bang"));
       window.setTimeout(() => {
         createShatterOverlay(cx, cy);
         createBigBangOverlay(cx, cy);
