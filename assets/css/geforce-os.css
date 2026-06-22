@@ -30,6 +30,14 @@
   --radius: 12px;
   --radius-sm: 8px;
   --menubar-h: 34px;
+  --dock-h: 66px;
+  --taskbar-h: 56px;
+  --shell-top: 0px;
+  --shell-bottom: var(--dock-h);
+  --dock-h: 66px;
+  --taskbar-h: 56px;
+  --shell-top: 0px;
+  --shell-bottom: var(--dock-h);
   --dock-h: 76px;
 
   --glow: 0 0 18px rgba(118, 185, 0, 0.45);
@@ -3052,22 +3060,149 @@ body.theme-windows-only.taskbar-right .win-stock-widget .stock-widget-meta {
    RESPONSIVE — mobile = stacked, maximized windows, no drag
    ================================================================= */
 @media (max-width: 768px) {
-  :root { --dock-h: 66px; }
+  :root { --dock-h: 66px; --shell-bottom: var(--dock-h); --shell-top: 0px; }
+  body.theme-windows-only {
+    --taskbar-h: 52px;
+    --shell-bottom: var(--taskbar-h);
+    --shell-top: 0px;
+  }
   .desktop-widgets {
+    display: none;
+  }
+  .windows-mobile-hint {
+    display: none;
+  }
+  body.theme-windows-only .windows-mobile-hint {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--taskbar-h) + 28px);
+    z-index: 6;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: min(320px, calc(100% - 32px));
+    padding: 16px 18px;
+    border-radius: 14px;
+    text-align: center;
+    color: #eff7ff;
+    background: rgba(15, 41, 80, 0.42);
+    border: 1px solid rgba(255,255,255,0.18);
+    box-shadow: 0 18px 48px rgba(0,0,0,0.22);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    backdrop-filter: blur(18px) saturate(140%);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  body.theme-windows-only .windows-mobile-hint img {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+  body.theme-windows-only .windows-mobile-hint p {
+    margin: 0;
+    font-family: "Segoe UI", var(--font-body);
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: rgba(239,247,255,0.92);
+  }
+  body.theme-windows-only .windows-mobile-hint strong {
+    color: #60cdff;
+  }
+  body.theme-windows-only .desktop:has(.win.is-open) .windows-mobile-hint {
+    display: none;
+  }
+  body.theme-windows-only .mobile-launcher {
+    display: none !important;
+  }
+  body.theme-macos .desktop:has(.win.is-open) .mobile-launcher,
+  body.theme-dgx .desktop:has(.win.is-open) .mobile-launcher {
+    display: none;
+  }
+  body.theme-windows-only .desktop {
+    margin-top: 0;
+  }
+  body.theme-windows-only .menubar {
+    top: max(8px, env(safe-area-inset-top));
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+    transform: none;
+    height: auto;
+    min-height: 38px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  body.theme-windows-only .menubar-right {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  body.theme-windows-only .os-switcher button {
+    padding: 0 8px;
+    font-size: 0.68rem;
+  }
+  body.theme-windows-only .windows-taskbar {
+    display: flex;
+    height: var(--taskbar-h);
+    padding: 0 6px;
+    gap: 4px;
+    align-items: center;
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+  body.theme-windows-only .win-taskbar-left {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-right: 4px;
+  }
+  body.theme-windows-only .win-taskbar-left::-webkit-scrollbar,
+  body.theme-windows-only .menubar::-webkit-scrollbar {
+    display: none;
+  }
+  body.theme-windows-only .win-taskbar-button,
+  body.theme-windows-only .win-taskbar-app,
+  body.theme-windows-only .win-search {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    border-radius: 8px;
+  }
+  body.theme-windows-only .win-search span,
+  body.theme-windows-only .win-stock-widget,
+  body.theme-windows-only .win-tray-chip,
+  body.theme-windows-only .win-tray-date {
+    display: none;
+  }
+  body.theme-windows-only .win-taskbar-tray {
+    flex: 0 0 auto;
+    padding-left: 4px;
+  }
+  body.theme-windows-only .win-tray-time {
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+  body.theme-windows-only .win-taskbar-button::after,
+  body.theme-windows-only .win-taskbar-app::after,
+  body.theme-windows-only .win-search::after {
     display: none;
   }
   .mobile-launcher {
     position: absolute;
-    inset: 78px 14px calc(var(--dock-h) + 18px);
+    inset: calc(var(--menubar-h) + 12px) 14px calc(var(--shell-bottom) + 18px);
     z-index: 7;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     align-content: start;
-    gap: 12px;
+    gap: 10px;
     overflow: auto;
   }
   .mobile-launcher button {
-    min-height: 102px;
+    min-height: 92px;
     border-radius: 14px;
     background: rgba(255,255,255,0.12);
     border: 1px solid var(--line-soft);
@@ -3080,6 +3215,14 @@ body.theme-windows-only.taskbar-right .win-stock-widget .stock-widget-meta {
     -webkit-backdrop-filter: blur(16px) saturate(145%);
     backdrop-filter: blur(16px) saturate(145%);
   }
+  body.theme-mac-only .mobile-launcher button {
+    background: rgba(255,255,255,0.58);
+    border-color: rgba(36, 50, 74, 0.12);
+    color: #1d1d1f;
+  }
+  body.theme-mac-only .mobile-launcher svg {
+    color: #2563eb;
+  }
   .mobile-launcher svg {
     width: 28px;
     height: 28px;
@@ -3090,13 +3233,22 @@ body.theme-windows-only.taskbar-right .win-stock-widget .stock-widget-meta {
     font-size: 0.82rem;
   }
   .win {
-    width: 100% !important; height: 100% !important;
-    top: 0 !important; left: 0 !important; max-width: 100%; max-height: 100%;
-    border-radius: 0; border-left: none; border-right: none;
+    width: 100% !important;
+    top: var(--shell-top) !important;
+    left: 0 !important;
+    max-width: 100%;
+    height: calc(100% - var(--shell-top) - var(--shell-bottom)) !important;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+  body.theme-windows-only .win {
+    border-radius: 10px 10px 0 0;
+    box-shadow: 0 -8px 40px rgba(7, 24, 57, 0.28);
   }
   .win-titlebar { cursor: default; }
   .win-resize-handle { display: none; }
-  .win-body { padding: 18px 16px calc(var(--dock-h) + 24px); }
+  .win-body { padding: 18px 16px calc(var(--shell-bottom) + 20px); }
   .desktop-watermark > img { width: 84px; }
   .blackhole,
   .whitehole,
@@ -3128,7 +3280,7 @@ body.theme-windows-only.taskbar-right .win-stock-widget .stock-widget-meta {
     right: 10px;
     left: 10px;
     width: auto;
-    bottom: calc(var(--dock-h) + 12px);
+    bottom: calc(var(--shell-bottom) + 12px);
   }
 }
 
