@@ -2140,16 +2140,15 @@
     const BIG_BANG_TARGET_SELECTOR = [
       ".desktop-video",
       ".desktop-bg",
-      ".desktop-watermark",
       ".menubar",
       ".dock",
       ".windows-taskbar",
       ".win.is-open:not(.is-min)",
       ".toast.show",
     ].join(", ");
-    const PANE_WARP_TARGET_SELECTOR = ".desktop-watermark, .win.is-open:not(.is-min):not(.is-max)";
+    const COSMIC_SUPPRESS_SELECTOR = ".desktop-watermark, .windows-mobile-hint, .mobile-launcher, .desktop-widgets";
+    const PANE_WARP_TARGET_SELECTOR = ".win.is-open:not(.is-min):not(.is-max)";
     const TEXT_WARP_TARGET_SELECTOR = [
-      ".desktop-watermark p",
       ".win.is-open:not(.is-min):not(.is-max) .win-title",
       ".win.is-open:not(.is-min):not(.is-max) .h-title",
       ".win.is-open:not(.is-min):not(.is-max) .h-sub",
@@ -2329,6 +2328,10 @@
       window.setTimeout(() => overlay.remove(), SCREEN_SHATTER_DURATION);
     }
 
+    function suppressCollisionChrome() {
+      $$(COSMIC_SUPPRESS_SELECTOR).forEach((el) => el.classList.add("cosmic-suppressed"));
+    }
+
     function createBigBangOverlay(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
@@ -2337,6 +2340,8 @@
       overlay.className = "cosmic-bigbang";
       overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+      const useWebglIris = !isMobile() && !reduceMotion && typeof IRIS_WEBGL !== "undefined";
+      if (useWebglIris) overlay.classList.add("cosmic-bigbang--webgl");
 
       const rings = [
         { size: "10vmin", delay: "0s", color: "rgba(255,255,255,0.58)", mid: 6, end: 13 },
@@ -2359,24 +2364,27 @@
 
       const rippleOrigins = [];
       const irisRadius = Math.min(window.innerWidth, window.innerHeight) * 0.46;
-      for (let i = 0; i < IRIS_BLADES; i++) {
-        const angle = (i / IRIS_BLADES) * Math.PI * 2 - Math.PI / 2;
+      const rippleBlades = useWebglIris ? 6 : IRIS_BLADES;
+      for (let i = 0; i < rippleBlades; i++) {
+        const angle = (i / rippleBlades) * Math.PI * 2 - Math.PI / 2;
         rippleOrigins.push({
           x: impactX + Math.cos(angle) * irisRadius,
           y: impactY + Math.sin(angle) * irisRadius,
           petal: i,
         });
       }
-      [
-        { x: impactX, y: -90 },
-        { x: impactX, y: window.innerHeight + 90 },
-        { x: -90, y: impactY },
-        { x: window.innerWidth + 90, y: impactY },
-      ].forEach((origin, offset) => rippleOrigins.push({ ...origin, petal: IRIS_BLADES + offset }));
+      if (!useWebglIris) {
+        [
+          { x: impactX, y: -90 },
+          { x: impactX, y: window.innerHeight + 90 },
+          { x: -90, y: impactY },
+          { x: window.innerWidth + 90, y: impactY },
+        ].forEach((origin, offset) => rippleOrigins.push({ ...origin, petal: IRIS_BLADES + offset }));
+      }
 
       rippleOrigins.forEach((origin, index) => {
         const ripple = document.createElement("div");
-        const orbitScale = 0.14 + (index % IRIS_BLADES) * 0.018;
+        const orbitScale = useWebglIris ? 0.1 : (0.14 + (index % IRIS_BLADES) * 0.018);
         const orbitX = (impactX - origin.x) * orbitScale + (index % 2 ? 64 : -64);
         const orbitY = (impactY - origin.y) * orbitScale + (index % 3 ? -52 : 52);
         ripple.className = "bigbang-green-ripple";
@@ -2386,13 +2394,13 @@
         ripple.style.setProperty("--to-y", (impactY - origin.y).toFixed(2) + "px");
         ripple.style.setProperty("--orbit-x", orbitX.toFixed(2) + "px");
         ripple.style.setProperty("--orbit-y", orbitY.toFixed(2) + "px");
-        ripple.style.setProperty("--ripple-size", (16 + (index % IRIS_BLADES) * 2.2).toFixed(2) + "vmin");
-        ripple.style.setProperty("--delay", (0.12 + index * 0.11).toFixed(2) + "s");
+        ripple.style.setProperty("--ripple-size", (16 + (index % rippleBlades) * 2.2).toFixed(2) + "vmin");
+        ripple.style.setProperty("--delay", (0.12 + index * (useWebglIris ? 0.18 : 0.11)).toFixed(2) + "s");
         overlay.appendChild(ripple);
       });
 
       const iris = document.createElement("div");
-      iris.className = "bigbang-iris";
+      iris.className = "bigbang-iris" + (useWebglIris ? " bigbang-iris--webgl" : "");
       iris.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       iris.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
 
@@ -2400,30 +2408,30 @@
       irisRing.className = "bigbang-iris-ring";
       iris.appendChild(irisRing);
 
-      for (let i = 0; i < IRIS_BLADES; i++) {
-        const angle = (i / IRIS_BLADES) * 360;
-        const spoke = document.createElement("div");
-        spoke.className = "bigbang-iris-spoke";
-        spoke.style.setProperty("--blade-i", String(i));
-        spoke.style.setProperty("--blade-angle", angle + "deg");
-        iris.appendChild(spoke);
+      if (!useWebglIris) {
+        for (let i = 0; i < IRIS_BLADES; i++) {
+          const angle = (i / IRIS_BLADES) * 360;
+          const spoke = document.createElement("div");
+          spoke.className = "bigbang-iris-spoke";
+          spoke.style.setProperty("--blade-i", String(i));
+          spoke.style.setProperty("--blade-angle", angle + "deg");
+          iris.appendChild(spoke);
 
-        const blade = document.createElement("div");
-        blade.className = "bigbang-iris-blade";
-        blade.style.setProperty("--blade-i", String(i));
-        blade.style.setProperty("--blade-angle", angle + "deg");
-        iris.appendChild(blade);
+          const blade = document.createElement("div");
+          blade.className = "bigbang-iris-blade";
+          blade.style.setProperty("--blade-i", String(i));
+          blade.style.setProperty("--blade-angle", angle + "deg");
+          iris.appendChild(blade);
+        }
+
+        const pupil = document.createElement("div");
+        pupil.className = "bigbang-iris-pupil";
+        iris.appendChild(pupil);
       }
 
-      const pupil = document.createElement("div");
-      pupil.className = "bigbang-iris-pupil";
-      iris.appendChild(pupil);
       overlay.appendChild(iris);
 
-      if (typeof IRIS_WEBGL !== "undefined" && IRIS_WEBGL.mount(overlay, impactX, impactY)) {
-        iris.classList.add("bigbang-iris--webgl");
-        iris.querySelectorAll(".bigbang-iris-blade, .bigbang-iris-spoke").forEach((el) => { el.style.display = "none"; });
-      }
+      if (useWebglIris) IRIS_WEBGL.mount(overlay, impactX, impactY);
 
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
@@ -2460,7 +2468,9 @@
         "rgba(118,185,0,0.58)",
         "rgba(210,216,214,0.64)",
       ];
-      const particleCount = Math.min(180, Math.max(96, Math.floor((window.innerWidth * window.innerHeight) / 11000)));
+      const particleCount = useWebglIris
+        ? Math.min(72, Math.max(40, Math.floor((window.innerWidth * window.innerHeight) / 22000)))
+        : Math.min(180, Math.max(96, Math.floor((window.innerWidth * window.innerHeight) / 11000)));
       const maxTravel = Math.hypot(window.innerWidth, window.innerHeight) * 0.86;
       for (let i = 0; i < particleCount; i++) {
         const sector = i % IRIS_BLADES;
@@ -2522,8 +2532,10 @@
     }
 
     function cleanupBigBangState() {
+      document.body.classList.remove("cosmic-active");
       $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
       $$(".bigbang-target, .bigbang-pulled, .bigbang-blasted, .bigbang-hidden").forEach(clearBigBangMotion);
+      $$(COSMIC_SUPPRESS_SELECTOR).forEach((el) => el.classList.remove("cosmic-suppressed"));
       clearWarpClasses();
     }
 
@@ -2741,6 +2753,7 @@
       const cy = (black.cy + white.cy) / 2;
 
       dismissSpaceWells();
+      suppressCollisionChrome();
       pullEverythingToImpact(cx, cy);
       window.dispatchEvent(new CustomEvent("portfolio:iris-bang"));
       window.setTimeout(() => {
@@ -2950,6 +2963,10 @@
       }).filter(Boolean);
       if (!wells.length) return;
       aimPrimaryWellsAtEachOther();
+      if (!isMobile()) {
+        document.body.classList.add("cosmic-active");
+        suppressCollisionChrome();
+      }
 
       if (reduceMotion) {
         wells.forEach((well) => paint(well));

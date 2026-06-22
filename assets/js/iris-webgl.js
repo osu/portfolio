@@ -4,7 +4,6 @@
 const IRIS_WEBGL = (function () {
   "use strict";
 
-  const BLADES = 12;
   const DURATION = 22000;
 
   const VERT = `
@@ -18,30 +17,30 @@ const IRIS_WEBGL = (function () {
     uniform float u_time;
     uniform vec2 u_center;
     uniform float u_phase;
-    const int BLADES = 12;
+    const float BLADES = 12.0;
 
     void main() {
       vec2 uv = (gl_FragCoord.xy - u_center) / min(u_res.x, u_res.y);
       float r = length(uv);
       float a = atan(uv.y, uv.x);
 
-      float open = smoothstep(0.0, 0.22, u_phase) * (1.0 - smoothstep(0.58, 0.78, u_phase));
+      float open = smoothstep(0.0, 0.24, u_phase) * (1.0 - smoothstep(0.60, 0.80, u_phase));
       float close = 1.0 - open;
-      float blade = cos(a * float(BLADES)) * 0.5 + 0.5;
-      float aperture = smoothstep(0.08 + close * 0.34, 0.02 + close * 0.34, r + blade * close * 0.18);
+      float blade = cos(a * BLADES) * 0.5 + 0.5;
+      float aperture = smoothstep(0.10 + close * 0.32, 0.02 + close * 0.30, r + blade * close * 0.16);
 
       vec3 green = vec3(0.46, 0.73, 0.0);
       vec3 cyan = vec3(0.37, 0.86, 0.95);
-      vec3 core = mix(green, cyan, 0.35 + 0.35 * sin(a * 3.0 + u_time * 2.0));
-      float glow = exp(-r * 5.5) * (0.5 + open * 0.8);
+      vec3 core = mix(green, cyan, 0.42);
+      float glow = exp(-r * 4.8) * (0.45 + open * 0.75);
       float ring = smoothstep(0.36, 0.34, r) * smoothstep(0.28, 0.30, r);
 
-      vec3 col = core * aperture * (0.35 + glow);
-      col += vec3(0.9, 1.0, 0.85) * glow * 0.55;
-      col += green * ring * 0.45;
-      float alpha = clamp(aperture * 0.85 + glow * 0.4 + ring * 0.3, 0.0, 1.0);
-      if (alpha < 0.01) discard;
-      gl_FragColor = vec4(col, alpha * smoothstep(1.0, 0.0, u_phase));
+      vec3 col = core * aperture * (0.32 + glow);
+      col += vec3(0.92, 1.0, 0.88) * glow * 0.5;
+      col += green * ring * 0.38;
+      float alpha = clamp(aperture * 0.78 + glow * 0.35 + ring * 0.28, 0.0, 1.0);
+      alpha *= smoothstep(1.0, 0.82, u_phase);
+      gl_FragColor = vec4(col, alpha * 0.92);
     }
   `;
 
@@ -66,7 +65,7 @@ const IRIS_WEBGL = (function () {
     canvas.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
     overlay.appendChild(canvas);
 
-    const gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false });
+    const gl = canvas.getContext("webgl", { alpha: true, premultipliedAlpha: false, antialias: true });
     if (!gl) {
       canvas.remove();
       return false;
