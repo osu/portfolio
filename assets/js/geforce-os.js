@@ -2109,6 +2109,7 @@
     const SPEED = 80; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const BIG_BANG_DURATION = 22000;
+    const IRIS_BLADES = 12;
     const SCREEN_SHATTER_DURATION = 7600;
     const PANEL_SHATTER_DURATION = 6700;
     const PRE_EXPLOSION_PULL_DURATION = 1180;
@@ -2333,23 +2334,28 @@
         overlay.appendChild(el);
       });
 
-      const rippleOrigins = [
-        { x: -90, y: impactY },
-        { x: window.innerWidth + 90, y: impactY },
+      const rippleOrigins = [];
+      const irisRadius = Math.min(window.innerWidth, window.innerHeight) * 0.46;
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const angle = (i / IRIS_BLADES) * Math.PI * 2 - Math.PI / 2;
+        rippleOrigins.push({
+          x: impactX + Math.cos(angle) * irisRadius,
+          y: impactY + Math.sin(angle) * irisRadius,
+          petal: i,
+        });
+      }
+      [
         { x: impactX, y: -90 },
         { x: impactX, y: window.innerHeight + 90 },
-        { x: -70, y: -70 },
-        { x: window.innerWidth + 70, y: -70 },
-        { x: -70, y: window.innerHeight + 70 },
-        { x: window.innerWidth + 70, y: window.innerHeight + 70 },
-        { x: window.innerWidth * 0.18, y: window.innerHeight + 76 },
-        { x: window.innerWidth * 0.82, y: -76 },
-      ];
+        { x: -90, y: impactY },
+        { x: window.innerWidth + 90, y: impactY },
+      ].forEach((origin, offset) => rippleOrigins.push({ ...origin, petal: IRIS_BLADES + offset }));
+
       rippleOrigins.forEach((origin, index) => {
         const ripple = document.createElement("div");
-        const orbitScale = 0.18 + (index % 4) * 0.055;
-        const orbitX = (impactX - origin.x) * orbitScale + (index % 2 ? 80 : -80);
-        const orbitY = (impactY - origin.y) * orbitScale + (index % 3 ? -62 : 62);
+        const orbitScale = 0.14 + (index % IRIS_BLADES) * 0.018;
+        const orbitX = (impactX - origin.x) * orbitScale + (index % 2 ? 64 : -64);
+        const orbitY = (impactY - origin.y) * orbitScale + (index % 3 ? -52 : 52);
         ripple.className = "bigbang-green-ripple";
         ripple.style.setProperty("--start-x", origin.x.toFixed(2) + "px");
         ripple.style.setProperty("--start-y", origin.y.toFixed(2) + "px");
@@ -2357,10 +2363,40 @@
         ripple.style.setProperty("--to-y", (impactY - origin.y).toFixed(2) + "px");
         ripple.style.setProperty("--orbit-x", orbitX.toFixed(2) + "px");
         ripple.style.setProperty("--orbit-y", orbitY.toFixed(2) + "px");
-        ripple.style.setProperty("--ripple-size", (18 + (index % 5) * 4).toFixed(2) + "vmin");
-        ripple.style.setProperty("--delay", (0.18 + index * 0.16).toFixed(2) + "s");
+        ripple.style.setProperty("--ripple-size", (16 + (index % IRIS_BLADES) * 2.2).toFixed(2) + "vmin");
+        ripple.style.setProperty("--delay", (0.12 + index * 0.11).toFixed(2) + "s");
         overlay.appendChild(ripple);
       });
+
+      const iris = document.createElement("div");
+      iris.className = "bigbang-iris";
+      iris.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      iris.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+
+      const irisRing = document.createElement("div");
+      irisRing.className = "bigbang-iris-ring";
+      iris.appendChild(irisRing);
+
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const angle = (i / IRIS_BLADES) * 360;
+        const spoke = document.createElement("div");
+        spoke.className = "bigbang-iris-spoke";
+        spoke.style.setProperty("--blade-i", String(i));
+        spoke.style.setProperty("--blade-angle", angle + "deg");
+        iris.appendChild(spoke);
+
+        const blade = document.createElement("div");
+        blade.className = "bigbang-iris-blade";
+        blade.style.setProperty("--blade-i", String(i));
+        blade.style.setProperty("--blade-angle", angle + "deg");
+        iris.appendChild(blade);
+      }
+
+      const pupil = document.createElement("div");
+      pupil.className = "bigbang-iris-pupil";
+      iris.appendChild(pupil);
+      overlay.appendChild(iris);
+
 
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
@@ -2400,9 +2436,12 @@
       const particleCount = Math.min(180, Math.max(96, Math.floor((window.innerWidth * window.innerHeight) / 11000)));
       const maxTravel = Math.hypot(window.innerWidth, window.innerHeight) * 0.86;
       for (let i = 0; i < particleCount; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const travel = maxTravel * (0.18 + Math.random() * 0.82);
-        const drift = (Math.random() - 0.5) * 130;
+        const sector = i % IRIS_BLADES;
+        const sectorAngle = (sector / IRIS_BLADES) * Math.PI * 2 - Math.PI / 2;
+        const jitter = (Math.random() - 0.5) * (Math.PI / IRIS_BLADES) * 0.9;
+        const angle = sectorAngle + jitter;
+        const travel = maxTravel * (0.22 + Math.random() * 0.78);
+        const drift = (Math.random() - 0.5) * 90;
         const dx = Math.cos(angle) * travel + Math.cos(angle + Math.PI / 2) * drift;
         const dy = Math.sin(angle) * travel + Math.sin(angle + Math.PI / 2) * drift;
         const particle = document.createElement("div");
