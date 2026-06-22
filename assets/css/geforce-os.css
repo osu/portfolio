@@ -38,6 +38,10 @@
   --taskbar-h: 56px;
   --shell-top: 0px;
   --shell-bottom: var(--dock-h);
+  --dock-h: 66px;
+  --taskbar-h: 56px;
+  --shell-top: 0px;
+  --shell-bottom: var(--dock-h);
   --dock-h: 76px;
 
   --glow: 0 0 18px rgba(118, 185, 0, 0.45);
