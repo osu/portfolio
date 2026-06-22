@@ -295,6 +295,41 @@
     return { init, confetti, shaderMode };
   })();
 
+   deep links ----- */
+  const DeepLinks = (function () {
+    const VALID = new Set([
+      "about", "experience", "skills", "projects", "certificates", "sideprojects",
+      "terminal", "gpu", "github", "diagnostics", "contact",
+    ]);
+
+    function targetFromUrl() {
+      const params = new URLSearchParams(location.search);
+      const app = (params.get("app") || location.hash.replace(/^#\/?/, "")).trim().toLowerCase();
+      return VALID.has(app) ? app : "";
+    }
+
+    function parse() {
+      const app = targetFromUrl();
+      if (!app) return;
+      window.setTimeout(() => api().openApp?.(app), 400);
+    }
+
+    function sync(id) {
+      if (!VALID.has(id)) return;
+      const url = new URL(location.href);
+      url.searchParams.set("app", id);
+      url.hash = "";
+      history.replaceState({ app: id }, "", url.pathname + url.search);
+    }
+
+    function init() {
+      window.addEventListener("portfolio:win-open", (e) => sync(e.detail.id));
+      window.addEventListener("popstate", parse);
+    }
+
+    return { init, parse, targetFromUrl };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
@@ -302,6 +337,7 @@
     SoundFX.init();
     DayNight.init();
     EasterEggs.init();
+    DeepLinks.init();
   }
 
   window.addEventListener("portfolio:ready", boot);
