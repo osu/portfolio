@@ -64,6 +64,12 @@
   function boot() {
     const el = $("#boot");
     if (!el) return;
+    try {
+      if (window.localStorage.getItem("portfolio-boot-seen") === "1") {
+        el.remove();
+        return;
+      }
+    } catch (_) {}
     const fill = $(".boot-bar-fill", el);
     const duration = reduceMotion ? 250 : 1700;
     const start = performance.now();
@@ -77,6 +83,7 @@
     function finish() {
       if (el.classList.contains("is-done")) return;
       el.classList.add("is-done");
+      try { window.localStorage.setItem("portfolio-boot-seen", "1"); } catch (_) {}
       window.setTimeout(() => el.remove(), 650);
     }
     let skipped = false;
@@ -2397,7 +2404,6 @@
       iris.appendChild(pupil);
       overlay.appendChild(iris);
 
-
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
       marketChart.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
@@ -2938,6 +2944,18 @@
   /* =============================================================
      INIT
      ============================================================= */
+  function showKeyboardHints() {
+    try {
+      if (window.localStorage.getItem("portfolio-kbd-hint") === "1") return;
+      window.localStorage.setItem("portfolio-kbd-hint", "1");
+    } catch (_) {}
+    const isApple = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
+    const mod = isApple ? "⌘" : "Ctrl";
+    window.setTimeout(() => {
+      notify("Shortcuts", mod + "+Space search · F3 task view · Esc minimize", { ttl: 5200 });
+    }, isMobile() ? 2400 : 3600);
+  }
+
   function init() {
     // pause the wallpaper video for users who prefer reduced motion
     const bgVideo = $(".desktop-video");
@@ -2978,6 +2996,7 @@
     } else {
       WM.open("about");
     }
+    showKeyboardHints();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
