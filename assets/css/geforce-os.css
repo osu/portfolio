@@ -2435,9 +2435,9 @@ body.theme-macos .desktop-bg::before {
   bottom: -12%;
   left: -12%;
   background:
-    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(218,231,255,0.20)),
+    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(218,231,255,0.10)),
     url("../images/macos_bg.jpg") left center / cover no-repeat;
-  filter: saturate(1.08) contrast(1.02);
+  filter: saturate(1.12) contrast(1.02) brightness(1.04);
   animation: macos-wallpaper 30s ease-in-out infinite alternate;
 }
 body.theme-macos .desktop-bg::after {
@@ -2448,7 +2448,7 @@ body.theme-macos .desktop-bg::after {
   bottom: -12%;
   left: 50%;
   background:
-    linear-gradient(180deg, rgba(8, 24, 54, 0.10), rgba(3, 10, 28, 0.22)),
+    linear-gradient(180deg, rgba(8, 24, 54, 0.06), rgba(3, 10, 28, 0.14)),
     url("../images/window-11-bg.jpg") right center / cover no-repeat;
   border-left: 1px solid rgba(255,255,255,0.52);
   filter: saturate(1.06) contrast(1.02);
@@ -3706,6 +3706,28 @@ body.theme-windows-only .search-result-row {
 body.theme-dgx .menubar-dgx-status.is-active { text-shadow: 0 0 12px rgba(118,185,0,0.45); }
 .menubar-sound { width: 26px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem; color: var(--txt-dim); background: rgba(255,255,255,0.06); border: 1px solid var(--line-soft); }
 .menubar-sound.is-muted { opacity: 0.42; }
+body.theme-dgx .desktop-bg::before {
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 10%, rgba(118,185,0,0.14), transparent 62%),
+    radial-gradient(ellipse 50% 60% at 85% 90%, rgba(118,185,0,0.08), transparent 62%);
+}
+body.theme-dgx .desktop-video,
+body.wallpaper-day.theme-dgx .desktop-video {
+  opacity: 0.94;
+}
+body.wallpaper-night.theme-dgx .desktop-video {
+  opacity: 0.78;
+}
+body.wallpaper-night.theme-dgx .desktop-bg::before {
+  filter: brightness(0.9) saturate(0.92);
+}
+body.wallpaper-night.theme-macos .desktop-bg::before,
+body.wallpaper-night.theme-mac-only .desktop-bg::before {
+  filter: saturate(1.08) contrast(1.02);
+}
+body.wallpaper-night.theme-macos .desktop-bg::after {
+  filter: saturate(1.06) contrast(1.02);
+}
 body.wallpaper-night .desktop-bg::before { filter: brightness(0.48) saturate(0.75); transition: filter 2.4s ease; }
 body.wallpaper-night .desktop-video { opacity: 0.28; transition: opacity 2.4s ease; }
 body.wallpaper-day .desktop-video { opacity: 0.52; transition: opacity 2.4s ease; }
