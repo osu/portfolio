@@ -3373,6 +3373,9 @@ body.theme-windows-only .search-result-row {
 body.theme-dgx .menubar-dgx-status.is-active { text-shadow: 0 0 12px rgba(118,185,0,0.45); }
 .menubar-sound { width: 26px; height: 24px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.82rem; color: var(--txt-dim); background: rgba(255,255,255,0.06); border: 1px solid var(--line-soft); }
 .menubar-sound.is-muted { opacity: 0.42; }
+body.wallpaper-night .desktop-bg::before { filter: brightness(0.48) saturate(0.75); transition: filter 2.4s ease; }
+body.wallpaper-night .desktop-video { opacity: 0.28; transition: opacity 2.4s ease; }
+body.wallpaper-day .desktop-video { opacity: 0.52; transition: opacity 2.4s ease; }
 
 /* =================================================================
    REDUCED MOTION

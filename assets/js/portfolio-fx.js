@@ -228,11 +228,29 @@
     return { init, play };
   })();
 
+   wallpaper ----- */
+  const DayNight = (function () {
+    function apply() {
+      const h = new Date().getHours();
+      const night = h < 7 || h >= 19;
+      document.body.classList.toggle("wallpaper-night", night);
+      document.body.classList.toggle("wallpaper-day", !night);
+    }
+
+    function init() {
+      apply();
+      window.setInterval(apply, 60000);
+    }
+
+    return { init };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
     DgxStatus.init();
     SoundFX.init();
+    DayNight.init();
   }
 
   window.addEventListener("portfolio:ready", boot);
