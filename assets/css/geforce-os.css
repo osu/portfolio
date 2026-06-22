@@ -1729,6 +1729,63 @@ body.theme-mac-only .dock-inner {
   max-width: calc(100vw - 28px);
   transform: translateX(-50%);
 }
+body.theme-mac-only.dock-left .dock,
+body.theme-mac-only.dock-right .dock {
+  top: 50%;
+  bottom: auto;
+  height: auto;
+  width: auto;
+  max-width: none;
+  transform: translateY(-50%);
+}
+body.theme-mac-only.dock-left .dock {
+  left: 12px;
+  right: auto;
+}
+body.theme-mac-only.dock-right .dock {
+  left: auto;
+  right: 12px;
+}
+body.theme-mac-only.dock-left .dock-inner,
+body.theme-mac-only.dock-right .dock-inner {
+  position: static;
+  margin: 0;
+  left: auto;
+  bottom: auto;
+  width: auto;
+  max-width: none;
+  max-height: calc(100vh - 78px);
+  flex-direction: column;
+  align-items: center;
+  transform: none;
+  overflow: visible;
+}
+body.theme-mac-only.dock-left .dock-sep,
+body.theme-mac-only.dock-right .dock-sep {
+  width: 32px;
+  height: 1px;
+  margin: 4px 0;
+}
+body.theme-mac-only.dock-left .dock-tooltip,
+body.theme-mac-only.dock-right .dock-tooltip {
+  top: 50%;
+  bottom: auto;
+}
+body.theme-mac-only.dock-left .dock-tooltip {
+  left: calc(100% + 12px);
+  transform: translateY(-50%) translateX(-6px);
+}
+body.theme-mac-only.dock-right .dock-tooltip {
+  left: auto;
+  right: calc(100% + 12px);
+  transform: translateY(-50%) translateX(6px);
+}
+body.theme-mac-only.dock-left .dock-item:hover .dock-tooltip,
+body.theme-mac-only.dock-left .dock-item.tooltip-demo .dock-tooltip,
+body.theme-mac-only.dock-right .dock-item:hover .dock-tooltip,
+body.theme-mac-only.dock-right .dock-item.tooltip-demo .dock-tooltip {
+  transform: translateY(-50%) translateX(0);
+}
 
 body.theme-windows-only .menubar {
   left: 50%;

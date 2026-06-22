@@ -110,6 +110,7 @@
 
     currentOsMode = activeMode;
     syncOsSwitcher(activeMode);
+    window.dispatchEvent(new CustomEvent("portfolio:os-mode", { detail: { mode: activeMode } }));
 
     if (typeof TERM !== "undefined") TERM.setMode(activeMode);
     if (typeof STOCK !== "undefined") STOCK.setMode(activeMode);
@@ -829,7 +830,7 @@
 
     function setEdge(kind, edge) {
       const next = edges.includes(edge) ? edge : "bottom";
-      const prefix = kind === "nvidia" ? "dock-" : "taskbar-";
+      const prefix = kind === "windows" ? "taskbar-" : "dock-";
       edges.forEach((item) => document.body.classList.remove(prefix + item));
       document.body.classList.add(prefix + next);
       try { window.localStorage.setItem("portfolio-" + kind + "-edge", next); } catch (_) {}
@@ -862,8 +863,17 @@
       contextMenu.classList.add("is-open");
     }
 
-    setEdge("windows", getEdge("windows"));
-    setEdge("nvidia", getEdge("nvidia"));
+    function activeDockKind(mode = currentOsMode) {
+      return mode === "macos" ? "macos" : "nvidia";
+    }
+
+    function applyPlacementForMode(mode = currentOsMode) {
+      setEdge("windows", getEdge("windows"));
+      setEdge(activeDockKind(mode), getEdge(activeDockKind(mode)));
+    }
+
+    applyPlacementForMode();
+    window.addEventListener("portfolio:os-mode", (e) => applyPlacementForMode(e.detail && e.detail.mode));
 
     if (taskbar) {
       taskbar.addEventListener("contextmenu", (e) => {
@@ -873,8 +883,13 @@
     }
     if (dockEl) {
       dockEl.addEventListener("contextmenu", (e) => {
-        if (!document.body.classList.contains("theme-dgx")) return;
-        openMenu(e, "nvidia");
+        if (document.body.classList.contains("theme-dgx")) {
+          openMenu(e, "nvidia");
+          return;
+        }
+        if (document.body.classList.contains("theme-mac-only")) {
+          openMenu(e, "macos");
+        }
       });
     }
 
