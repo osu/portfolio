@@ -70,10 +70,37 @@
         return;
       }
     } catch (_) {}
+
+    const bladesHost = $(".iris-boot-blades", el);
+    if (bladesHost && !bladesHost.childElementCount) {
+      for (let i = 0; i < 12; i++) {
+        const blade = document.createElement("div");
+        blade.className = "iris-boot-blade";
+        blade.style.setProperty("--blade-angle", (i * 30) + "deg");
+        bladesHost.appendChild(blade);
+      }
+    }
+
     const fill = $(".boot-bar-fill", el);
-    const duration = reduceMotion ? 250 : 1700;
+    const status = $("#iris-boot-status");
+    const scanner = $(".iris-boot-scanner", el);
+    const statuses = reduceMotion
+      ? ["Verifying clearance…", "Identity confirmed"]
+      : ["Initializing optics…", "Scanning biometrics…", "Subject: HASAN KHAN", "Clearance granted"];
+    let statusIdx = 0;
+    const statusTimer = window.setInterval(() => {
+      if (!status || statusIdx >= statuses.length) return;
+      status.textContent = statuses[statusIdx++];
+    }, reduceMotion ? 180 : 520);
+
+    const duration = reduceMotion ? 320 : 2800;
     const start = performance.now();
     let raf;
+    if (scanner && !reduceMotion) {
+      window.setTimeout(() => scanner.classList.add("is-scanning"), 120);
+      window.setTimeout(() => scanner.classList.add("is-verified"), duration * 0.72);
+    }
+
     function step(now) {
       const p = clamp((now - start) / duration, 0, 1);
       if (fill) fill.style.width = (p * 100).toFixed(1) + "%";
@@ -82,8 +109,11 @@
     }
     function finish() {
       if (el.classList.contains("is-done")) return;
+      window.clearInterval(statusTimer);
+      if (status) status.textContent = "Desktop unlocked";
       el.classList.add("is-done");
       try { window.localStorage.setItem("portfolio-boot-seen", "1"); } catch (_) {}
+      window.dispatchEvent(new CustomEvent("portfolio:iris-boot"));
       window.setTimeout(() => el.remove(), 650);
     }
     let skipped = false;
@@ -92,7 +122,9 @@
       skipped = true;
       document.removeEventListener("keydown", onKey);
       cancelAnimationFrame(raf);
+      window.clearInterval(statusTimer);
       if (fill) fill.style.width = "100%";
+      if (scanner) scanner.classList.add("is-scanning", "is-verified");
       finish();
     }
     function onKey(e) {
@@ -141,42 +173,60 @@
   }
 
   function setOsMode(mode, options = {}) {
-    document.body.classList.remove("theme-macos", "theme-dgx", "theme-mac-only", "theme-windows-only");
+    const target = mode === "nvidia" ? "nvidia" : mode;
+    const prev = currentOsMode;
 
-    const osLabel = $(".menubar-os");
-    const themeColor = $('meta[name="theme-color"]');
-    let activeMode = mode;
+    const apply = () => {
+      document.body.classList.remove("theme-macos", "theme-dgx", "theme-mac-only", "theme-windows-only");
 
-    if (mode === "macos") {
-      document.body.classList.add("theme-macos", "theme-mac-only");
-      if (osLabel) osLabel.textContent = "macOS";
-      if (themeColor) themeColor.setAttribute("content", "#eff4ff");
-    } else if (mode === "windows") {
-      document.body.classList.add("theme-macos", "theme-windows-only");
-      if (osLabel) osLabel.textContent = "Windows 11";
-      if (themeColor) themeColor.setAttribute("content", "#071839");
-    } else {
-      document.body.classList.add("theme-dgx");
-      if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
-      if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
-      activeMode = "nvidia";
+      const osLabel = $(".menubar-os");
+      const themeColor = $('meta[name="theme-color"]');
+      let activeMode = mode;
+
+      if (mode === "macos") {
+        document.body.classList.add("theme-macos", "theme-mac-only");
+        if (osLabel) osLabel.textContent = "macOS";
+        if (themeColor) themeColor.setAttribute("content", "#eff4ff");
+      } else if (mode === "windows") {
+        document.body.classList.add("theme-macos", "theme-windows-only");
+        if (osLabel) osLabel.textContent = "Windows 11";
+        if (themeColor) themeColor.setAttribute("content", "#071839");
+      } else {
+        document.body.classList.add("theme-dgx");
+        if (osLabel) osLabel.textContent = "NVIDIA DGX OS";
+        if (themeColor) themeColor.setAttribute("content", "#0c0e0c");
+        activeMode = "nvidia";
+      }
+
+      currentOsMode = activeMode;
+      syncOsSwitcher(activeMode);
+      syncAppLabels(activeMode);
+      window.dispatchEvent(new CustomEvent("portfolio:os-mode", { detail: { mode: activeMode } }));
+
+      if (typeof TERM !== "undefined") TERM.setMode(activeMode);
+      if (typeof STOCK !== "undefined") STOCK.setMode(activeMode);
+      if (options.layout !== false) applyOsWindowLayout(activeMode);
+      playTaskbarIntro(activeMode);
+
+      if (typeof GPU !== "undefined") GPU.refreshMenubar();
+    };
+
+    if (
+      !options.skipGlitch
+      && !reduceMotion
+      && prev
+      && prev !== "split"
+      && prev !== target
+      && typeof window.__osMergeGlitch === "function"
+    ) {
+      window.__osMergeGlitch(prev, target, apply);
+      return;
     }
-
-    currentOsMode = activeMode;
-    syncOsSwitcher(activeMode);
-    syncAppLabels(activeMode);
-    window.dispatchEvent(new CustomEvent("portfolio:os-mode", { detail: { mode: activeMode } }));
-
-    if (typeof TERM !== "undefined") TERM.setMode(activeMode);
-    if (typeof STOCK !== "undefined") STOCK.setMode(activeMode);
-    if (options.layout !== false) applyOsWindowLayout(activeMode);
-    playTaskbarIntro(activeMode);
-
-    if (typeof GPU !== "undefined") GPU.refreshMenubar();
+    apply();
   }
 
   function switchToDgxTheme() {
-    setOsMode("nvidia", { layout: false });
+    setOsMode("nvidia", { layout: false, skipGlitch: true });
   }
 
   function osSwitcher() {

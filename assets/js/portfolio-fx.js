@@ -432,6 +432,62 @@
     return { init };
   })();
 
+  /* ----- 10. OS merge glitch on theme switch ----- */
+  const OsMergeGlitch = (function () {
+    const DURATION = 540;
+    const LABELS = { macos: "macOS", windows: "Windows 11", nvidia: "NVIDIA DGX OS" };
+
+    function run(from, to, done) {
+      if (reduceMotion || from === to) {
+        done();
+        return;
+      }
+
+      const overlay = document.createElement("div");
+      overlay.className = "os-merge-glitch";
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.dataset.from = from;
+      overlay.dataset.to = to;
+      overlay.innerHTML = [
+        "<div class='os-merge-glitch__noise'></div>",
+        "<div class='os-merge-glitch__scanlines'></div>",
+        "<div class='os-merge-glitch__rgb os-merge-glitch__rgb--r'></div>",
+        "<div class='os-merge-glitch__rgb os-merge-glitch__rgb--g'></div>",
+        "<div class='os-merge-glitch__rgb os-merge-glitch__rgb--b'></div>",
+        "<div class='os-merge-glitch__brands'>",
+        "<img class='os-merge-glitch__apple' src='./assets/images/apple-logo.svg' alt=''>",
+        "<img class='os-merge-glitch__msft' src='./assets/images/Microsoft_icon.svg.png' alt=''>",
+        "<img class='os-merge-glitch__nvidia' src='./assets/images/nvda-eye.png' alt=''>",
+        "</div>",
+        "<p class='os-merge-glitch__label'>",
+        (LABELS[from] || from), " <span>⇄</span> ", (LABELS[to] || to),
+        "</p>",
+      ].join("");
+
+      document.body.classList.add("os-glitching");
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add("is-active"));
+
+      window.setTimeout(() => {
+        done();
+        overlay.classList.add("is-resolve");
+      }, Math.floor(DURATION * 0.44));
+
+      window.setTimeout(() => {
+        overlay.classList.add("is-exit");
+        document.body.classList.remove("os-glitching");
+      }, DURATION - 40);
+
+      window.setTimeout(() => overlay.remove(), DURATION + 120);
+    }
+
+    function init() {
+      window.__osMergeGlitch = run;
+    }
+
+    return { init, run };
+  })();
+
   function boot() {
     AuroraTrail.init();
     DgxStatus.init();
@@ -440,6 +496,7 @@
     EasterEggs.init();
     DeepLinks.init();
     PwaInstall.init();
+    OsMergeGlitch.init();
     CrtMode.init();
   }
 
