@@ -1007,6 +1007,30 @@ body.theme-windows-only .os-switcher-sep { display: block; }
   border-radius: 0; border-left: none; border-right: none;
 }
 .win.is-focused { box-shadow: 0 28px 70px -10px rgba(0,0,0,0.85), 0 0 0 1px var(--green), var(--glow); }
+.win.is-focused .win-body {
+  position: relative;
+  isolation: isolate;
+}
+.win.is-focused .win-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  animation: glass-noise-drift 14s steps(10) infinite;
+}
+.win.is-focused {
+  -webkit-backdrop-filter: blur(26px) saturate(165%);
+  backdrop-filter: blur(26px) saturate(165%);
+}
+@keyframes glass-noise-drift {
+  to { background-position: 180px 120px; }
+}
+
 @keyframes winopen { from { opacity: 0; transform: scale(0.96) translateY(8px); } }
 @keyframes win-minimize {
   to { opacity: 0; transform: translate3d(0, 36px, 0) scale(0.82); filter: blur(3px); }
