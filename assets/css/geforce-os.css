@@ -3368,6 +3368,9 @@ body.theme-windows-only .search-result-row {
    PORTFOLIO FX
    ================================================================= */
 .aurora-trail { position: fixed; inset: 0; z-index: 420; pointer-events: none; }
+.menubar-dgx-status { display: none; font-family: var(--font-mono); font-size: 0.7rem; color: var(--green-bright); max-width: min(240px, 28vw); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.menubar-dgx-status.is-active { display: inline-block; }
+body.theme-dgx .menubar-dgx-status.is-active { text-shadow: 0 0 12px rgba(118,185,0,0.45); }
 
 /* =================================================================
    REDUCED MOTION

@@ -89,9 +89,74 @@
     return { init };
   })();
 
+   menubar status ----- */
+  const DgxStatus = (function () {
+    const TERMS = [
+      "syncing DGX node…",
+      "NVLink fabric stable",
+      "GB200 thermals nominal",
+      "Mission Control heartbeat",
+      "Vera Rubin NVL72 online",
+      "infra-controller armed",
+      "Blackwell cluster ready",
+      "recovery daemon idle",
+      "CUDA graphs compiled",
+    ];
+    let el, termIdx = 0, charIdx = 0, deleting = false, timer = 0;
+
+    function type() {
+      if (!el || !document.body.classList.contains("theme-dgx")) return;
+      const term = TERMS[termIdx % TERMS.length];
+      if (!deleting) {
+        charIdx += 1;
+        el.textContent = term.slice(0, charIdx);
+        if (charIdx >= term.length) {
+          deleting = true;
+          timer = window.setTimeout(type, 2000);
+          return;
+        }
+        timer = window.setTimeout(type, 38 + Math.random() * 36);
+      } else {
+        charIdx -= 1;
+        el.textContent = term.slice(0, charIdx);
+        if (charIdx <= 0) {
+          deleting = false;
+          termIdx += 1;
+          timer = window.setTimeout(type, 420);
+          return;
+        }
+        timer = window.setTimeout(type, 16);
+      }
+    }
+
+    function sync() {
+      if (!el) return;
+      window.clearTimeout(timer);
+      if (!document.body.classList.contains("theme-dgx")) {
+        el.textContent = "";
+        el.classList.remove("is-active");
+        return;
+      }
+      el.classList.add("is-active");
+      charIdx = 0;
+      deleting = false;
+      type();
+    }
+
+    function init() {
+      el = $("#mb-dgx-status");
+      if (!el) return;
+      window.addEventListener("portfolio:os-mode", sync);
+      sync();
+    }
+
+    return { init };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
+    DgxStatus.init();
   }
 
   window.addEventListener("portfolio:ready", boot);
