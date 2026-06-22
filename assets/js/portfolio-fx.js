@@ -2,7 +2,6 @@
    Portfolio FX — aurora, sound, deep links, easter eggs, CRT, day/night
    ================================================================= */
 (function () {
-
   "use strict";
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -11,7 +10,7 @@
 
   function api() { return window.__portfolio || {}; }
 
-   cursor trail (NVIDIA theme) ----- */
+  /* ----- 1. Aurora cursor trail (NVIDIA theme) ----- */
   const AuroraTrail = (function () {
     let canvas, ctx, particles = [], active = false, raf = 0;
 
@@ -89,7 +88,7 @@
     return { init };
   })();
 
-   menubar status ----- */
+  /* ----- 3. Live DGX menubar status ----- */
   const DgxStatus = (function () {
     const TERMS = [
       "syncing DGX node…",
@@ -153,7 +152,7 @@
     return { init };
   })();
 
-   ----- */
+  /* ----- 4. UI sounds ----- */
   const SoundFX = (function () {
     let ctx, muted = false;
 
@@ -228,7 +227,7 @@
     return { init, play };
   })();
 
-   wallpaper ----- */
+  /* ----- 5. Day / night wallpaper ----- */
   const DayNight = (function () {
     function apply() {
       const h = new Date().getHours();
@@ -245,7 +244,7 @@
     return { init };
   })();
 
-   + confetti + shader party ----- */
+  /* ----- 6. Konami + confetti + shader party ----- */
   const EasterEggs = (function () {
     const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
     let seq = [];
@@ -295,7 +294,7 @@
     return { init, confetti, shaderMode };
   })();
 
-   deep links ----- */
+  /* ----- 7. Shareable deep links ----- */
   const DeepLinks = (function () {
     const VALID = new Set([
       "about", "experience", "skills", "projects", "certificates", "sideprojects",
@@ -330,7 +329,7 @@
     return { init, parse, targetFromUrl };
   })();
 
-   scanline mode ----- */
+  /* ----- 8. CRT scanline mode ----- */
   const CrtMode = (function () {
     function init() {
       const btn = $("[data-crt-toggle]");
@@ -357,7 +356,6 @@
     return { init };
   })();
 
-  
   function boot() {
     AuroraTrail.init();
     DgxStatus.init();

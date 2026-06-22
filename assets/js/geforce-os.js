@@ -1808,6 +1808,9 @@
           "  launcher         open app launcher",
           "  demo             run project demo mode",
           "  matrix           terminal easter egg",
+          "  konami           unlock confetti",
+          "  confetti         party mode",
+          "  shader           toggle party shaders",
           "  ls               list apps",
           "  date             current date/time",
           "  clear            clear the screen",
@@ -3006,16 +3009,35 @@
     TERM.init();
     SPACE_WELLS.init();
 
+    const params = new URLSearchParams(location.search);
+    const deepApp = (params.get("app") || location.hash.replace(/^#\/?/, "")).trim().toLowerCase();
+    const validApps = ["about", "experience", "skills", "projects", "certificates", "sideprojects", "terminal", "gpu", "github", "diagnostics", "contact"];
+    const hasDeepLink = validApps.includes(deepApp);
+
     // default windows on first load (open About last so it takes focus)
     if (!isMobile()) {
-      WM.open("gpu");
+      if (!hasDeepLink) {
+        WM.open("gpu");
+        WM.open("about");
+        window.setTimeout(() => playTaskbarIntro("macos"), 2100);
+        window.setTimeout(() => playTaskbarIntro("windows"), 5000);
+      } else {
+        WM.open(deepApp);
+      }
+    } else if (!hasDeepLink) {
       WM.open("about");
-      window.setTimeout(() => playTaskbarIntro("macos"), 2100);
-      window.setTimeout(() => playTaskbarIntro("windows"), 5000);
     } else {
-      WM.open("about");
+      WM.open(deepApp);
     }
     showKeyboardHints();
+
+    window.__portfolio = {
+      openApp(id) { WM.open(id); },
+      closeApp(id) { WM.close(id); },
+      notify,
+      getMode() { return currentOsMode; },
+    };
+    window.dispatchEvent(new CustomEvent("portfolio:ready"));
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
