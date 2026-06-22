@@ -329,7 +329,83 @@
     return { init, parse, targetFromUrl };
   })();
 
-  /* ----- 8. CRT scanline mode ----- */
+  /* ----- 8. PWA install prompt (mobile) ----- */
+  const PwaInstall = (function () {
+    let deferredPrompt = null;
+
+    function dismissed() {
+      try { return window.localStorage.getItem("portfolio-pwa-dismiss") === "1"; } catch (_) { return false; }
+    }
+
+    function dismiss() {
+      try { window.localStorage.setItem("portfolio-pwa-dismiss", "1"); } catch (_) {}
+      document.querySelector(".pwa-install-banner")?.remove();
+    }
+
+    function showBanner(label, actionText, onAction) {
+      if (dismissed() || document.querySelector(".pwa-install-banner")) return;
+      const banner = document.createElement("div");
+      banner.className = "pwa-install-banner";
+      banner.setAttribute("role", "region");
+      banner.setAttribute("aria-label", "Install app");
+      banner.innerHTML = [
+        "<p>", label, "</p>",
+        "<div class='pwa-install-actions'>",
+        "<button type='button' class='pwa-install-go'>", actionText, "</button>",
+        "<button type='button' class='pwa-install-dismiss' aria-label='Dismiss'>Not now</button>",
+        "</div>",
+      ].join("");
+      banner.querySelector(".pwa-install-dismiss").addEventListener("click", dismiss);
+      banner.querySelector(".pwa-install-go").addEventListener("click", () => {
+        onAction?.();
+        dismiss();
+      });
+      document.body.appendChild(banner);
+      window.setTimeout(() => banner.classList.add("is-visible"), 40);
+    }
+
+    function init() {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      }
+
+      const mobile = isMobile() || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if (!mobile || dismissed()) return;
+
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        window.setTimeout(() => {
+          showBanner(
+            "Install this portfolio as an app on your home screen.",
+            "Install",
+            async () => {
+              if (!deferredPrompt) return;
+              deferredPrompt.prompt();
+              await deferredPrompt.userChoice;
+              deferredPrompt = null;
+            }
+          );
+        }, 3200);
+      });
+
+      const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
+      if (isIos && !isStandalone) {
+        window.setTimeout(() => {
+          showBanner(
+            "Add to Home Screen: tap Share, then <strong>Add to Home Screen</strong>.",
+            "Got it",
+            () => {}
+          );
+        }, 4800);
+      }
+    }
+
+    return { init };
+  })();
+
+  /* ----- 9. CRT scanline mode ----- */
   const CrtMode = (function () {
     function init() {
       const btn = $("[data-crt-toggle]");
@@ -363,6 +439,7 @@
     DayNight.init();
     EasterEggs.init();
     DeepLinks.init();
+    PwaInstall.init();
     CrtMode.init();
   }
 

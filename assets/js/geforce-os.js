@@ -2967,6 +2967,7 @@
         document.body.classList.add("cosmic-active");
         suppressCollisionChrome();
       }
+      if (typeof HOLE_LIGHTNING !== "undefined") HOLE_LIGHTNING.init();
 
       if (reduceMotion) {
         wells.forEach((well) => paint(well));

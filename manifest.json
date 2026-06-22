@@ -1,0 +1,25 @@
+{
+  "name": "Hasan Khan — Portfolio",
+  "short_name": "HK Portfolio",
+  "description": "Interactive macOS / Windows / NVIDIA DGX desktop portfolio.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#050606",
+  "theme_color": "#76B900",
+  "icons": [
+    {
+      "src": "./assets/images/nvda-eye.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/images/nvda-eye.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

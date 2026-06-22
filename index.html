@@ -13,8 +13,13 @@
   <meta property="og:type" content="website" />
   <meta property="og:image" content="./assets/images/nvda-eye.png" />
   <meta name="theme-color" content="#eff4ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="HK Portfolio">
+  <meta name="mobile-web-app-capable" content="yes">
 
   <link rel="icon" href="./assets/images/nvda-eye.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/images/nvda-eye.png">
+  <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="./assets/css/geforce-os.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -100,19 +105,11 @@
         <div class="blackhole-lens"></div>
         <div class="blackhole-ring"></div>
         <div class="blackhole-core"></div>
-        <div class="hole-bolts hole-bolts--dark" aria-hidden="true">
-          <i style="--bolt-angle: 12deg"></i><i style="--bolt-angle: 68deg"></i><i style="--bolt-angle: 134deg"></i>
-          <i style="--bolt-angle: 210deg"></i><i style="--bolt-angle: 286deg"></i><i style="--bolt-angle: 332deg"></i>
-        </div>
       </div>
       <div class="whitehole" id="whitehole" aria-hidden="true">
         <div class="whitehole-lens"></div>
         <div class="whitehole-ring"></div>
         <div class="whitehole-core"></div>
-        <div class="hole-bolts hole-bolts--bright" aria-hidden="true">
-          <i style="--bolt-angle: 0deg"></i><i style="--bolt-angle: 55deg"></i><i style="--bolt-angle: 118deg"></i>
-          <i style="--bolt-angle: 182deg"></i><i style="--bolt-angle: 244deg"></i><i style="--bolt-angle: 305deg"></i>
-        </div>
       </div>
       <div class="greyhole" id="greyhole" aria-hidden="true">
         <div class="greyhole-lens"></div>
@@ -827,6 +824,7 @@
 
   </div>
 
+  <script src="./assets/js/hole-lightning.js"></script>
   <script src="./assets/js/iris-webgl.js"></script>
   <script src="./assets/js/geforce-os.js"></script>
   <script src="./assets/js/portfolio-fx.js"></script>

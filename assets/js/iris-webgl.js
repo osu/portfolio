@@ -1,10 +1,11 @@
 /* =================================================================
-   WebGL iris aperture for big-bang (desktop; CSS fallback on mobile)
+   WebGL camera-iris diaphragm for big-bang (desktop; CSS on mobile)
    ================================================================= */
 const IRIS_WEBGL = (function () {
   "use strict";
 
   const DURATION = 22000;
+  const BLADES = 12;
 
   const VERT = `
     attribute vec2 a_pos;
@@ -14,33 +15,59 @@ const IRIS_WEBGL = (function () {
   const FRAG = `
     precision mediump float;
     uniform vec2 u_res;
-    uniform float u_time;
-    uniform vec2 u_center;
     uniform float u_phase;
-    const float BLADES = 12.0;
+    uniform vec2 u_center;
+    const float BLADES = ${BLADES}.0;
+    const float PI = 3.14159265;
+
+    float diaphragm(vec2 p, float openAmt) {
+      float r = length(p);
+      float a = atan(p.y, p.x);
+      float seg = 2.0 * PI / BLADES;
+      float local = abs(mod(a + seg * 0.5, seg) - seg * 0.5);
+      float edge = r * cos(local);
+
+      float openR = mix(0.035, 0.36, openAmt);
+      float close = 1.0 - openAmt;
+      float bladeSwing = close * pow(cos(local * 1.12), 1.6) * 0.38;
+      float limit = openR + bladeSwing;
+
+      float outer = 0.46;
+      if (r > outer) return 0.0;
+      if (edge < openR - 0.018) return 1.0;
+      return 1.0 - smoothstep(limit - 0.012, limit + 0.008, edge);
+    }
 
     void main() {
       vec2 uv = (gl_FragCoord.xy - u_center) / min(u_res.x, u_res.y);
       float r = length(uv);
-      float a = atan(uv.y, uv.x);
 
-      float open = smoothstep(0.0, 0.24, u_phase) * (1.0 - smoothstep(0.60, 0.80, u_phase));
-      float close = 1.0 - open;
-      float blade = cos(a * BLADES) * 0.5 + 0.5;
-      float aperture = smoothstep(0.10 + close * 0.32, 0.02 + close * 0.30, r + blade * close * 0.16);
+      float open = smoothstep(0.0, 0.22, u_phase) * (1.0 - smoothstep(0.58, 0.78, u_phase));
+      float aperture = diaphragm(uv, open);
 
-      vec3 green = vec3(0.46, 0.73, 0.0);
-      vec3 cyan = vec3(0.37, 0.86, 0.95);
-      vec3 core = mix(green, cyan, 0.42);
-      float glow = exp(-r * 4.8) * (0.45 + open * 0.75);
-      float ring = smoothstep(0.36, 0.34, r) * smoothstep(0.28, 0.30, r);
+      vec3 bladeDark = vec3(0.07, 0.10, 0.06);
+      vec3 bladeMid = vec3(0.18, 0.28, 0.10);
+      vec3 bladeEdge = vec3(0.46, 0.73, 0.0);
+      vec3 rim = vec3(0.55, 0.82, 0.12);
+      vec3 pupil = vec3(0.02, 0.04, 0.02);
 
-      vec3 col = core * aperture * (0.32 + glow);
-      col += vec3(0.92, 1.0, 0.88) * glow * 0.5;
-      col += green * ring * 0.38;
-      float alpha = clamp(aperture * 0.78 + glow * 0.35 + ring * 0.28, 0.0, 1.0);
-      alpha *= smoothstep(1.0, 0.82, u_phase);
-      gl_FragColor = vec4(col, alpha * 0.92);
+      float seg = 2.0 * PI / BLADES;
+      float local = abs(mod(atan(uv.y, uv.x) + seg * 0.5, seg) - seg * 0.5);
+      float bladeV = smoothstep(0.0, seg * 0.5, local);
+      vec3 bladeCol = mix(bladeEdge, mix(bladeMid, bladeDark, bladeV), 0.55);
+
+      float housing = smoothstep(0.44, 0.40, r) * smoothstep(0.34, 0.38, r);
+      float innerPupil = smoothstep(0.14, 0.06, r) * (1.0 - open * 0.85);
+      float glow = exp(-r * 5.2) * (0.35 + open * 0.65);
+
+      vec3 col = mix(pupil, bladeCol, aperture);
+      col = mix(col, rim, housing * 0.55);
+      col += bladeEdge * glow * 0.42;
+      col += vec3(0.9, 1.0, 0.88) * glow * 0.28 * aperture;
+
+      float alpha = clamp(aperture * 0.88 + housing * 0.35 + glow * 0.3, 0.0, 1.0);
+      alpha *= smoothstep(1.0, 0.84, u_phase);
+      gl_FragColor = vec4(col, alpha * 0.94);
     }
   `;
 
@@ -92,7 +119,6 @@ const IRIS_WEBGL = (function () {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
     const aPos = gl.getAttribLocation(prog, "a_pos");
     const uRes = gl.getUniformLocation(prog, "u_res");
-    const uTime = gl.getUniformLocation(prog, "u_time");
     const uCenter = gl.getUniformLocation(prog, "u_center");
     const uPhase = gl.getUniformLocation(prog, "u_phase");
 
@@ -113,7 +139,6 @@ const IRIS_WEBGL = (function () {
       gl.enableVertexAttribArray(aPos);
       gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
       gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.uniform1f(uTime, elapsed * 0.001);
       gl.uniform2f(uCenter, canvas.width * 0.5, canvas.height * 0.5);
       gl.uniform1f(uPhase, phase);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
