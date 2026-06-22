@@ -1926,7 +1926,16 @@
       ls() { return ["about  experience  skills  projects  certificates  sideprojects  contact  gpu  github  diagnostics  terminal"]; },
       date() { return [new Date().toString()]; },
       clear() { out.innerHTML = ""; return null; },
-      sudo() { return ["<span class='err'>hasan is not in the sudoers file. This incident will be reported. 🚓</span>"]; },
+      sudo(args, raw) {
+        const line = (raw || "").toLowerCase();
+        if (line.includes("party") || line.includes("confetti")) {
+          window.__portfolioFx?.confetti?.();
+          return ["<span class='green'>root access granted.</span>"];
+        }
+        return ["<span class='err'>hasan is not in the sudoers file. This incident will be reported. 🚓</span>"]; },
+      konami() { window.__portfolioFx?.confetti?.(); window.__portfolioFx?.shaderMode?.(true); return ["<span class='green'>KONAMI CODE ACCEPTED</span>"]; },
+      confetti() { window.__portfolioFx?.confetti?.(); return ["<span class='green'>Confetti armed.</span>"]; },
+      shader() { const on = window.__portfolioFx?.shaderMode?.(); return ["<span class='green'>Shader " + (on ? "on" : "off") + "</span>"]; },
       exit() { return ["<span class='dim'>Nice try — you can't escape the portfolio. Use the dock instead.</span>"]; },
     };
 
@@ -2047,7 +2056,7 @@
       }
       if (key === "echo") { print(escapeHtml(args.join(" "))); return; }
       const fn = COMMANDS[key];
-      if (fn) print(fn());
+      if (fn) print(fn(args, line));
       else print("<span class='err'>command not found: " + escapeHtml(cmd) + "</span> — type <span class='green'>help</span>");
     }
 

@@ -245,12 +245,63 @@
     return { init };
   })();
 
+   + confetti + shader party ----- */
+  const EasterEggs = (function () {
+    const KONAMI = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
+    let seq = [];
+
+    function confetti() {
+      const layer = document.createElement("div");
+      layer.className = "confetti-layer";
+      layer.setAttribute("aria-hidden", "true");
+      for (let i = 0; i < 90; i++) {
+        const p = document.createElement("i");
+        p.style.setProperty("--x", (Math.random() * 100).toFixed(2) + "%");
+        p.style.setProperty("--delay", (Math.random() * 0.9).toFixed(2) + "s");
+        p.style.setProperty("--hue", String(Math.floor(Math.random() * 360)));
+        p.style.setProperty("--rot", (Math.random() * 720).toFixed(0) + "deg");
+        layer.appendChild(p);
+      }
+      document.body.appendChild(layer);
+      document.body.classList.add("confetti-active");
+      window.setTimeout(() => {
+        layer.remove();
+        document.body.classList.remove("confetti-active");
+      }, 4500);
+      api().notify?.("Easter egg", "CUDA confetti deployed 🎉");
+    }
+
+    function shaderMode(force) {
+      const on = typeof force === "boolean" ? force : !document.body.classList.contains("shader-party");
+      document.body.classList.toggle("shader-party", on);
+      api().notify?.("Shader mode", on ? "Party shaders enabled" : "Party shaders disabled");
+      return on;
+    }
+
+    function init() {
+      document.addEventListener("keydown", (e) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        seq.push(e.key);
+        if (seq.length > KONAMI.length) seq.shift();
+        if (seq.join("\0") === KONAMI.join("\0")) {
+          seq = [];
+          confetti();
+          shaderMode(true);
+        }
+      });
+      window.__portfolioFx = { confetti, shaderMode };
+    }
+
+    return { init, confetti, shaderMode };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
     DgxStatus.init();
     SoundFX.init();
     DayNight.init();
+    EasterEggs.init();
   }
 
   window.addEventListener("portfolio:ready", boot);

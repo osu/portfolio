@@ -3376,6 +3376,11 @@ body.theme-dgx .menubar-dgx-status.is-active { text-shadow: 0 0 12px rgba(118,18
 body.wallpaper-night .desktop-bg::before { filter: brightness(0.48) saturate(0.75); transition: filter 2.4s ease; }
 body.wallpaper-night .desktop-video { opacity: 0.28; transition: opacity 2.4s ease; }
 body.wallpaper-day .desktop-video { opacity: 0.52; transition: opacity 2.4s ease; }
+body.shader-party .desktop-bg::before { animation: bgdrift 6s ease-in-out infinite alternate, shader-hue 10s linear infinite; }
+@keyframes shader-hue { to { filter: hue-rotate(360deg) saturate(1.4); } }
+.confetti-layer { position: fixed; inset: 0; z-index: 9800; pointer-events: none; overflow: hidden; }
+.confetti-layer i { position: absolute; left: var(--x); top: -12px; width: 8px; height: 14px; background: hsl(var(--hue), 90%, 58%); animation: confetti-fall 3.8s forwards; animation-delay: var(--delay); }
+@keyframes confetti-fall { to { transform: translateY(110vh); opacity: 0; } }
 
 /* =================================================================
    REDUCED MOTION
