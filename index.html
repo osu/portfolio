@@ -114,6 +114,35 @@
           <span class="split-logo-half split-logo-msft"><img src="./assets/images/Microsoft_icon.svg.png" alt=""></span>
         </div>
       </div>
+      <aside class="desktop-widgets" aria-label="Desktop widgets">
+        <button class="desktop-widget" type="button" data-widget="stock" data-stock-trigger data-stock-target="dock" aria-label="Open stock chart">
+          <span class="widget-kicker">Market</span>
+          <strong data-stock-symbol>AAPL</strong>
+          <span data-stock-change>--</span>
+          <svg viewBox="0 0 120 42" preserveAspectRatio="none" aria-hidden="true">
+            <polyline data-stock-sparkline points="4,32 26,28 48,30 70,20 92,21 116,8"/>
+          </svg>
+        </button>
+        <button class="desktop-widget" type="button" data-action="diagnostics" aria-label="Open diagnostics">
+          <span class="widget-kicker">Telemetry</span>
+          <strong>DGX health</strong>
+          <span>NVLink stable</span>
+          <div class="widget-bars" aria-hidden="true"><i></i><i></i><i></i></div>
+        </button>
+        <button class="desktop-widget" type="button" data-action="demo" aria-label="Start portfolio demo">
+          <span class="widget-kicker">Demo</span>
+          <strong>Portfolio tour</strong>
+          <span>Open sequence</span>
+        </button>
+      </aside>
+      <section class="mobile-launcher" aria-label="Mobile app launcher">
+        <button data-app="about"><svg><use href="#i-user" xlink:href="#i-user"/></svg><span>About</span></button>
+        <button data-app="projects"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span>Projects</span></button>
+        <button data-app="skills"><svg><use href="#i-cpu" xlink:href="#i-cpu"/></svg><span>Skills</span></button>
+        <button data-app="github"><svg><use href="#i-github" xlink:href="#i-github"/></svg><span>GitHub</span></button>
+        <button data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span>Terminal</span></button>
+        <button data-app="contact"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg><span>Contact</span></button>
+      </section>
 
       <!-- =================== ABOUT =================== -->
       <section class="win" data-app="about" data-title="About — Hasan Khan" role="dialog" aria-label="About Hasan Khan">
@@ -537,6 +566,70 @@
         </div>
       </section>
 
+      <!-- =================== GITHUB =================== -->
+      <section class="win" data-app="github" data-title="GitHub Activity" role="dialog" aria-label="GitHub activity">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-github" xlink:href="#i-github"/></svg>
+          <span class="win-title">GitHub Activity</span>
+        </header>
+        <div class="win-body">
+          <div class="github-app" data-github-app>
+            <div class="github-head">
+              <div>
+                <h2 class="h-title">GitHub <span class="accent">Activity</span></h2>
+                <p class="lead">Featured repositories and recent public activity from github.com/osu.</p>
+              </div>
+              <a class="btn" href="https://github.com/osu" target="_blank" rel="noopener"><svg><use href="#i-external" xlink:href="#i-external"/></svg> Profile</a>
+            </div>
+            <div class="github-stats">
+              <div><span data-github-repos>--</span><b>Repos</b></div>
+              <div><span data-github-stars>--</span><b>Stars</b></div>
+              <div><span data-github-lang>--</span><b>Top language</b></div>
+            </div>
+            <div class="github-repos" data-github-repos-list>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+              <div class="skeleton-row"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================== DIAGNOSTICS =================== -->
+      <section class="win" data-app="diagnostics" data-title="NVIDIA Diagnostics" role="dialog" aria-label="NVIDIA diagnostics">
+        <header class="win-titlebar">
+          <div class="win-lights">
+            <button class="win-light win-close" data-win-action="close" aria-label="Close"></button>
+            <button class="win-light win-min" data-win-action="minimize" aria-label="Minimize"></button>
+            <button class="win-light win-max" data-win-action="maximize" aria-label="Maximize"></button>
+          </div>
+          <svg class="win-ico"><use href="#i-activity" xlink:href="#i-activity"/></svg>
+          <span class="win-title">NVIDIA Diagnostics</span>
+        </header>
+        <div class="win-body">
+          <div class="diag-app">
+            <h2 class="h-title">Fabric <span class="accent">Diagnostics</span></h2>
+            <div class="diag-grid">
+              <div class="diag-card"><span>NVLink</span><strong data-diag="nvlink">OK</strong><i></i></div>
+              <div class="diag-card"><span>Thermals</span><strong data-diag="thermals">Nominal</strong><i></i></div>
+              <div class="diag-card"><span>Recovery</span><strong data-diag="recovery">Idle</strong><i></i></div>
+              <div class="diag-card"><span>Rack health</span><strong data-diag="rack">99.98%</strong><i></i></div>
+            </div>
+            <div class="diag-log" aria-label="Diagnostics log">
+              <div><b>00:00:01</b><span>checking gpu fabric links</span><em>pass</em></div>
+              <div><b>00:00:03</b><span>sampling thermals and fan curve</span><em>pass</em></div>
+              <div><b>00:00:06</b><span>watching recovery daemon heartbeat</span><em>pass</em></div>
+              <div><b>00:00:08</b><span>mission-control automation ready</span><em>armed</em></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- =================== CONTACT =================== -->
       <section class="win" data-app="contact" data-title="Contact" role="dialog" aria-label="Contact">
         <header class="win-titlebar">
@@ -579,8 +672,14 @@
         <button class="dock-item" data-app="certificates"><svg><use href="#i-award" xlink:href="#i-award"/></svg><span class="dock-tooltip">Certificates</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="sideprojects"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Side Projects</span><span class="dock-indicator"></span></button>
         <span class="dock-sep"></span>
+        <button class="dock-item" type="button" data-action="mission" aria-label="Mission Control"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span class="dock-tooltip">Mission Control</span></button>
+        <button class="dock-item" type="button" data-action="launcher" aria-label="App Launcher"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Launchpad</span></button>
+        <button class="dock-item" type="button" data-action="command-palette" aria-label="Command Palette"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Command Palette</span></button>
+        <span class="dock-sep"></span>
         <button class="dock-item" data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Terminal</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="gpu"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="github"><svg><use href="#i-github" xlink:href="#i-github"/></svg><span class="dock-tooltip">GitHub</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="diagnostics"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">Diagnostics</span><span class="dock-indicator"></span></button>
         <button class="dock-item stock-dock-widget" type="button" data-stock-trigger data-stock-target="dock" aria-label="AAPL Stock">
           <span class="stock-widget-icon" aria-hidden="true">
             <svg viewBox="0 0 64 32" focusable="false">
@@ -599,17 +698,19 @@
     <!-- WINDOWS TASKBAR -->
     <nav class="windows-taskbar" aria-label="Windows taskbar">
       <div class="win-taskbar-left">
-        <button class="win-taskbar-button win-start" data-app="projects" aria-label="Start">
+        <button class="win-taskbar-button win-start" type="button" data-action="launcher" aria-label="Start">
           <img src="./assets/images/Microsoft_icon.svg.png" alt="">
         </button>
         <button class="win-search" aria-label="Search">
           <svg><use href="#i-grid" xlink:href="#i-grid"/></svg>
           <span>Search portfolio</span>
         </button>
+        <button class="win-taskbar-app" type="button" data-action="mission" aria-label="Task View"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg></button>
         <button class="win-taskbar-app" data-app="about" aria-label="About"><svg><use href="#i-user" xlink:href="#i-user"/></svg></button>
         <button class="win-taskbar-app" data-app="experience" aria-label="Experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg></button>
         <button class="win-taskbar-app" data-app="terminal" aria-label="Terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg></button>
         <button class="win-taskbar-app" data-app="gpu" aria-label="GPU Stats"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg></button>
+        <button class="win-taskbar-app" data-app="github" aria-label="GitHub"><svg><use href="#i-github" xlink:href="#i-github"/></svg></button>
         <button class="win-stock-widget" type="button" data-stock-trigger data-stock-target="windows" aria-label="MSFT Stock">
           <span class="stock-widget-icon" aria-hidden="true">
             <svg viewBox="0 0 64 32" focusable="false">
@@ -658,6 +759,49 @@
         <span data-stock-updated>Updating...</span>
       </div>
     </aside>
+
+    <section class="mission-control" data-mission-control aria-hidden="true" aria-label="Mission Control">
+      <div class="overlay-shell">
+        <header class="overlay-head">
+          <div><span>Mission Control</span><strong data-mission-count>Open windows</strong></div>
+          <button type="button" data-overlay-close aria-label="Close Mission Control">Close</button>
+        </header>
+        <div class="mission-grid" data-mission-grid></div>
+      </div>
+    </section>
+
+    <section class="universal-search spotlight-search" data-universal-search aria-hidden="true" aria-label="Search">
+      <div class="search-shell">
+        <div class="search-input-row">
+          <svg><use href="#i-grid" xlink:href="#i-grid"/></svg>
+          <input type="search" data-universal-search-input placeholder="Search apps, projects, commands" aria-label="Search apps and commands">
+        </div>
+        <div class="search-results" data-universal-search-results></div>
+      </div>
+    </section>
+
+    <section class="app-launcher" data-app-launcher aria-hidden="true" aria-label="App launcher">
+      <div class="overlay-shell">
+        <header class="overlay-head">
+          <div><span data-launcher-kicker>Launchpad</span><strong data-launcher-title>Apps</strong></div>
+          <button type="button" data-overlay-close aria-label="Close app launcher">Close</button>
+        </header>
+        <div class="launcher-grid" data-launcher-grid></div>
+      </div>
+    </section>
+
+    <section class="command-palette" data-command-palette aria-hidden="true" aria-label="NVIDIA command palette">
+      <div class="search-shell command-shell">
+        <div class="search-input-row">
+          <svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg>
+          <input type="search" data-command-input placeholder="Run command" aria-label="Run command">
+        </div>
+        <div class="search-results" data-command-results></div>
+      </div>
+    </section>
+
+    <div class="snap-preview" data-snap-preview aria-hidden="true"></div>
+    <div class="notification-stack" data-notification-stack aria-live="polite"></div>
 
   </div>
 

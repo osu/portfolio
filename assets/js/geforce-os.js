@@ -10,6 +10,53 @@
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
   let currentOsMode = "split";
+  const APP_CATALOG = [
+    { id: "about", icon: "i-user", title: "About", desc: "Profile and background", names: { macos: "Finder", windows: "Portfolio Explorer", nvidia: "Identity Node" } },
+    { id: "experience", icon: "i-briefcase", title: "Experience", desc: "Work history", names: { macos: "Work Timeline", windows: "Experience", nvidia: "Mission Log" } },
+    { id: "skills", icon: "i-cpu", title: "Skills", desc: "Languages and tools", names: { macos: "System Profiler", windows: "Skills", nvidia: "Capability Matrix" } },
+    { id: "projects", icon: "i-grid", title: "Projects", desc: "Featured builds", names: { macos: "Projects", windows: "Pinned Projects", nvidia: "Build Grid" } },
+    { id: "certificates", icon: "i-award", title: "Certificates", desc: "Credentials", names: { macos: "Certificates", windows: "Credentials", nvidia: "Trust Store" } },
+    { id: "sideprojects", icon: "i-rocket", title: "Side Projects", desc: "Community and experiments", names: { macos: "Side Projects", windows: "Side Projects", nvidia: "Side Quests" } },
+    { id: "terminal", icon: "i-terminal", title: "Terminal", desc: "Shell and commands", names: { macos: "Terminal", windows: "PowerShell", nvidia: "DGX Shell" } },
+    { id: "gpu", icon: "i-activity", title: "GPU Stats", desc: "Live graphics telemetry", names: { macos: "Graphics", windows: "Task Manager", nvidia: "GPU Telemetry" } },
+    { id: "github", icon: "i-github", title: "GitHub", desc: "Repos and public activity", names: { macos: "GitHub", windows: "GitHub", nvidia: "Repo Feed" } },
+    { id: "diagnostics", icon: "i-activity", title: "Diagnostics", desc: "Fabric and recovery status", names: { macos: "Diagnostics", windows: "Diagnostics", nvidia: "Fabric Diagnostics" } },
+    { id: "contact", icon: "i-mail", title: "Contact", desc: "Email and socials", names: { macos: "Contacts", windows: "People", nvidia: "Comms" } },
+  ];
+
+  function appMeta(id) {
+    return APP_CATALOG.find((app) => app.id === id);
+  }
+
+  function appTitle(id, mode = currentOsMode) {
+    const meta = appMeta(id);
+    if (!meta) return id || "";
+    return (meta.names && meta.names[mode]) || meta.title;
+  }
+
+  function appDescription(id) {
+    const meta = appMeta(id);
+    return meta ? meta.desc : "";
+  }
+
+  function desktopAppName(mode = currentOsMode) {
+    if (mode === "windows") return "Desktop";
+    if (mode === "nvidia") return "Control Plane";
+    return "Finder";
+  }
+
+  function iconUse(icon) {
+    return "<svg><use href='#" + icon + "' xlink:href='#" + icon + "'/></svg>";
+  }
+
+  function escapePlain(value) {
+    return String(value || "").replace(/[&<>"]/g, (c) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+    }[c]));
+  }
 
   /* =============================================================
      BOOT SPLASH
@@ -110,6 +157,7 @@
 
     currentOsMode = activeMode;
     syncOsSwitcher(activeMode);
+    syncAppLabels(activeMode);
     window.dispatchEvent(new CustomEvent("portfolio:os-mode", { detail: { mode: activeMode } }));
 
     if (typeof TERM !== "undefined") TERM.setMode(activeMode);
@@ -129,6 +177,41 @@
       button.addEventListener("click", () => setOsMode(button.dataset.osMode));
     });
     syncOsSwitcher(document.body.classList.contains("theme-dgx") ? "nvidia" : "");
+  }
+
+  function syncAppLabels(mode = currentOsMode) {
+    APP_CATALOG.forEach((app) => {
+      const label = appTitle(app.id, mode);
+      $$("[data-app='" + app.id + "']").forEach((el) => {
+        const tooltip = $(".dock-tooltip", el);
+        if (tooltip) tooltip.textContent = label;
+        if (el.matches("button, a")) el.setAttribute("aria-label", label);
+        if (el.closest(".mobile-launcher")) {
+          const mobileLabel = $("span", el);
+          if (mobileLabel) mobileLabel.textContent = label;
+        }
+      });
+
+      const win = $(".win[data-app='" + app.id + "']");
+      if (win) {
+        const title = $(".win-title", win);
+        win.dataset.title = label;
+        win.setAttribute("aria-label", label + " window");
+        if (title && app.id !== "terminal" && app.id !== "gpu") title.textContent = label;
+      }
+    });
+
+    const focused = $(".win.is-focused.is-open:not(.is-min)");
+    const menubarApp = $("#mb-app");
+    if (focused && menubarApp) menubarApp.textContent = focused.dataset.title || appTitle(focused.dataset.app, mode);
+    else if (menubarApp) menubarApp.textContent = desktopAppName(mode);
+
+    $$("[data-action='command-palette']").forEach((el) => {
+      const label = mode === "nvidia" ? "Command Palette" : (mode === "windows" ? "Search" : "Spotlight");
+      const tooltip = $(".dock-tooltip", el);
+      if (tooltip) tooltip.textContent = label;
+      el.setAttribute("aria-label", label);
+    });
   }
 
   /* =============================================================
@@ -190,11 +273,12 @@
       const win = wins[id];
       if (!win) return;
       const wasOpen = win.classList.contains("is-open") && !win.classList.contains("is-min");
+      win._minimizeToken = (win._minimizeToken || 0) + 1;
       if (!wasOpen) {
         const trigger = document.activeElement;
         if (trigger && trigger !== document.body && win !== trigger && !win.contains(trigger)) openers[id] = trigger;
       }
-      win.classList.remove("is-min");
+      win.classList.remove("is-min", "is-minimizing");
       if (!win.classList.contains("is-open")) {
         win.classList.add("is-open");
         place(win);
@@ -203,6 +287,8 @@
       focus(id);
       if (id === "terminal" && typeof TERM !== "undefined") TERM.ensureWelcome();
       if (id === "gpu" && typeof GPU !== "undefined") GPU.refreshMenubar();
+      if (id === "github" && typeof GITHUB_APP !== "undefined") GITHUB_APP.refresh();
+      if (id === "diagnostics" && typeof DIAGNOSTICS !== "undefined") DIAGNOSTICS.refresh();
       syncDock();
       // move DOM focus into the freshly shown window (terminal manages its own input)
       if (!wasOpen && id !== "terminal") win.focus({ preventScroll: true });
@@ -218,7 +304,7 @@
     function close(id) {
       const win = wins[id];
       if (!win) return;
-      win.classList.remove("is-open", "is-focused", "is-min");
+      win.classList.remove("is-open", "is-focused", "is-min", "is-minimizing");
       syncDock();
       if (!restoreOpener(id)) focusTopMost();
     }
@@ -226,22 +312,36 @@
     function closeAll() {
       Object.keys(wins).forEach((id) => {
         const win = wins[id];
-        win.classList.remove("is-open", "is-focused", "is-min", "is-max");
+        win.classList.remove("is-open", "is-focused", "is-min", "is-max", "is-minimizing");
         delete openers[id];
       });
       z = 20;
       const label = $("#mb-app");
-      if (label) label.textContent = "Finder";
+      if (label) label.textContent = desktopAppName();
       syncDock();
     }
 
     function minimize(id) {
       const win = wins[id];
       if (!win) return;
-      win.classList.add("is-min");
-      win.classList.remove("is-focused");
-      syncDock();
-      if (!restoreOpener(id)) focusTopMost();
+      if (reduceMotion) {
+        win.classList.add("is-min");
+        win.classList.remove("is-focused", "is-minimizing");
+        syncDock();
+        if (!restoreOpener(id)) focusTopMost();
+        return;
+      }
+      if (win.classList.contains("is-minimizing")) return;
+      const token = (win._minimizeToken || 0) + 1;
+      win._minimizeToken = token;
+      win.classList.add("is-minimizing");
+      window.setTimeout(() => {
+        if (win._minimizeToken !== token) return;
+        win.classList.add("is-min");
+        win.classList.remove("is-focused", "is-minimizing");
+        syncDock();
+        if (!restoreOpener(id)) focusTopMost();
+      }, 245);
     }
 
     function toggleMax(id) {
@@ -269,7 +369,7 @@
 
     function focusTopMost() {
       const openWins = $$(".win.is-open").filter((w) => !w.classList.contains("is-min"));
-      if (!openWins.length) { const l = $("#mb-app"); if (l) l.textContent = "Finder"; return; }
+      if (!openWins.length) { const l = $("#mb-app"); if (l) l.textContent = desktopAppName(); return; }
       openWins.sort((a, b) => (+a.style.zIndex || 0) - (+b.style.zIndex || 0));
       const top = openWins[openWins.length - 1];
       focus(top.dataset.app);
@@ -307,29 +407,102 @@
       });
     }
 
+    function snapTargetFromPointer(x, y) {
+      const desk = $(".desktop");
+      if (!desk) return null;
+      const rect = desk.getBoundingClientRect();
+      const edge = 34;
+      if (y <= rect.top + edge) return "top";
+      if (x <= rect.left + edge) return "left";
+      if (x >= rect.right - edge) return "right";
+      return null;
+    }
+
+    function snapRect(target) {
+      const desk = $(".desktop");
+      if (!desk) return null;
+      const rect = desk.getBoundingClientRect();
+      const gap = 12;
+      const top = gap + 34;
+      const bottomReserve = document.body.classList.contains("taskbar-bottom") || document.body.classList.contains("dock-bottom") ? 92 : 16;
+      const height = Math.max(280, rect.height - top - bottomReserve);
+      if (target === "left") return { left: gap, top, width: Math.floor((rect.width - gap * 3) / 2), height };
+      if (target === "right") return { left: Math.floor(rect.width / 2) + gap / 2, top, width: Math.floor((rect.width - gap * 3) / 2), height };
+      if (target === "top") return { left: gap, top: gap + 28, width: rect.width - gap * 2, height: Math.max(320, rect.height - bottomReserve - gap * 2 - 28) };
+      return null;
+    }
+
+    function showSnapPreview(target) {
+      const preview = $("[data-snap-preview]");
+      const rect = snapRect(target);
+      if (!preview || !rect) return;
+      preview.style.left = rect.left + "px";
+      preview.style.top = rect.top + "px";
+      preview.style.width = rect.width + "px";
+      preview.style.height = rect.height + "px";
+      preview.classList.add("is-visible");
+    }
+
+    function hideSnapPreview() {
+      const preview = $("[data-snap-preview]");
+      if (preview) preview.classList.remove("is-visible");
+    }
+
+    function applySnap(win, target) {
+      const rect = snapRect(target);
+      if (!rect) return;
+      win.classList.remove("is-max");
+      win.style.left = rect.left + "px";
+      win.style.top = rect.top + "px";
+      win.style.width = rect.width + "px";
+      win.style.height = rect.height + "px";
+      if (target === "top") win.classList.add("is-max");
+      focus(win.dataset.app);
+      notify("Window snapped", appTitle(win.dataset.app) + " moved " + target + ".");
+    }
+
     function makeDraggable(win) {
       const bar = $(".win-titlebar", win);
       if (!bar) return;
       let sx, sy, ox, oy, dragging = false;
+      let snapTarget = null;
       const dockH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) || 76;
-      bar.addEventListener("pointerdown", (e) => {
-        if (e.target.closest(".win-light")) return;
-        if (isMobile() || win.classList.contains("is-max")) return;
-        dragging = true;
-        sx = e.clientX; sy = e.clientY;
-        ox = win.offsetLeft; oy = win.offsetTop;
-        bar.setPointerCapture(e.pointerId);
-        focus(win.dataset.app);
-      });
-      bar.addEventListener("pointermove", (e) => {
+      function move(e) {
         if (!dragging) return;
         const desk = $(".desktop");
         const nx = clamp(ox + (e.clientX - sx), -win.offsetWidth + 80, desk.clientWidth - 80);
         const ny = clamp(oy + (e.clientY - sy), 0, desk.clientHeight - dockH - 24);
         win.style.left = nx + "px";
         win.style.top = ny + "px";
+        snapTarget = snapTargetFromPointer(e.clientX, e.clientY);
+        if (snapTarget) showSnapPreview(snapTarget);
+        else hideSnapPreview();
+      }
+      const end = (e) => {
+        if (dragging) {
+          dragging = false;
+          hideSnapPreview();
+          if (snapTarget) applySnap(win, snapTarget);
+          snapTarget = null;
+          window.removeEventListener("pointermove", move);
+          window.removeEventListener("pointerup", end);
+          window.removeEventListener("pointercancel", end);
+          try { bar.releasePointerCapture(e.pointerId); } catch (_) {}
+        }
+      };
+      bar.addEventListener("pointerdown", (e) => {
+        if (e.target.closest(".win-light")) return;
+        if (isMobile() || win.classList.contains("is-max")) return;
+        dragging = true;
+        sx = e.clientX; sy = e.clientY;
+        ox = win.offsetLeft; oy = win.offsetTop;
+        try { bar.setPointerCapture(e.pointerId); } catch (_) {}
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", end);
+        window.addEventListener("pointercancel", end);
+        focus(win.dataset.app);
       });
-      const end = (e) => { if (dragging) { dragging = false; try { bar.releasePointerCapture(e.pointerId); } catch (_) {} } };
+      bar.addEventListener("pointermove", move);
       bar.addEventListener("pointerup", end);
       bar.addEventListener("pointercancel", end);
       // double-click titlebar to maximize
@@ -423,7 +596,7 @@
      DOCK
      ============================================================= */
   function dock() {
-    $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app]").forEach((it) => {
+    $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app], .mobile-launcher [data-app]").forEach((it) => {
       if (!it.dataset.app) return;
       it.addEventListener("click", () => WM.toggle(it.dataset.app));
     });
@@ -454,17 +627,7 @@
     const results = $(".windows-search-results");
     if (!button || !panel || !input || !results) return;
 
-    const apps = [
-      { id: "about", title: "About", desc: "Hasan profile", icon: "i-user" },
-      { id: "experience", title: "Experience", desc: "Work history", icon: "i-briefcase" },
-      { id: "skills", title: "Skills", desc: "Languages and tools", icon: "i-cpu" },
-      { id: "projects", title: "Projects", desc: "Featured builds", icon: "i-grid" },
-      { id: "certificates", title: "Certificates", desc: "Credentials", icon: "i-award" },
-      { id: "sideprojects", title: "Side Projects", desc: "Extra work", icon: "i-rocket" },
-      { id: "terminal", title: "Terminal", desc: "Shell", icon: "i-terminal" },
-      { id: "gpu", title: "GPU Stats", desc: "Live telemetry", icon: "i-activity" },
-      { id: "contact", title: "Contact", desc: "Email and socials", icon: "i-mail" },
-    ];
+    const apps = APP_CATALOG;
 
     function openPanel() {
       if (!document.body.classList.contains("theme-windows-only")) return;
@@ -482,13 +645,13 @@
     function render() {
       const query = input.value.trim().toLowerCase();
       const filtered = apps.filter((app) => {
-        const haystack = (app.title + " " + app.desc + " " + app.id).toLowerCase();
+        const haystack = (appTitle(app.id, "windows") + " " + app.title + " " + app.desc + " " + app.id).toLowerCase();
         return !query || haystack.includes(query);
       });
       results.innerHTML = filtered.map((app) => (
         "<button class='windows-search-result' type='button' data-app='" + app.id + "'>" +
         "<svg><use href='#" + app.icon + "' xlink:href='#" + app.icon + "'/></svg>" +
-        "<div><b>" + app.title + "</b><span>" + app.desc + "</span></div>" +
+        "<div><b>" + appTitle(app.id, "windows") + "</b><span>" + app.desc + "</span></div>" +
         "</button>"
       )).join("");
     }
@@ -590,24 +753,25 @@
       }
     }
 
-    function yahooUrl(symbol) {
-      return "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) + "?range=1d&interval=5m";
-    }
-
-    async function fetchJson(url) {
+    async function fetchText(url) {
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.json();
+      return res.text();
+    }
+
+    function yahooReaderUrl(symbol) {
+      return "https://r.jina.ai/http://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) + "?range=1d&interval=5m";
+    }
+
+    function parseReaderJson(text) {
+      const start = text.indexOf("{\"chart\"");
+      const end = text.lastIndexOf("}");
+      if (start < 0 || end <= start) throw new Error("missing reader json");
+      return JSON.parse(text.slice(start, end + 1));
     }
 
     async function fetchYahoo(symbol) {
-      const url = yahooUrl(symbol);
-      try {
-        return parseYahoo(symbol, await fetchJson(url), "Yahoo");
-      } catch (_) {
-        const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
-        return parseYahoo(symbol, await fetchJson(proxy), "Yahoo proxy");
-      }
+      return parseYahoo(symbol, parseReaderJson(await fetchText(yahooReaderUrl(symbol))), "Yahoo via Jina");
     }
 
     function parseYahoo(symbol, json, source) {
@@ -779,6 +943,13 @@
       refreshVisible();
     }
 
+    function summary() {
+      return Object.values(CONFIG).map((item) => {
+        const quote = quoteFor(item.symbol);
+        return item.symbol + "  " + formatPrice(quote.price) + "  " + formatChange(quote) + "  " + quote.source;
+      });
+    }
+
     function init() {
       const inferred = document.body.classList.contains("theme-dgx")
         ? "nvidia"
@@ -811,7 +982,7 @@
       refreshTimer = window.setInterval(refreshVisible, 120000);
     }
 
-    return { init, setMode };
+    return { init, setMode, summary };
   })();
 
   function taskbarPlacement() {
@@ -919,11 +1090,295 @@
         WM.open(el.dataset.openApp);
       });
     });
+    $$("[data-action]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        runSystemAction(el.dataset.action);
+      });
+    });
     document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.code === "Space") {
+        e.preventDefault();
+        if (currentOsMode === "nvidia") COMMAND_PALETTE.open();
+        else UNIVERSAL_SEARCH.open(currentOsMode === "macos" ? "spotlight" : "windows");
+        return;
+      }
+      if (e.key === "F3") {
+        e.preventDefault();
+        MISSION.open();
+        return;
+      }
       if (e.key !== "Escape") return;
+      if (closeSystemOverlays()) return;
       if ($(".lb-overlay")) return; // overlay open: let lightbox() handle Escape
       const f = $(".win.is-focused.is-open");
       if (f) WM.minimize(f.dataset.app);
+    });
+  }
+
+  function runSystemAction(action) {
+    if (action === "mission") MISSION.open();
+    else if (action === "launcher") APP_LAUNCHER.open();
+    else if (action === "command-palette") {
+      if (currentOsMode === "nvidia") COMMAND_PALETTE.open();
+      else UNIVERSAL_SEARCH.open(currentOsMode === "windows" ? "windows" : "spotlight");
+    }
+    else if (action === "diagnostics") {
+      WM.open("diagnostics");
+      notify("Diagnostics", "Fabric telemetry is live.");
+    } else if (action === "demo") startProjectDemo();
+  }
+
+  function closeSystemOverlays() {
+    const before = $$(".mission-control.is-open, .universal-search.is-open, .app-launcher.is-open, .command-palette.is-open").length;
+    MISSION.close();
+    UNIVERSAL_SEARCH.close();
+    APP_LAUNCHER.close();
+    COMMAND_PALETTE.close();
+    return before > 0;
+  }
+
+  function searchRows(items, query, mode = currentOsMode) {
+    const needle = query.trim().toLowerCase();
+    return items.filter((item) => {
+      const label = item.title || appTitle(item.id, mode);
+      const haystack = (label + " " + (item.desc || "") + " " + (item.id || "") + " " + (item.keywords || "")).toLowerCase();
+      return !needle || haystack.includes(needle);
+    });
+  }
+
+  function rowMarkup(item, mode = currentOsMode) {
+    const label = item.title || appTitle(item.id, mode);
+    return "<button class='search-result-row' type='button' data-id='" + (item.id || "") + "' data-action-name='" + (item.action || "app") + "'>" +
+      iconUse(item.icon || "i-grid") +
+      "<div><b>" + escapePlain(label) + "</b><span>" + escapePlain(item.desc || appDescription(item.id)) + "</span></div>" +
+      "</button>";
+  }
+
+  const MISSION = (function () {
+    let el, grid;
+    function init() {
+      el = $("[data-mission-control]");
+      grid = $("[data-mission-grid]", el || document);
+      if (!el || !grid) return;
+      $$("[data-overlay-close]", el).forEach((button) => button.addEventListener("click", close));
+      el.addEventListener("pointerdown", (e) => { if (e.target === el) close(); });
+      grid.addEventListener("click", (e) => {
+        const card = e.target.closest("[data-app]");
+        if (!card) return;
+        WM.open(card.dataset.app);
+        close();
+      });
+    }
+    function render() {
+      if (!grid) return;
+      const wins = $$(".win.is-open:not(.is-min)").map((win) => ({
+        id: win.dataset.app,
+        title: appTitle(win.dataset.app),
+        desc: appDescription(win.dataset.app) || "Open pane",
+      }));
+      if (!wins.length) {
+        grid.innerHTML = "<button class='mission-card' type='button' data-app='about'><div class='mini-window'></div><b>No open panes</b><span>Open About to begin.</span></button>";
+        const count = $("[data-mission-count]");
+        if (count) count.textContent = "No open windows";
+        return;
+      }
+      const count = $("[data-mission-count]");
+      if (count) count.textContent = wins.length + " open window" + (wins.length === 1 ? "" : "s");
+      grid.innerHTML = wins.map((win) => (
+        "<button class='mission-card' type='button' data-app='" + win.id + "'>" +
+        "<div class='mini-window'></div><b>" + escapePlain(win.title) + "</b><span>" + escapePlain(win.desc) + "</span></button>"
+      )).join("");
+    }
+    function open() {
+      if (!el) return;
+      closeSystemOverlays();
+      render();
+      el.classList.add("is-open");
+      el.setAttribute("aria-hidden", "false");
+      notify("Mission Control", "Showing active panes.");
+    }
+    function close() {
+      if (!el) return;
+      el.classList.remove("is-open");
+      el.setAttribute("aria-hidden", "true");
+    }
+    return { init, open, close };
+  })();
+
+  const UNIVERSAL_SEARCH = (function () {
+    let el, input, results, variant = "spotlight";
+    const actions = [
+      { id: "mission", title: "Mission Control", desc: "Show all open panes", icon: "i-grid", action: "mission", keywords: "expose overview task view" },
+      { id: "launcher", title: "Launchpad", desc: "Open the app launcher", icon: "i-rocket", action: "launcher", keywords: "start apps" },
+      { id: "demo", title: "Project Demo Mode", desc: "Walk through the portfolio", icon: "i-award", action: "demo", keywords: "presentation tour" },
+    ];
+    function init() {
+      el = $("[data-universal-search]");
+      input = $("[data-universal-search-input]", el || document);
+      results = $("[data-universal-search-results]", el || document);
+      if (!el || !input || !results) return;
+      input.addEventListener("input", render);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+        if (e.key === "Enter") activate($(".search-result-row", results));
+      });
+      results.addEventListener("click", (e) => activate(e.target.closest(".search-result-row")));
+      el.addEventListener("pointerdown", (e) => { if (e.target === el) close(); });
+    }
+    function allItems() {
+      return APP_CATALOG.map((app) => ({ ...app, title: appTitle(app.id, currentOsMode), action: "app" })).concat(actions);
+    }
+    function render() {
+      if (!results) return;
+      const rows = searchRows(allItems(), input.value, currentOsMode).slice(0, 8);
+      results.innerHTML = rows.map((item) => rowMarkup(item, currentOsMode)).join("");
+    }
+    function activate(row) {
+      if (!row) return;
+      const action = row.dataset.actionName;
+      const id = row.dataset.id;
+      close();
+      if (action === "app") WM.open(id);
+      else runSystemAction(id);
+    }
+    function open(nextVariant = "spotlight") {
+      if (!el) return;
+      closeSystemOverlays();
+      variant = nextVariant;
+      el.dataset.variant = variant;
+      input.placeholder = variant === "windows" ? "Search apps, repos, and settings" : "Spotlight Search";
+      input.value = "";
+      render();
+      el.classList.add("is-open");
+      el.setAttribute("aria-hidden", "false");
+      window.setTimeout(() => input.focus(), 30);
+    }
+    function close() {
+      if (!el) return;
+      el.classList.remove("is-open");
+      el.setAttribute("aria-hidden", "true");
+    }
+    return { init, open, close };
+  })();
+
+  const APP_LAUNCHER = (function () {
+    let el, grid;
+    function init() {
+      el = $("[data-app-launcher]");
+      grid = $("[data-launcher-grid]", el || document);
+      if (!el || !grid) return;
+      $$("[data-overlay-close]", el).forEach((button) => button.addEventListener("click", close));
+      el.addEventListener("pointerdown", (e) => { if (e.target === el) close(); });
+      grid.addEventListener("click", (e) => {
+        const tile = e.target.closest("[data-app]");
+        if (!tile) return;
+        WM.open(tile.dataset.app);
+        notify("App opened", appTitle(tile.dataset.app));
+        close();
+      });
+      render();
+      window.addEventListener("portfolio:os-mode", render);
+    }
+    function render() {
+      if (!grid) return;
+      const kicker = $("[data-launcher-kicker]");
+      const title = $("[data-launcher-title]");
+      if (kicker) kicker.textContent = currentOsMode === "windows" ? "Start" : (currentOsMode === "nvidia" ? "App Grid" : "Launchpad");
+      if (title) title.textContent = currentOsMode === "nvidia" ? "NVIDIA OS apps" : "Apps";
+      grid.innerHTML = APP_CATALOG.map((app) => (
+        "<button class='launcher-tile' type='button' data-app='" + app.id + "'>" +
+        iconUse(app.icon) +
+        "<b>" + escapePlain(appTitle(app.id)) + "</b><span>" + escapePlain(app.desc) + "</span></button>"
+      )).join("");
+    }
+    function open() {
+      if (!el) return;
+      closeSystemOverlays();
+      render();
+      el.classList.add("is-open");
+      el.setAttribute("aria-hidden", "false");
+      notify(currentOsMode === "windows" ? "Start" : "Launchpad", "Choose an app.");
+    }
+    function close() {
+      if (!el) return;
+      el.classList.remove("is-open");
+      el.setAttribute("aria-hidden", "true");
+    }
+    return { init, open, close };
+  })();
+
+  const COMMAND_PALETTE = (function () {
+    let el, input, results;
+    const commands = [
+      { id: "diagnostics", title: "Open Fabric Diagnostics", desc: "NVLink, thermals, recovery, and rack status", icon: "i-activity", action: "app", keywords: "nvidia health" },
+      { id: "gpu", title: "Open GPU Telemetry", desc: "Live GPU gauges", icon: "i-activity", action: "app", keywords: "nvidia smi stats" },
+      { id: "github", title: "Open Repo Feed", desc: "Fetch public GitHub activity", icon: "i-github", action: "app", keywords: "repos code" },
+      { id: "terminal", title: "Open DGX Shell", desc: "Run terminal commands", icon: "i-terminal", action: "app", keywords: "console shell" },
+      { id: "mission", title: "Mission Control", desc: "Show open panes", icon: "i-grid", action: "mission", keywords: "overview" },
+      { id: "launcher", title: "Open App Launcher", desc: "Grid of portfolio apps", icon: "i-rocket", action: "launcher", keywords: "apps launchpad" },
+      { id: "demo", title: "Run Project Demo", desc: "Sequence the portfolio for presentation", icon: "i-award", action: "demo", keywords: "tour" },
+    ];
+    function init() {
+      el = $("[data-command-palette]");
+      input = $("[data-command-input]", el || document);
+      results = $("[data-command-results]", el || document);
+      if (!el || !input || !results) return;
+      input.addEventListener("input", render);
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") close();
+        if (e.key === "Enter") activate($(".search-result-row", results));
+      });
+      results.addEventListener("click", (e) => activate(e.target.closest(".search-result-row")));
+      el.addEventListener("pointerdown", (e) => { if (e.target === el) close(); });
+    }
+    function render() {
+      if (!results) return;
+      const rows = searchRows(commands, input.value, "nvidia").slice(0, 8);
+      results.innerHTML = rows.map((item) => rowMarkup(item, "nvidia")).join("");
+    }
+    function activate(row) {
+      if (!row) return;
+      const id = row.dataset.id;
+      const command = commands.find((item) => item.id === id);
+      close();
+      if (!command) return;
+      if (command.action === "app") WM.open(command.id);
+      else runSystemAction(command.id);
+    }
+    function open() {
+      if (!el) return;
+      closeSystemOverlays();
+      input.value = "";
+      render();
+      el.classList.add("is-open");
+      el.setAttribute("aria-hidden", "false");
+      window.setTimeout(() => input.focus(), 30);
+    }
+    function close() {
+      if (!el) return;
+      el.classList.remove("is-open");
+      el.setAttribute("aria-hidden", "true");
+    }
+    return { init, open, close };
+  })();
+
+  function startProjectDemo() {
+    closeSystemOverlays();
+    notify("Demo mode", "Sequencing the strongest panes.");
+    WM.closeAll();
+    const sequence = [
+      { id: "about", delay: 160 },
+      { id: "projects", delay: 760 },
+      { id: "github", delay: 1360 },
+      { id: "diagnostics", delay: 1960 },
+      { id: "contact", delay: 2560 },
+    ];
+    sequence.forEach((item) => {
+      window.setTimeout(() => {
+        WM.open(item.id);
+        notify("Demo mode", appTitle(item.id) + " is now in focus.", { ttl: 1800 });
+      }, item.delay);
     });
   }
 
@@ -986,13 +1441,34 @@
   /* =============================================================
      COPY-TO-CLIPBOARD
      ============================================================= */
-  function toast(msg) {
+  function notify(title, body, options = {}) {
+    const stack = $("[data-notification-stack]");
+    if (!stack) return toastFallback((body ? title + " — " + body : title));
+    const note = document.createElement("div");
+    note.className = "notification";
+    note.setAttribute("role", "status");
+    note.innerHTML = [
+      "<strong>" + escapePlain(title) + "</strong>",
+      body ? "<span>" + escapePlain(body) + "</span>" : "",
+    ].join("");
+    stack.appendChild(note);
+    requestAnimationFrame(() => note.classList.add("show"));
+    const ttl = options.ttl || 3600;
+    window.setTimeout(() => note.classList.remove("show"), ttl);
+    window.setTimeout(() => note.remove(), ttl + 420);
+  }
+
+  function toastFallback(msg) {
     let t = $(".toast");
     if (!t) { t = document.createElement("div"); t.className = "toast"; document.body.appendChild(t); }
     t.textContent = msg;
     t.classList.add("show");
     window.clearTimeout(t._t);
     t._t = window.setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function toast(msg) {
+    notify("Portfolio OS", msg, { ttl: 2200 });
   }
   function copyText(text, label) {
     const done = () => toast((label || "Copied") + " ✓");
@@ -1126,6 +1602,120 @@
     return { start, refreshMenubar: () => { paintMenubar(); paintPanel(); }, snapshot: () => ({ ...state, memTotal: profile().memTotal }) };
   })();
 
+  const GITHUB_APP = (function () {
+    const fallbackRepos = [
+      { name: "AI-Powered-Disease-Detection-in-X-Ray-Images", html_url: "https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images", stargazers_count: 0, language: "Python", description: "Deep-learning model for X-ray disease detection." },
+      { name: "Spotify-Top-Songs-2021-Data-Analysis", html_url: "https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis", stargazers_count: 0, language: "SQL", description: "Analysis notebook and SQL pipeline for music data." },
+      { name: "Beartracks", html_url: "https://github.com/osu/Beartracks", stargazers_count: 0, language: "Python", description: "Mini timetable management app." },
+      { name: "Maze-Pathfinder", html_url: "https://github.com/osu/Maze-Pathfinder", stargazers_count: 0, language: "JavaScript", description: "Visual pathfinding project." },
+    ];
+    let loading = false;
+    let loadedAt = 0;
+
+    function topLanguage(repos) {
+      const counts = repos.reduce((acc, repo) => {
+        if (!repo.language) return acc;
+        acc[repo.language] = (acc[repo.language] || 0) + 1;
+        return acc;
+      }, {});
+      return Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0] || "Mixed";
+    }
+
+    function render(repos, source) {
+      const list = $("[data-github-repos-list]");
+      const reposEl = $("[data-github-repos]");
+      const starsEl = $("[data-github-stars]");
+      const langEl = $("[data-github-lang]");
+      if (!list) return;
+      const stars = repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0);
+      if (reposEl) reposEl.textContent = String(repos.length);
+      if (starsEl) starsEl.textContent = String(stars);
+      if (langEl) langEl.textContent = topLanguage(repos);
+      list.innerHTML = repos.slice(0, 6).map((repo) => (
+        "<a class='github-repo' href='" + escapePlain(repo.html_url) + "' target='_blank' rel='noopener'>" +
+        "<b>" + escapePlain(repo.name) + "</b>" +
+        "<span>" + escapePlain(repo.description || "Public repository") + "</span>" +
+        "<em>" + escapePlain(repo.language || "Code") + " · ★ " + (repo.stargazers_count || 0) + "</em>" +
+        "</a>"
+      )).join("") + "<p class='lead' style='font-size:.74rem;margin-top:8px'>Source: " + escapePlain(source) + "</p>";
+    }
+
+    async function refresh(force = false) {
+      if (loading) return;
+      if (!force && loadedAt && Date.now() - loadedAt < 180000) return;
+      loading = true;
+      try {
+        const res = await fetch("https://api.github.com/users/osu/repos?sort=updated&per_page=24", { cache: "no-store" });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const repos = (await res.json())
+          .filter((repo) => !repo.fork)
+          .sort((a, b) => (b.stargazers_count || 0) - (a.stargazers_count || 0) || new Date(b.updated_at) - new Date(a.updated_at));
+        render(repos.length ? repos : fallbackRepos, "GitHub API");
+        loadedAt = Date.now();
+      } catch (_) {
+        render(fallbackRepos, "offline fallback");
+        loadedAt = Date.now();
+      } finally {
+        loading = false;
+      }
+    }
+
+    function init() {
+      const win = WM.wins["github"];
+      if (!win) return;
+      const obs = new MutationObserver(() => {
+        if (win.classList.contains("is-open") && !win.classList.contains("is-min")) refresh();
+      });
+      obs.observe(win, { attributes: true, attributeFilter: ["class"] });
+    }
+
+    return { init, refresh };
+  })();
+
+  const DIAGNOSTICS = (function () {
+    let tick = 0;
+    const logLines = [
+      "nvlink lane check completed",
+      "fan curve adjusted inside target range",
+      "recovery watchdog heartbeat received",
+      "thermal headroom stable",
+      "rack fabric packet loss below threshold",
+      "display compositor latency nominal",
+    ];
+
+    function setDiag(key, value) {
+      const el = $("[data-diag='" + key + "']");
+      if (el) el.textContent = value;
+    }
+
+    function refresh() {
+      tick += 1;
+      const util = GPU.snapshot();
+      setDiag("nvlink", tick % 7 === 0 ? "Retiming" : "OK");
+      setDiag("thermals", Math.round(util.temp) + "°C");
+      setDiag("recovery", tick % 5 === 0 ? "Checkpoint" : "Idle");
+      setDiag("rack", (99.91 + Math.random() * 0.08).toFixed(2) + "%");
+
+      const log = $(".diag-log");
+      if (log && tick % 2 === 0) {
+        const now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+        const line = document.createElement("div");
+        line.innerHTML = "<b>" + now + "</b><span>" + escapePlain(logLines[tick % logLines.length]) + "</span><em>pass</em>";
+        log.prepend(line);
+        while (log.children.length > 8) log.lastElementChild.remove();
+      }
+    }
+
+    function init() {
+      window.setInterval(() => {
+        const win = WM.wins["diagnostics"];
+        if (win && win.classList.contains("is-open") && !win.classList.contains("is-min")) refresh();
+      }, 2200);
+    }
+
+    return { init, refresh };
+  })();
+
   /* =============================================================
      TERMINAL
      ============================================================= */
@@ -1202,6 +1792,11 @@
           "  python3          open a tiny Python-style REPL",
           "  python3 -c ...   run print() or basic math",
           "  open &lt;app&gt;       launch an app window",
+          "  stocks           AAPL · MSFT · NVDA quotes",
+          "  mission          show Mission Control",
+          "  launcher         open app launcher",
+          "  demo             run project demo mode",
+          "  matrix           terminal easter egg",
           "  ls               list apps",
           "  date             current date/time",
           "  clear            clear the screen",
@@ -1255,6 +1850,40 @@
                 "<span class='green'>GitHub</span>   github.com/osu",
                 "Type <span class='green'>open contact</span> to copy details."];
       },
+      stocks() {
+        return ["<span class='green'>Market widgets</span>"].concat(STOCK.summary().map((line) => "  " + escapeHtml(line)));
+      },
+      github() {
+        WM.open("github");
+        return ["<span class='green'>Opening GitHub Activity.</span>"];
+      },
+      diagnostics() {
+        WM.open("diagnostics");
+        return ["<span class='green'>Opening NVIDIA Diagnostics.</span>"];
+      },
+      mission() {
+        MISSION.open();
+        return ["<span class='green'>Mission Control online.</span>"];
+      },
+      launcher() {
+        APP_LAUNCHER.open();
+        return ["<span class='green'>Launcher opened.</span>"];
+      },
+      launchpad() {
+        APP_LAUNCHER.open();
+        return ["<span class='green'>Launchpad opened.</span>"];
+      },
+      demo() {
+        startProjectDemo();
+        return ["<span class='green'>Demo mode started.</span>"];
+      },
+      matrix() {
+        const glyphs = "010101 CUDA NVDA AAPL MSFT PY GO TS";
+        return ["<span class='green'>CUDA MATRIX ONLINE</span>"].concat(Array.from({ length: 12 }, (_, row) => {
+          const chars = Array.from({ length: 38 }, (_, col) => glyphs[(row * 7 + col * 5) % glyphs.length]).join("");
+          return "<span class='green'>" + escapeHtml(chars) + "</span>";
+        }));
+      },
       "nvidia-smi"() {
         if (mode === "macos") return ["zsh: command not found: nvidia-smi"];
         if (mode === "windows") {
@@ -1283,7 +1912,7 @@
         if (mode === "windows") return WINDOWS_FETCH;
         return NEOFETCH;
       },
-      ls() { return ["about  experience  skills  projects  certificates  sideprojects  contact  gpu  terminal"]; },
+      ls() { return ["about  experience  skills  projects  certificates  sideprojects  contact  gpu  github  diagnostics  terminal"]; },
       date() { return [new Date().toString()]; },
       clear() { out.innerHTML = ""; return null; },
       sudo() { return ["<span class='err'>hasan is not in the sudoers file. This incident will be reported. 🚓</span>"]; },
@@ -1295,7 +1924,8 @@
       skills: "skills", projects: "projects", proj: "projects",
       certs: "certificates", certificates: "certificates",
       contact: "contact", gpu: "gpu", "side": "sideprojects", sideprojects: "sideprojects",
-      terminal: "terminal",
+      terminal: "terminal", github: "github", repo: "github", repos: "github",
+      diagnostics: "diagnostics", diag: "diagnostics",
     };
 
     function print(lines, cls, decorative) {
@@ -1954,7 +2584,7 @@
         panel.style.removeProperty("filter");
       });
       const label = $("#mb-app");
-      if (label) label.textContent = "Finder";
+      if (label) label.textContent = desktopAppName();
       WM.syncDock();
     }
 
@@ -2278,7 +2908,15 @@
     WM.init();
     dock();
     osSwitcher();
+    currentOsMode = document.body.classList.contains("theme-dgx")
+      ? "nvidia"
+      : (document.body.classList.contains("theme-windows-only") ? "windows" : "macos");
+    syncAppLabels(currentOsMode);
     windowsSearch();
+    MISSION.init();
+    UNIVERSAL_SEARCH.init();
+    APP_LAUNCHER.init();
+    COMMAND_PALETTE.init();
     STOCK.init();
     taskbarPlacement();
     globalHooks();
@@ -2287,6 +2925,8 @@
     lightbox();
     copyHooks();
     GPU.start();
+    GITHUB_APP.init();
+    DIAGNOSTICS.init();
     TERM.init();
     SPACE_WELLS.init();
 
