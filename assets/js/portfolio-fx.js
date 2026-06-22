@@ -153,10 +153,86 @@
     return { init };
   })();
 
+   ----- */
+  const SoundFX = (function () {
+    let ctx, muted = false;
+
+    function ensureCtx() {
+      if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+      return ctx;
+    }
+
+    function play(name) {
+      if (muted || reduceMotion) return;
+      try {
+        const ac = ensureCtx();
+        if (ac.state === "suspended") ac.resume();
+        const t = ac.currentTime;
+        const osc = ac.createOscillator();
+        const gain = ac.createGain();
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        if (name === "thump") {
+          osc.frequency.setValueAtTime(190, t);
+          osc.frequency.exponentialRampToValueAtTime(55, t + 0.09);
+          gain.gain.setValueAtTime(0.14, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+          osc.start(t);
+          osc.stop(t + 0.13);
+        } else if (name === "whoosh") {
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(420, t);
+          osc.frequency.exponentialRampToValueAtTime(110, t + 0.16);
+          gain.gain.setValueAtTime(0.07, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+          osc.start(t);
+          osc.stop(t + 0.2);
+        } else if (name === "shutter") {
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(880, t);
+          osc.frequency.exponentialRampToValueAtTime(180, t + 0.07);
+          gain.gain.setValueAtTime(0.11, t);
+          gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+          osc.start(t);
+          osc.stop(t + 0.11);
+        }
+      } catch (_) {}
+    }
+
+    function syncButton(btn) {
+      if (!btn) return;
+      btn.classList.toggle("is-muted", muted);
+      btn.setAttribute("aria-pressed", muted ? "true" : "false");
+      btn.title = muted ? "Unmute UI sounds" : "Mute UI sounds";
+    }
+
+    function toggle() {
+      muted = !muted;
+      try { window.localStorage.setItem("portfolio-sound-muted", muted ? "1" : "0"); } catch (_) {}
+      syncButton($("[data-sound-toggle]"));
+      if (!muted) play("thump");
+    }
+
+    function init() {
+      try { muted = window.localStorage.getItem("portfolio-sound-muted") === "1"; } catch (_) {}
+      const btn = $("[data-sound-toggle]");
+      if (btn) {
+        btn.addEventListener("click", toggle);
+        syncButton(btn);
+      }
+      window.addEventListener("portfolio:win-open", () => play("whoosh"));
+      window.addEventListener("portfolio:dock-click", () => play("thump"));
+      window.addEventListener("portfolio:iris-bang", () => play("shutter"));
+    }
+
+    return { init, play };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
     DgxStatus.init();
+    SoundFX.init();
   }
 
   window.addEventListener("portfolio:ready", boot);

@@ -297,6 +297,7 @@
       if (id === "github" && typeof GITHUB_APP !== "undefined") GITHUB_APP.refresh();
       if (id === "diagnostics" && typeof DIAGNOSTICS !== "undefined") DIAGNOSTICS.refresh();
       syncDock();
+      window.dispatchEvent(new CustomEvent("portfolio:win-open", { detail: { id } }));
       // move DOM focus into the freshly shown window (terminal manages its own input)
       if (!wasOpen && id !== "terminal") win.focus({ preventScroll: true });
     }
@@ -605,7 +606,10 @@
   function dock() {
     $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app], .mobile-launcher [data-app]").forEach((it) => {
       if (!it.dataset.app) return;
-      it.addEventListener("click", () => WM.toggle(it.dataset.app));
+      it.addEventListener("click", () => {
+        window.dispatchEvent(new CustomEvent("portfolio:dock-click"));
+        WM.toggle(it.dataset.app);
+      });
     });
   }
 
