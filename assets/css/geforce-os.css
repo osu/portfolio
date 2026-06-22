@@ -1054,6 +1054,7 @@ body.theme-windows-only .os-switcher-sep { display: block; }
 .dock {
   position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 600;
   max-width: calc(100vw - 16px);
+  overflow: visible;
 }
 .dock-inner {
   display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px;
@@ -1061,8 +1062,7 @@ body.theme-windows-only .os-switcher-sep { display: block; }
   backdrop-filter: blur(20px) saturate(160%); -webkit-backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--line); border-radius: 18px;
   box-shadow: 0 16px 40px -8px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
-  overflow-x: auto; overflow-y: visible;
-  scrollbar-width: none; /* Firefox: hide dock scrollbar, keep swipe scroll */
+  overflow: visible;
 }
 
 /* Solid fallback where backdrop-filter is unsupported */
@@ -1119,8 +1119,7 @@ body.theme-dgx.dock-right .dock-inner {
   flex-direction: column;
   align-items: center;
   max-height: calc(100vh - 78px);
-  overflow-x: visible;
-  overflow-y: auto;
+  overflow: visible;
 }
 body.theme-dgx.dock-left .dock-sep,
 body.theme-dgx.dock-right .dock-sep {
@@ -2037,7 +2036,7 @@ body.theme-windows-only.taskbar-right .win-tray-chip {
   .about-avatar { width: 72px; height: 72px; }
   .about-id .name { font-size: 1.5rem; }
   .dock { bottom: 8px; left: 8px; right: 8px; transform: none; max-width: none; }
-  .dock-inner { justify-content: flex-start; }
+  .dock-inner { justify-content: flex-start; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
   .dock-item { width: 44px; height: 44px; }
   .dock-item:hover { transform: none; box-shadow: none; }
   .dock-tooltip { display: none; }
