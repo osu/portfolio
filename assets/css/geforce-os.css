@@ -3381,6 +3381,10 @@ body.shader-party .desktop-bg::before { animation: bgdrift 6s ease-in-out infini
 .confetti-layer { position: fixed; inset: 0; z-index: 9800; pointer-events: none; overflow: hidden; }
 .confetti-layer i { position: absolute; left: var(--x); top: -12px; width: 8px; height: 14px; background: hsl(var(--hue), 90%, 58%); animation: confetti-fall 3.8s forwards; animation-delay: var(--delay); }
 @keyframes confetti-fall { to { transform: translateY(110vh); opacity: 0; } }
+body.crt-mode #os::after { content: ""; position: fixed; inset: 0; z-index: 9400; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,0.14) 2px 4px); opacity: 0.55; }
+[data-crt-toggle].is-active { background: var(--green) !important; color: #08120a !important; }
+.bigbang-iris-canvas { position: absolute; left: var(--impact-x, 50%); top: var(--impact-y, 50%); width: min(76vmin, 720px); height: min(76vmin, 720px); transform: translate(-50%, -50%); pointer-events: none; z-index: 3; mix-blend-mode: screen; }
+.bigbang-iris--webgl .bigbang-iris-blade, .bigbang-iris--webgl .bigbang-iris-spoke { display: none; }
 
 /* =================================================================
    REDUCED MOTION

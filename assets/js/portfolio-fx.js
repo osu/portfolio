@@ -330,6 +330,33 @@
     return { init, parse, targetFromUrl };
   })();
 
+   scanline mode ----- */
+  const CrtMode = (function () {
+    function init() {
+      const btn = $("[data-crt-toggle]");
+      if (!btn) return;
+      try {
+        if (window.localStorage.getItem("portfolio-crt") === "1") document.body.classList.add("crt-mode");
+      } catch (_) {}
+      const sync = () => {
+        const on = document.body.classList.contains("crt-mode");
+        btn.classList.toggle("is-active", on);
+        btn.setAttribute("aria-pressed", on ? "true" : "false");
+      };
+      btn.addEventListener("click", () => {
+        document.body.classList.toggle("crt-mode");
+        try {
+          window.localStorage.setItem("portfolio-crt", document.body.classList.contains("crt-mode") ? "1" : "0");
+        } catch (_) {}
+        sync();
+        api().notify?.("CRT mode", document.body.classList.contains("crt-mode") ? "Scanlines on" : "Scanlines off");
+      });
+      sync();
+    }
+
+    return { init };
+  })();
+
   
   function boot() {
     AuroraTrail.init();
@@ -338,6 +365,7 @@
     DayNight.init();
     EasterEggs.init();
     DeepLinks.init();
+    CrtMode.init();
   }
 
   window.addEventListener("portfolio:ready", boot);
