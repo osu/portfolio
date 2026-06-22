@@ -2106,7 +2106,7 @@
      SPACE WELLS
      ============================================================= */
   const SPACE_WELLS = (function () {
-    const SPEED = 10; // pixels per second
+    const SPEED = 80; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
     const BIG_BANG_DURATION = 22000;
     const SCREEN_SHATTER_DURATION = 7600;
