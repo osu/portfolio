@@ -9,6 +9,7 @@
   const clamp = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
+  let currentOsMode = "split";
 
   /* =============================================================
      BOOT SPLASH
@@ -107,9 +108,12 @@
       activeMode = "nvidia";
     }
 
+    currentOsMode = activeMode;
     syncOsSwitcher(activeMode);
 
+    if (typeof TERM !== "undefined") TERM.setMode(activeMode);
     if (options.layout !== false) applyOsWindowLayout(activeMode);
+    playTaskbarIntro(activeMode);
 
     if (typeof GPU !== "undefined") GPU.refreshMenubar();
   }
@@ -158,6 +162,7 @@
       $$(".win").forEach((w) => {
         w.addEventListener("pointerdown", () => focus(w.dataset.app), true);
         makeDraggable(w);
+        makeResizable(w);
       });
     }
 
@@ -194,6 +199,8 @@
         if (isMobile()) win.classList.add("is-max");
       }
       focus(id);
+      if (id === "terminal" && typeof TERM !== "undefined") TERM.ensureWelcome();
+      if (id === "gpu" && typeof GPU !== "undefined") GPU.refreshMenubar();
       syncDock();
       // move DOM focus into the freshly shown window (terminal manages its own input)
       if (!wasOpen && id !== "terminal") win.focus({ preventScroll: true });
@@ -327,6 +334,55 @@
       bar.addEventListener("dblclick", (e) => { if (!e.target.closest(".win-light")) toggleMax(win.dataset.app); });
     }
 
+    function makeResizable(win) {
+      let handle = $(".win-resize-handle", win);
+      if (!handle) {
+        handle = document.createElement("div");
+        handle.className = "win-resize-handle";
+        handle.setAttribute("aria-hidden", "true");
+        win.appendChild(handle);
+      }
+
+      let sx = 0, sy = 0, sw = 0, sh = 0, resizing = false;
+      function move(e) {
+        if (!resizing) return;
+        const desk = $(".desktop");
+        const rect = win.getBoundingClientRect();
+        const deskRect = desk.getBoundingClientRect();
+        const maxW = Math.max(320, deskRect.right - rect.left - 12);
+        const maxH = Math.max(280, deskRect.bottom - rect.top - 12);
+        const nextW = clamp(sw + e.clientX - sx, 320, maxW);
+        const nextH = clamp(sh + e.clientY - sy, 280, maxH);
+        win.style.width = nextW.toFixed(0) + "px";
+        win.style.height = nextH.toFixed(0) + "px";
+      }
+      function end(e) {
+        if (!resizing) return;
+        resizing = false;
+        win.classList.remove("is-resizing");
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", end);
+        window.removeEventListener("pointercancel", end);
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+      handle.addEventListener("pointerdown", (e) => {
+        if (isMobile() || win.classList.contains("is-max")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        resizing = true;
+        sx = e.clientX;
+        sy = e.clientY;
+        sw = win.offsetWidth;
+        sh = win.offsetHeight;
+        handle.setPointerCapture(e.pointerId);
+        focus(win.dataset.app);
+        win.classList.add("is-resizing");
+        window.addEventListener("pointermove", move);
+        window.addEventListener("pointerup", end);
+        window.addEventListener("pointercancel", end);
+      });
+    }
+
     function syncDock() {
       $$(".dock-item, .win-taskbar-app").forEach((it) => {
         const id = it.dataset.app;
@@ -365,63 +421,185 @@
      DOCK
      ============================================================= */
   function dock() {
-    $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app], .win-search[data-app]").forEach((it) => {
+    $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app]").forEach((it) => {
       it.addEventListener("click", () => WM.toggle(it.dataset.app));
+    });
+  }
+
+  let taskbarIntroTimers = [];
+  function playTaskbarIntro(mode) {
+    taskbarIntroTimers.forEach((timer) => window.clearTimeout(timer));
+    taskbarIntroTimers = [];
+    if (reduceMotion || isMobile()) return;
+    const selector = mode === "windows"
+      ? ".win-taskbar-button, .win-search, .win-taskbar-app"
+      : ".dock-item";
+    const items = $$(selector).filter((item) => {
+      const rect = item.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0;
+    });
+    items.forEach((item, index) => {
+      taskbarIntroTimers.push(window.setTimeout(() => item.classList.add("tooltip-demo"), 520 + index * 190));
+      taskbarIntroTimers.push(window.setTimeout(() => item.classList.remove("tooltip-demo"), 1080 + index * 190));
+    });
+  }
+
+  function windowsSearch() {
+    const button = $(".win-search");
+    const panel = $(".windows-search-panel");
+    const input = $(".windows-search-box input");
+    const results = $(".windows-search-results");
+    if (!button || !panel || !input || !results) return;
+
+    const apps = [
+      { id: "about", title: "About", desc: "Hasan profile", icon: "i-user" },
+      { id: "experience", title: "Experience", desc: "Work history", icon: "i-briefcase" },
+      { id: "skills", title: "Skills", desc: "Languages and tools", icon: "i-cpu" },
+      { id: "projects", title: "Projects", desc: "Featured builds", icon: "i-grid" },
+      { id: "certificates", title: "Certificates", desc: "Credentials", icon: "i-award" },
+      { id: "sideprojects", title: "Side Projects", desc: "Extra work", icon: "i-rocket" },
+      { id: "terminal", title: "Terminal", desc: "Shell", icon: "i-terminal" },
+      { id: "gpu", title: "GPU Stats", desc: "Live telemetry", icon: "i-activity" },
+      { id: "contact", title: "Contact", desc: "Email and socials", icon: "i-mail" },
+    ];
+
+    function openPanel() {
+      if (!document.body.classList.contains("theme-windows-only")) return;
+      panel.classList.add("is-open");
+      panel.setAttribute("aria-hidden", "false");
+      input.focus();
+      render();
+    }
+
+    function closePanel() {
+      panel.classList.remove("is-open");
+      panel.setAttribute("aria-hidden", "true");
+    }
+
+    function render() {
+      const query = input.value.trim().toLowerCase();
+      const filtered = apps.filter((app) => {
+        const haystack = (app.title + " " + app.desc + " " + app.id).toLowerCase();
+        return !query || haystack.includes(query);
+      });
+      results.innerHTML = filtered.map((app) => (
+        "<button class='windows-search-result' type='button' data-app='" + app.id + "'>" +
+        "<svg><use href='#" + app.icon + "' xlink:href='#" + app.icon + "'/></svg>" +
+        "<div><b>" + app.title + "</b><span>" + app.desc + "</span></div>" +
+        "</button>"
+      )).join("");
+    }
+
+    button.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (panel.classList.contains("is-open")) closePanel();
+      else openPanel();
+    });
+    input.addEventListener("input", render);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closePanel();
+        button.focus();
+      } else if (e.key === "Enter") {
+        const first = $(".windows-search-result", results);
+        if (first) {
+          WM.open(first.dataset.app);
+          closePanel();
+        }
+      }
+    });
+    results.addEventListener("click", (e) => {
+      const result = e.target.closest("[data-app]");
+      if (!result) return;
+      WM.open(result.dataset.app);
+      closePanel();
+    });
+    document.addEventListener("pointerdown", (e) => {
+      if (!panel.classList.contains("is-open")) return;
+      if (panel.contains(e.target) || button.contains(e.target)) return;
+      closePanel();
     });
   }
 
   function taskbarPlacement() {
     const taskbar = $(".windows-taskbar");
-    if (!taskbar) return;
-    const edges = ["bottom", "top", "left", "right"];
-    const key = "portfolio-windows-taskbar-edge";
+    const dockEl = $(".dock");
+    const edges = ["bottom", "left", "right"];
+    const contextMenu = document.createElement("div");
+    contextMenu.className = "taskbar-context-menu";
+    contextMenu.setAttribute("role", "menu");
+    contextMenu.innerHTML = edges.map((edge) => (
+      "<button type='button' role='menuitem' data-edge='" + edge + "'>" +
+      edge.charAt(0).toUpperCase() + edge.slice(1) +
+      "</button>"
+    )).join("");
+    document.body.appendChild(contextMenu);
 
-    function setEdge(edge) {
+    function setEdge(kind, edge) {
       const next = edges.includes(edge) ? edge : "bottom";
-      edges.forEach((item) => document.body.classList.remove("taskbar-" + item));
-      document.body.classList.add("taskbar-" + next);
-      try { window.localStorage.setItem(key, next); } catch (_) {}
+      const prefix = kind === "nvidia" ? "dock-" : "taskbar-";
+      edges.forEach((item) => document.body.classList.remove(prefix + item));
+      document.body.classList.add(prefix + next);
+      try { window.localStorage.setItem("portfolio-" + kind + "-edge", next); } catch (_) {}
     }
 
-    function nearestEdge(x, y) {
-      const distances = [
-        { edge: "top", value: y },
-        { edge: "bottom", value: window.innerHeight - y },
-        { edge: "left", value: x },
-        { edge: "right", value: window.innerWidth - x },
-      ];
-      distances.sort((a, b) => a.value - b.value);
-      return distances[0].edge;
+    function getEdge(kind) {
+      try { return window.localStorage.getItem("portfolio-" + kind + "-edge") || "bottom"; }
+      catch (_) { return "bottom"; }
     }
 
-    let startX = 0, startY = 0, dragging = false;
-    try { setEdge(window.localStorage.getItem(key) || "bottom"); } catch (_) { setEdge("bottom"); }
+    function closeMenu() {
+      contextMenu.classList.remove("is-open");
+      contextMenu.removeAttribute("data-kind");
+    }
 
-    taskbar.addEventListener("pointerdown", (e) => {
-      if (isMobile() || e.button !== 0 || e.target.closest("button")) return;
-      dragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      taskbar.classList.add("is-dragging");
-      taskbar.setPointerCapture(e.pointerId);
+    function openMenu(e, kind) {
+      if (isMobile()) return;
+      e.preventDefault();
+      const activeEdge = getEdge(kind);
+      contextMenu.dataset.kind = kind;
+      $$("button", contextMenu).forEach((button) => {
+        button.classList.toggle("is-active", button.dataset.edge === activeEdge);
+      });
+      const menuW = 156;
+      const menuH = 132;
+      const left = clamp(e.clientX, 10, window.innerWidth - menuW - 10);
+      const top = clamp(e.clientY, 10, window.innerHeight - menuH - 10);
+      contextMenu.style.left = left + "px";
+      contextMenu.style.top = top + "px";
+      contextMenu.classList.add("is-open");
+    }
+
+    setEdge("windows", getEdge("windows"));
+    setEdge("nvidia", getEdge("nvidia"));
+
+    if (taskbar) {
+      taskbar.addEventListener("contextmenu", (e) => {
+        if (!document.body.classList.contains("theme-windows-only")) return;
+        openMenu(e, "windows");
+      });
+    }
+    if (dockEl) {
+      dockEl.addEventListener("contextmenu", (e) => {
+        if (!document.body.classList.contains("theme-dgx")) return;
+        openMenu(e, "nvidia");
+      });
+    }
+
+    contextMenu.addEventListener("click", (e) => {
+      const button = e.target.closest("[data-edge]");
+      if (!button) return;
+      setEdge(contextMenu.dataset.kind || "windows", button.dataset.edge);
+      closeMenu();
     });
 
-    taskbar.addEventListener("pointermove", (e) => {
-      if (!dragging) return;
-      if (Math.hypot(e.clientX - startX, e.clientY - startY) < 18) return;
-      setEdge(nearestEdge(e.clientX, e.clientY));
+    document.addEventListener("pointerdown", (e) => {
+      if (!contextMenu.classList.contains("is-open") || contextMenu.contains(e.target)) return;
+      closeMenu();
     });
-
-    function finish(e) {
-      if (!dragging) return;
-      dragging = false;
-      setEdge(nearestEdge(e.clientX, e.clientY));
-      taskbar.classList.remove("is-dragging");
-      try { taskbar.releasePointerCapture(e.pointerId); } catch (_) {}
-    }
-
-    taskbar.addEventListener("pointerup", finish);
-    taskbar.addEventListener("pointercancel", finish);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
   }
 
   /* =============================================================
@@ -533,7 +711,46 @@
      ============================================================= */
   const GPU = (function () {
     let state = { util: 42, temp: 54, mem: 5.6, fan: 38, power: 118, clock: 1845 };
-    const MEM_TOTAL = 24;
+    const PROFILES = {
+      nvidia: {
+        menu: () => "GPU " + Math.round(state.util) + "% · " + Math.round(state.temp) + "°C",
+        name: "Blackwell <span>RTX</span> GPU",
+        sub: "CPU · RTX Spark N1X",
+        title: "GPU — nvidia-smi",
+        memTotal: 24,
+        powerCap: 350,
+        clockCap: 2600,
+        memLabel: "VRAM",
+        tip: "Tip: run <a data-open-app=\"terminal\" href=\"#\">nvidia-smi</a> in the terminal for the classic table view.",
+      },
+      macos: {
+        menu: () => "Wi-Fi · Control Center",
+        name: "Apple <span>M4 Pro</span>",
+        sub: "Unified GPU · 18-core graphics",
+        title: "Graphics — Apple Silicon",
+        memTotal: 36,
+        powerCap: 95,
+        clockCap: 1800,
+        memLabel: "Unified Mem",
+        tip: "Tip: run <a data-open-app=\"terminal\" href=\"#\">neofetch</a> to view the Apple Silicon profile.",
+      },
+      windows: {
+        menu: () => "ENG · Network",
+        name: "DirectX <span>Graphics</span>",
+        sub: "Windows 11 · WDDM display adapter",
+        title: "Graphics — Task Manager",
+        memTotal: 16,
+        powerCap: 185,
+        clockCap: 2200,
+        memLabel: "GPU Memory",
+        tip: "Tip: use Windows Search to open Terminal or Projects.",
+      },
+    };
+    function profile() {
+      if (document.body.classList.contains("theme-mac-only")) return PROFILES.macos;
+      if (document.body.classList.contains("theme-windows-only")) return PROFILES.windows;
+      return PROFILES.nvidia;
+    }
     function rnd(v, amp, lo, hi) { return clamp(v + (Math.random() - 0.5) * amp, lo, hi); }
     function step() {
       state.util  = rnd(state.util, 18, 8, 99);
@@ -546,27 +763,35 @@
     function paintMenubar() {
       const el = $("#mb-gpu");
       if (!el) return;
-      if (document.body.classList.contains("theme-macos")) {
-        el.textContent = "Wi-Fi · Widgets";
-        return;
-      }
-      el.textContent = "GPU " + Math.round(state.util) + "% · " + Math.round(state.temp) + "°C";
+      el.textContent = profile().menu();
     }
     function paintPanel() {
       const win = WM.wins["gpu"];
-      if (!win || !win.classList.contains("is-open") || win.classList.contains("is-min")) return;
+      if (!win) return;
+      const p = profile();
+      const title = $(".win-title", win);
+      const name = $(".gpu-head .name", win);
+      const sub = $(".gpu-sub", win);
+      const memLabel = $('[data-g="mem"] .lbl', win);
+      const tip = $(".gpu > .lead", win);
+      if (title) title.textContent = p.title;
+      if (name) name.innerHTML = p.name;
+      if (sub) sub.textContent = p.sub;
+      if (memLabel) memLabel.textContent = p.memLabel;
+      if (tip) tip.innerHTML = p.tip;
       set("util", Math.round(state.util), "%", state.util);
       set("temp", Math.round(state.temp), "°C", (state.temp / 90) * 100);
       set("fan", Math.round(state.fan), "%", state.fan);
-      set("power", Math.round(state.power), "W", (state.power / 350) * 100);
+      set("power", Math.round(Math.min(state.power, p.powerCap)), "W", (state.power / p.powerCap) * 100);
+      const memUsed = Math.min(state.mem, p.memTotal * 0.92);
       const memEl = $('[data-g="mem"] .num', win);
-      if (memEl) memEl.innerHTML = state.mem.toFixed(1) + ' <small>/ ' + MEM_TOTAL + ' GB</small>';
+      if (memEl) memEl.innerHTML = memUsed.toFixed(1) + ' <small>/ ' + p.memTotal + ' GB</small>';
       const memFill = $('[data-g="mem"] .gauge-fill', win);
-      if (memFill) memFill.style.width = ((state.mem / MEM_TOTAL) * 100).toFixed(1) + "%";
+      if (memFill) memFill.style.width = ((memUsed / p.memTotal) * 100).toFixed(1) + "%";
       const clk = $('[data-g="clock"] .num', win);
-      if (clk) clk.innerHTML = Math.round(state.clock) + ' <small>MHz</small>';
+      if (clk) clk.innerHTML = Math.round(Math.min(state.clock, p.clockCap)) + ' <small>MHz</small>';
       const clkFill = $('[data-g="clock"] .gauge-fill', win);
-      if (clkFill) clkFill.style.width = ((state.clock / 2600) * 100).toFixed(1) + "%";
+      if (clkFill) clkFill.style.width = ((state.clock / p.clockCap) * 100).toFixed(1) + "%";
       function set(key, num, unit, pct) {
         const n = $('[data-g="' + key + '"] .num', win);
         const f = $('[data-g="' + key + '"] .gauge-fill', win);
@@ -591,14 +816,15 @@
       }
       window.setInterval(tick, 1400);
     }
-    return { start, refreshMenubar: paintMenubar, snapshot: () => ({ ...state, memTotal: MEM_TOTAL }) };
+    return { start, refreshMenubar: () => { paintMenubar(); paintPanel(); }, snapshot: () => ({ ...state, memTotal: profile().memTotal }) };
   })();
 
   /* =============================================================
      TERMINAL
      ============================================================= */
   const TERM = (function () {
-    let out, input, promptEl, hist = [], hi = -1, booted = false, pythonMode = false;
+    let out, input, promptEl, win, hist = [], hi = -1, bootedMode = "", pythonMode = false;
+    let mode = "nvidia";
 
     const NEOFETCH = [
       "        <span class='green'>.::////::.</span>          <span class='cmd'>hasan@dgx-os</span>",
@@ -614,9 +840,49 @@
       "       <span class='green'>':::::::::'</span>",
     ];
 
+    const MAC_FETCH = [
+      "        <span class='green'>.:'</span>          <span class='cmd'>hasan@MacBook-Pro</span>",
+      "    <span class='green'>__ :'__</span>        --------------------",
+      " <span class='green'>.'`__`-'__``.</span>     <span class='green'>OS</span>      macOS 15 Sequoia",
+      "<span class='green'>:__________.-'</span>    <span class='green'>Host</span>    MacBook Pro",
+      "<span class='green'>:_________:</span>       <span class='green'>Chip</span>    Apple M4 Pro",
+      " <span class='green'>:_________`-;</span>     <span class='green'>Shell</span>   zsh",
+      "  <span class='green'>`.__.-.__.'</span>       <span class='green'>GPU</span>     Apple integrated graphics",
+    ];
+
+    const WINDOWS_FETCH = [
+      "<span class='green'>Windows 11 Pro</span>",
+      "----------------",
+      "<span class='green'>Host</span>    Hasan-PC",
+      "<span class='green'>Shell</span>   PowerShell 7.6.3",
+      "<span class='green'>CPU</span>     modern x64 workstation",
+      "<span class='green'>GPU</span>     DirectX 12 graphics",
+    ];
+
+    const PROFILES = {
+      nvidia: {
+        title: "hasan@dgx-os: ~",
+        prompt: "hasan@dgx-os:~$",
+        commandPrompt: "hasan@dgx-os:~$",
+        welcome: () => [...NEOFETCH, "", "<span class='dim'>Type <span class='green'>help</span> to get started, or <span class='green'>open projects</span> to explore.</span>", ""],
+      },
+      macos: {
+        title: "Terminal — zsh",
+        prompt: "➜  ~",
+        commandPrompt: "➜  ~",
+        welcome: () => ["Last login: Sun Jun 21 16:53:33 on ttys010", ""],
+      },
+      windows: {
+        title: "PowerShell 7.6.3",
+        prompt: "PS C:\\Users\\hasan>",
+        commandPrompt: "PS C:\\Users\\hasan>",
+        welcome: () => ["PowerShell 7.6.3", "Copyright (c) Microsoft Corporation. All rights reserved.", ""],
+      },
+    };
+
     const COMMANDS = {
       help() {
-        return [
+        const lines = [
           "<span class='green'>Available commands</span>",
           "  about            who I am",
           "  whoami           short bio",
@@ -625,7 +891,6 @@
           "  projects         featured projects",
           "  certs            certifications",
           "  contact          how to reach me",
-          "  nvidia-smi       GPU status table",
           "  neofetch         system info",
           "  python3          open a tiny Python-style REPL",
           "  python3 -c ...   run print() or basic math",
@@ -635,6 +900,8 @@
           "  clear            clear the screen",
           "  help             this menu",
         ];
+        if (mode === "nvidia") lines.splice(8, 0, "  nvidia-smi       GPU status table");
+        return lines;
       },
       whoami() {
         return ["<span class='green'>Hasan Khan</span> — Software Engineer Intern @ NVIDIA",
@@ -682,6 +949,13 @@
                 "Type <span class='green'>open contact</span> to copy details."];
       },
       "nvidia-smi"() {
+        if (mode === "macos") return ["zsh: command not found: nvidia-smi"];
+        if (mode === "windows") {
+          return [
+            "<span class='err'>nvidia-smi : The term 'nvidia-smi' is not recognized as a name of a cmdlet, function, script file, or executable program.</span>",
+            "<span class='err'>Check the spelling of the name, or if a path was included, verify that the path is correct and try again.</span>",
+          ];
+        }
         const s = GPU.snapshot();
         const pad = (v, n) => String(v).padStart(n);
         return [
@@ -697,7 +971,11 @@
           "<span class='dim'>Tip: open the GPU app from the dock for live gauges.</span>",
         ];
       },
-      neofetch() { return NEOFETCH; },
+      neofetch() {
+        if (mode === "macos") return MAC_FETCH;
+        if (mode === "windows") return WINDOWS_FETCH;
+        return NEOFETCH;
+      },
       ls() { return ["about  experience  skills  projects  certificates  sideprojects  contact  gpu  terminal"]; },
       date() { return [new Date().toString()]; },
       clear() { out.innerHTML = ""; return null; },
@@ -725,8 +1003,20 @@
       out.scrollTop = out.scrollHeight;
     }
 
+    function activeProfile() {
+      return PROFILES[mode] || PROFILES.nvidia;
+    }
+
     function setPrompt() {
-      if (promptEl) promptEl.textContent = pythonMode ? ">>>" : "hasan@dgx-os:~$";
+      if (promptEl) promptEl.textContent = pythonMode ? ">>>" : activeProfile().prompt;
+    }
+
+    function updateChrome() {
+      if (!win) return;
+      const profile = activeProfile();
+      const title = $(".win-title", win);
+      if (title) title.textContent = profile.title;
+      win.dataset.title = profile.title;
     }
 
     function stripPythonString(value) {
@@ -790,7 +1080,7 @@
 
     function run(raw) {
       const line = raw.trim();
-      const promptText = pythonMode ? ">>>" : "hasan@dgx-os:~$";
+      const promptText = pythonMode ? ">>>" : activeProfile().commandPrompt;
       print("<span class='term-prompt'>" + promptText + "</span> <span class='cmd'>" + escapeHtml(raw) + "</span>");
       if (!line) return;
       hist.unshift(raw); hi = -1;
@@ -816,20 +1106,45 @@
     function escapeHtml(s) { return s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
 
     function welcome() {
-      if (booted) return; booted = true;
-      print(NEOFETCH, null, true);
-      print("", null, true);
-      print("<span class='dim'>Type <span class='green'>help</span> to get started, or <span class='green'>open projects</span> to explore.</span>");
-      print("", null, true);
+      if (bootedMode === mode) return;
+      bootedMode = mode;
+      print(activeProfile().welcome(), null, true);
+    }
+
+    function ensureWelcome() {
+      if (!out) return;
+      welcome();
+      setPrompt();
+      if (input) window.setTimeout(() => input.focus(), 60);
+    }
+
+    function normalizeMode(next) {
+      return next === "macos" || next === "windows" || next === "nvidia" ? next : "nvidia";
+    }
+
+    function setMode(next) {
+      const normalized = normalizeMode(next);
+      const changed = normalized !== mode;
+      mode = normalized;
+      pythonMode = false;
+      updateChrome();
+      setPrompt();
+      if (changed && out) {
+        out.innerHTML = "";
+        bootedMode = "";
+        welcome();
+      }
+      if (win && win.classList.contains("is-open") && !win.classList.contains("is-min")) welcome();
     }
 
     function init() {
-      const win = WM.wins["terminal"];
+      win = WM.wins["terminal"];
       if (!win) return;
       out = $(".term-output", win);
       input = $(".term-input", win);
       promptEl = $(".term-inputline .term-prompt", win);
       if (!out || !input) return;
+      setMode(currentOsMode);
       setPrompt();
 
       input.addEventListener("keydown", (e) => {
@@ -847,7 +1162,7 @@
       obs.observe(win, { attributes: true, attributeFilter: ["class"] });
       if (win.classList.contains("is-open")) welcome();
     }
-    return { init };
+    return { init, setMode, ensureWelcome };
   })();
 
   /* =============================================================
@@ -856,7 +1171,7 @@
   const SPACE_WELLS = (function () {
     const SPEED = 10; // pixels per second
     const GROWTH_PER_SECOND = 0.01;
-    const BIG_BANG_DURATION = 20000;
+    const BIG_BANG_DURATION = 22000;
     const SCREEN_SHATTER_DURATION = 7600;
     const PANEL_SHATTER_DURATION = 6700;
     const PRE_EXPLOSION_PULL_DURATION = 1180;
@@ -1115,6 +1430,13 @@
       core.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       core.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       overlay.appendChild(core);
+
+      const eye = document.createElement("div");
+      eye.className = "bigbang-nvidia-eye";
+      eye.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      eye.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+      eye.innerHTML = "<img src='./assets/images/nvda-eye.png' alt=''>";
+      overlay.appendChild(eye);
 
       const colors = [
         "rgba(255,255,255,0.88)",
@@ -1633,6 +1955,7 @@
     WM.init();
     dock();
     osSwitcher();
+    windowsSearch();
     taskbarPlacement();
     globalHooks();
     skillBars();
@@ -1647,6 +1970,8 @@
     if (!isMobile()) {
       WM.open("gpu");
       WM.open("about");
+      window.setTimeout(() => playTaskbarIntro("macos"), 2100);
+      window.setTimeout(() => playTaskbarIntro("windows"), 5000);
     } else {
       WM.open("about");
     }

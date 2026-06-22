@@ -309,7 +309,7 @@ img { max-width: 100%; display: block; }
     radial-gradient(circle at calc(var(--impact-x, 50%) + 12vw) calc(var(--impact-y, 50%) - 16vh), rgba(255,255,255,0.13), transparent 24%),
     radial-gradient(circle at calc(var(--impact-x, 50%) - 18vw) calc(var(--impact-y, 50%) + 14vh), rgba(118,185,0,0.10), transparent 28%);
   mix-blend-mode: screen;
-  animation: bigbang-nebula 20s ease-out forwards;
+  animation: bigbang-nebula 22s ease-out forwards;
 }
 .cosmic-bigbang::after {
   content: "";
@@ -325,7 +325,7 @@ img { max-width: 100%; display: block; }
     0 0 54px rgba(255,255,255,0.36),
     inset 0 0 26px rgba(255,255,255,0.32);
   transform: translate(-50%, -50%) scale(0.05);
-  animation: bigbang-shockwave 20s cubic-bezier(0.08, 0.74, 0.1, 1) forwards;
+  animation: bigbang-shockwave 22s cubic-bezier(0.08, 0.74, 0.1, 1) forwards;
 }
 .cosmic-shatter::before {
   content: "";
@@ -432,7 +432,7 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 0 var(--particle-glow) var(--particle-color);
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.3);
-  animation: bigbang-particle-flight 20s cubic-bezier(0.08, 0.66, 0.08, 1) forwards;
+  animation: bigbang-particle-flight 22s cubic-bezier(0.08, 0.66, 0.08, 1) forwards;
   animation-delay: var(--delay);
 }
 .bigbang-ring {
@@ -446,7 +446,7 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 0 24px var(--ring-color), inset 0 0 24px rgba(255,255,255,0.12);
   transform: translate(-50%, -50%) scale(0.05);
   opacity: 0;
-  animation: bigbang-ring-expand 20s cubic-bezier(0.07, 0.76, 0.12, 1) forwards;
+  animation: bigbang-ring-expand 22s cubic-bezier(0.07, 0.76, 0.12, 1) forwards;
   animation-delay: var(--delay);
 }
 .bigbang-green-ripple {
@@ -464,7 +464,7 @@ img { max-width: 100%; display: block; }
   opacity: 0;
   mix-blend-mode: screen;
   transform: translate(-50%, -50%) scale(0.28);
-  animation: green-ripple-converge 20s cubic-bezier(0.11, 0.78, 0.14, 1) forwards;
+  animation: green-ripple-converge 22s cubic-bezier(0.11, 0.78, 0.14, 1) forwards;
   animation-delay: var(--delay);
 }
 .bigbang-green-core {
@@ -483,7 +483,44 @@ img { max-width: 100%; display: block; }
   opacity: 0;
   mix-blend-mode: screen;
   transform: translate(-50%, -50%) scale(0.2);
-  animation: green-core-collapse 20s ease-in-out forwards;
+  animation: green-core-collapse 22s ease-in-out forwards;
+}
+.bigbang-nvidia-eye {
+  position: absolute;
+  left: var(--impact-x, 50%);
+  top: var(--impact-y, 50%);
+  width: min(180px, 20vmin);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.18) rotate(-12deg);
+  filter: blur(14px) brightness(2.6);
+  mix-blend-mode: screen;
+  animation: nvidia-eye-formation 22s ease-in-out forwards;
+}
+.bigbang-nvidia-eye::before,
+.bigbang-nvidia-eye::after {
+  content: "";
+  position: absolute;
+  inset: 18%;
+  border-radius: 50% 12% 50% 12%;
+  border: 2px solid rgba(118,185,0,0.66);
+  box-shadow: 0 0 26px rgba(118,185,0,0.52), inset 0 0 22px rgba(96,221,142,0.22);
+  transform: rotate(-18deg) scaleX(1.38);
+}
+.bigbang-nvidia-eye::after {
+  inset: 33%;
+  border-color: rgba(246,255,237,0.78);
+  transform: rotate(-18deg) scaleX(1.05);
+}
+.bigbang-nvidia-eye img {
+  width: 64%;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 18px rgba(118,185,0,0.82));
+  opacity: 0.86;
 }
 .blackhole-warped {
   --bh-warp-x: 0px;
@@ -565,6 +602,12 @@ img { max-width: 100%; display: block; }
   80% { opacity: 0.95; transform: translate(-50%, -50%) scale(1); filter: blur(0) brightness(1.6); }
   91% { opacity: 0.92; transform: translate(-50%, -50%) scale(0.68); filter: blur(0.5px) brightness(2.1); }
   98%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0.08); filter: blur(9px) brightness(2.6); }
+}
+@keyframes nvidia-eye-formation {
+  0%, 84% { opacity: 0; transform: translate(-50%, -50%) scale(0.16) rotate(-18deg); filter: blur(16px) brightness(2.8); }
+  89% { opacity: 0.95; transform: translate(-50%, -50%) scale(1.04) rotate(0deg); filter: blur(1px) brightness(1.65); }
+  94% { opacity: 0.9; transform: translate(-50%, -50%) scale(0.94) rotate(0deg); filter: blur(0) brightness(1.35); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.62) rotate(10deg); filter: blur(10px) brightness(2.1); }
 }
 @keyframes bigbang-particle-flight {
   0% { opacity: 0; transform: translate(-50%, -50%) scale(0.25); filter: brightness(2); }
@@ -717,6 +760,33 @@ body.theme-windows-only .os-switcher-sep { display: block; }
 }
 .win.is-focused { box-shadow: 0 28px 70px -10px rgba(0,0,0,0.85), 0 0 0 1px var(--green), var(--glow); }
 @keyframes winopen { from { opacity: 0; transform: scale(0.96) translateY(8px); } }
+
+.win-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 8;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+}
+.win-resize-handle::before {
+  content: "";
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--green);
+  border-bottom: 2px solid var(--green);
+  opacity: 0.62;
+}
+.win.is-max .win-resize-handle {
+  display: none;
+}
+.win.is-resizing {
+  user-select: none;
+}
 
 .win-titlebar {
   display: flex; align-items: center; gap: 12px;
@@ -1027,6 +1097,95 @@ body.theme-windows-only .os-switcher-sep { display: block; }
 
 .windows-taskbar {
   display: none;
+}
+
+body.theme-dgx.dock-left .dock,
+body.theme-dgx.dock-right .dock {
+  top: 50%;
+  bottom: auto;
+  max-width: none;
+  transform: translateY(-50%);
+}
+body.theme-dgx.dock-left .dock {
+  left: 12px;
+  right: auto;
+}
+body.theme-dgx.dock-right .dock {
+  left: auto;
+  right: 12px;
+}
+body.theme-dgx.dock-left .dock-inner,
+body.theme-dgx.dock-right .dock-inner {
+  flex-direction: column;
+  align-items: center;
+  max-height: calc(100vh - 78px);
+  overflow-x: visible;
+  overflow-y: auto;
+}
+body.theme-dgx.dock-left .dock-sep,
+body.theme-dgx.dock-right .dock-sep {
+  width: 32px;
+  height: 1px;
+  margin: 4px 0;
+}
+body.theme-dgx.dock-left .dock-tooltip,
+body.theme-dgx.dock-right .dock-tooltip {
+  top: 50%;
+  bottom: auto;
+}
+body.theme-dgx.dock-left .dock-tooltip {
+  left: calc(100% + 12px);
+  transform: translateY(-50%) translateX(-6px);
+}
+body.theme-dgx.dock-right .dock-tooltip {
+  left: auto;
+  right: calc(100% + 12px);
+  transform: translateY(-50%) translateX(6px);
+}
+body.theme-dgx.dock-left .dock-item:hover .dock-tooltip,
+body.theme-dgx.dock-left .dock-item.tooltip-demo .dock-tooltip,
+body.theme-dgx.dock-right .dock-item:hover .dock-tooltip,
+body.theme-dgx.dock-right .dock-item.tooltip-demo .dock-tooltip {
+  transform: translateY(-50%) translateX(0);
+}
+
+.taskbar-context-menu {
+  position: fixed;
+  z-index: 9500;
+  min-width: 148px;
+  padding: 6px;
+  border-radius: 9px;
+  background: rgba(20, 24, 30, 0.92);
+  border: 1px solid rgba(255,255,255,0.13);
+  box-shadow: 0 18px 46px rgba(0,0,0,0.32);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(5px);
+  transition: opacity 0.12s, transform 0.12s, visibility 0.12s;
+}
+.taskbar-context-menu.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+.taskbar-context-menu button {
+  display: block;
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+  border-radius: 7px;
+  color: rgba(247,251,255,0.88);
+  font: 700 0.78rem var(--font-ui);
+  text-align: left;
+}
+.taskbar-context-menu button:hover,
+.taskbar-context-menu button.is-active {
+  color: #07120a;
+  background: var(--green);
 }
 
 /* =================================================================
@@ -1349,12 +1508,7 @@ body.theme-macos .windows-taskbar {
   -webkit-backdrop-filter: blur(24px) saturate(160%);
   backdrop-filter: blur(24px) saturate(160%);
   font-family: "Segoe UI", var(--font-body);
-  cursor: grab;
   user-select: none;
-}
-body.theme-macos .windows-taskbar.is-dragging {
-  cursor: grabbing;
-  box-shadow: 0 -22px 60px rgba(0,120,212,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
 }
 body.theme-macos .windows-taskbar .win-taskbar-left {
   position: absolute;
@@ -1512,8 +1666,28 @@ body.theme-windows-only .win-body {
   color: #172033;
 }
 body.theme-windows-only .term {
-  background: #0c0f18;
-  color: #d8e6ff;
+  background: #012456;
+  color: #f3f8ff;
+}
+body.theme-windows-only .term-output,
+body.theme-windows-only .term-input {
+  color: #f3f8ff;
+}
+body.theme-windows-only .term-prompt,
+body.theme-windows-only .term-output .green {
+  color: #ffd95a;
+}
+body.theme-mac-only .term {
+  background: #101014;
+  color: #f5f5f7;
+}
+body.theme-mac-only .term-output,
+body.theme-mac-only .term-input {
+  color: #f5f5f7;
+}
+body.theme-mac-only .term-prompt,
+body.theme-mac-only .term-output .green {
+  color: #34c759;
 }
 body.theme-windows-only .os-switcher {
   background: rgba(255,255,255,0.08);
@@ -1562,11 +1736,53 @@ body.theme-mac-only .os-switcher {
   box-shadow: 0 10px 22px rgba(0,0,0,0.18);
   transform: translateY(-1px);
 }
+.win-taskbar-button::after,
+.win-taskbar-app::after,
+.win-search::after {
+  content: attr(aria-label);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(6px);
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: rgba(18, 28, 44, 0.92);
+  color: #f7fbff;
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 14px 32px rgba(0,0,0,0.24);
+  font-family: "Segoe UI", var(--font-body);
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.16s, transform 0.16s;
+}
+.win-taskbar-button:hover::after,
+.win-taskbar-app:hover::after,
+.win-search:hover::after,
+.win-taskbar-button.tooltip-demo::after,
+.win-taskbar-app.tooltip-demo::after,
+.win-search.tooltip-demo::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+.dock-item.tooltip-demo {
+  transform: translateY(-12px) scale(1.18);
+  box-shadow: var(--glow);
+}
+.dock-item.tooltip-demo .dock-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
 .win-taskbar-button,
 .win-taskbar-app {
   width: 42px;
   flex: 0 0 auto;
+  position: relative;
 }
+.win-search { position: relative; }
 .win-start img {
   width: 22px;
   height: 22px;
@@ -1602,6 +1818,101 @@ body.theme-mac-only .os-switcher {
   display: block;
   font-variant-numeric: tabular-nums;
   color: rgba(247,251,255,0.94);
+}
+
+.windows-search-panel {
+  position: fixed;
+  left: 50%;
+  bottom: 68px;
+  z-index: 625;
+  width: min(640px, calc(100vw - 28px));
+  padding: 14px;
+  border-radius: 14px;
+  background: rgba(244, 249, 255, 0.82);
+  border: 1px solid rgba(255,255,255,0.62);
+  box-shadow: 0 28px 80px rgba(7, 24, 57, 0.34), inset 0 1px 0 rgba(255,255,255,0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  transform: translateX(-50%) translateY(12px) scale(0.98);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.16s, transform 0.16s, visibility 0.16s;
+}
+body.theme-windows-only .windows-search-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+.windows-search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 13px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.82);
+  border: 1px solid rgba(0, 120, 212, 0.20);
+  box-shadow: inset 0 -2px 0 rgba(0, 120, 212, 0.62);
+}
+.windows-search-box svg {
+  width: 18px;
+  height: 18px;
+  color: #0078d4;
+}
+.windows-search-box input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #172033;
+  font: 600 0.92rem "Segoe UI", var(--font-body);
+  outline: none;
+}
+.windows-search-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.windows-search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: #172033;
+  background: rgba(255,255,255,0.48);
+  border: 1px solid rgba(36, 50, 74, 0.08);
+  font-family: "Segoe UI", var(--font-body);
+  text-align: left;
+}
+.windows-search-result:hover,
+.windows-search-result.is-selected {
+  background: rgba(0, 120, 212, 0.10);
+  border-color: rgba(0, 120, 212, 0.24);
+}
+.windows-search-result svg {
+  width: 18px;
+  height: 18px;
+  color: #0078d4;
+  flex: 0 0 auto;
+}
+.windows-search-result > div {
+  min-width: 0;
+}
+.windows-search-result b {
+  display: block;
+  font-size: 0.84rem;
+  line-height: 1.1;
+}
+.windows-search-result span {
+  display: block;
+  margin-top: 2px;
+  color: #647084;
+  font-size: 0.72rem;
 }
 
 body.theme-windows-only.taskbar-top .windows-taskbar {
@@ -1717,6 +2028,7 @@ body.theme-windows-only.taskbar-right .win-tray-chip {
     border-radius: 0; border-left: none; border-right: none;
   }
   .win-titlebar { cursor: default; }
+  .win-resize-handle { display: none; }
   .win-body { padding: 18px 16px calc(var(--dock-h) + 24px); }
   .desktop-watermark > img { width: 84px; }
   .blackhole,
