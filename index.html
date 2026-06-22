@@ -581,6 +581,17 @@
         <span class="dock-sep"></span>
         <button class="dock-item" data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Terminal</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="gpu"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
+        <button class="dock-item stock-dock-widget" type="button" data-stock-trigger data-stock-target="dock" aria-label="AAPL Stock">
+          <span class="stock-widget-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 32" focusable="false">
+              <path class="stock-grid-line" d="M4 26H60M4 16H60M4 6H60"/>
+              <polyline data-stock-sparkline points="4,24 14,22 24,23 34,18 44,19 58,8"/>
+              <path class="stock-candle-mark" d="M52 18V5M48 10h8v8h-8z"/>
+            </svg>
+          </span>
+          <span class="stock-widget-meta"><b data-stock-symbol>AAPL</b><span data-stock-change>--</span></span>
+          <span class="dock-tooltip" data-stock-tooltip>AAPL Stock</span>
+        </button>
         <button class="dock-item" data-app="contact"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg><span class="dock-tooltip">Contact</span><span class="dock-indicator"></span></button>
       </div>
     </nav>
@@ -599,6 +610,16 @@
         <button class="win-taskbar-app" data-app="experience" aria-label="Experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg></button>
         <button class="win-taskbar-app" data-app="terminal" aria-label="Terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg></button>
         <button class="win-taskbar-app" data-app="gpu" aria-label="GPU Stats"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg></button>
+        <button class="win-stock-widget" type="button" data-stock-trigger data-stock-target="windows" aria-label="MSFT Stock">
+          <span class="stock-widget-icon" aria-hidden="true">
+            <svg viewBox="0 0 64 32" focusable="false">
+              <path class="stock-grid-line" d="M4 26H60M4 16H60M4 6H60"/>
+              <polyline data-stock-sparkline points="4,24 14,22 24,23 34,18 44,19 58,8"/>
+              <path class="stock-candle-mark" d="M52 18V5M48 10h8v8h-8z"/>
+            </svg>
+          </span>
+          <span class="stock-widget-meta"><b data-stock-symbol>MSFT</b><span data-stock-change>--</span></span>
+        </button>
       </div>
       <div class="win-taskbar-tray">
         <span class="win-tray-chip">ENG</span>
@@ -614,6 +635,29 @@
       </div>
       <div class="windows-search-results" role="listbox" aria-label="Search results"></div>
     </div>
+
+    <aside class="stock-popover" data-stock-popover aria-hidden="true">
+      <div class="stock-popover-head">
+        <div>
+          <span class="stock-kicker">Market</span>
+          <strong data-stock-popover-title>AAPL</strong>
+        </div>
+        <span class="stock-live-dot" data-stock-source>API</span>
+      </div>
+      <div class="stock-popover-price">
+        <span data-stock-price>--</span>
+        <b data-stock-detail-change>--</b>
+      </div>
+      <svg class="stock-detail-chart" viewBox="0 0 320 128" preserveAspectRatio="none" aria-hidden="true">
+        <path class="stock-detail-grid" d="M8 112H312M8 72H312M8 32H312"/>
+        <polyline data-stock-detail-line points="8,98 58,94 108,96 158,76 208,80 312,30"/>
+        <path class="stock-detail-candle" d="M270 94V22M256 48h28v46h-28z"/>
+      </svg>
+      <div class="stock-popover-foot">
+        <span data-stock-company>Apple</span>
+        <span data-stock-updated>Updating...</span>
+      </div>
+    </aside>
 
   </div>
 

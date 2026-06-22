@@ -112,6 +112,7 @@
     syncOsSwitcher(activeMode);
 
     if (typeof TERM !== "undefined") TERM.setMode(activeMode);
+    if (typeof STOCK !== "undefined") STOCK.setMode(activeMode);
     if (options.layout !== false) applyOsWindowLayout(activeMode);
     playTaskbarIntro(activeMode);
 
@@ -422,6 +423,7 @@
      ============================================================= */
   function dock() {
     $$(".dock-item, .win-taskbar-app, .win-taskbar-button[data-app]").forEach((it) => {
+      if (!it.dataset.app) return;
       it.addEventListener("click", () => WM.toggle(it.dataset.app));
     });
   }
@@ -432,7 +434,7 @@
     taskbarIntroTimers = [];
     if (reduceMotion || isMobile()) return;
     const selector = mode === "windows"
-      ? ".win-taskbar-button, .win-search, .win-taskbar-app"
+      ? ".win-taskbar-button, .win-search, .win-taskbar-app, .win-stock-widget"
       : ".dock-item";
     const items = $$(selector).filter((item) => {
       const rect = item.getBoundingClientRect();
@@ -520,6 +522,296 @@
       closePanel();
     });
   }
+
+  const STOCK = (function () {
+    const CONFIG = {
+      macos: { symbol: "AAPL", company: "Apple Inc." },
+      windows: { symbol: "MSFT", company: "Microsoft Corp." },
+      nvidia: { symbol: "NVDA", company: "NVIDIA Corp." },
+    };
+    const FALLBACK_SERIES = {
+      AAPL: [289.2, 289.6, 289.3, 290.1, 290.0, 290.8, 291.1, 290.9, 291.7, 292.4, 292.1, 293.0, 294.1, 294.0, 295.2, 296.8, 298.0],
+      MSFT: [477.3, 478.0, 477.6, 479.2, 480.1, 479.4, 481.2, 482.0, 481.5, 483.1, 484.4, 485.0, 486.8, 487.1, 488.9, 490.4, 492.2],
+      NVDA: [142.8, 143.4, 142.9, 144.0, 145.6, 145.1, 146.8, 147.3, 146.9, 148.6, 149.8, 150.4, 151.0, 152.9, 154.6, 156.8, 160.3],
+    };
+    const cache = {};
+    let activeMode = "macos";
+    let activePopoverSymbol = null;
+    let refreshTimer = 0;
+
+    function getModeConfig(mode) {
+      return CONFIG[mode] || CONFIG.macos;
+    }
+
+    function symbolForTarget(target) {
+      if (target === "windows") return CONFIG.windows.symbol;
+      return getModeConfig(activeMode).symbol;
+    }
+
+    function companyForSymbol(symbol) {
+      const match = Object.values(CONFIG).find((item) => item.symbol === symbol);
+      return match ? match.company : symbol;
+    }
+
+    function fallbackQuote(symbol) {
+      const series = FALLBACK_SERIES[symbol] || FALLBACK_SERIES.NVDA;
+      const price = series[series.length - 1];
+      const previous = series[0];
+      const change = price - previous;
+      return {
+        symbol,
+        company: companyForSymbol(symbol),
+        price,
+        change,
+        percent: previous ? (change / previous) * 100 : 0,
+        points: series,
+        source: "Preview",
+        updated: null,
+      };
+    }
+
+    function storeCache(symbol, quote) {
+      cache[symbol] = { ...quote, fetchedAt: Date.now() };
+      try { window.localStorage.setItem("portfolio-stock-" + symbol, JSON.stringify(cache[symbol])); } catch (_) {}
+    }
+
+    function readStoredCache(symbol) {
+      if (cache[symbol]) return cache[symbol];
+      try {
+        const raw = window.localStorage.getItem("portfolio-stock-" + symbol);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || !Number.isFinite(parsed.price) || !Array.isArray(parsed.points)) return null;
+        cache[symbol] = parsed;
+        return parsed;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function yahooUrl(symbol) {
+      return "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) + "?range=1d&interval=5m";
+    }
+
+    async function fetchJson(url) {
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }
+
+    async function fetchYahoo(symbol) {
+      const url = yahooUrl(symbol);
+      try {
+        return parseYahoo(symbol, await fetchJson(url), "Yahoo");
+      } catch (_) {
+        const proxy = "https://api.allorigins.win/raw?url=" + encodeURIComponent(url);
+        return parseYahoo(symbol, await fetchJson(proxy), "Yahoo proxy");
+      }
+    }
+
+    function parseYahoo(symbol, json, source) {
+      const result = json && json.chart && json.chart.result && json.chart.result[0];
+      if (!result) throw new Error("missing quote");
+      const meta = result.meta || {};
+      const quote = result.indicators && result.indicators.quote && result.indicators.quote[0];
+      const closes = (quote && quote.close ? quote.close : []).filter((value) => Number.isFinite(value));
+      const points = closes.length >= 4 ? closes.slice(-48) : fallbackQuote(symbol).points;
+      const price = Number.isFinite(meta.regularMarketPrice) ? meta.regularMarketPrice : points[points.length - 1];
+      const previous = Number.isFinite(meta.chartPreviousClose)
+        ? meta.chartPreviousClose
+        : (Number.isFinite(meta.previousClose) ? meta.previousClose : points[0]);
+      const change = price - previous;
+      return {
+        symbol,
+        company: meta.shortName || meta.longName || companyForSymbol(symbol),
+        price,
+        change,
+        percent: previous ? (change / previous) * 100 : 0,
+        points,
+        source,
+        updated: meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : new Date().toISOString(),
+      };
+    }
+
+    function quoteFor(symbol) {
+      return readStoredCache(symbol) || fallbackQuote(symbol);
+    }
+
+    function formatPrice(value) {
+      return "$" + value.toFixed(value >= 100 ? 2 : 3);
+    }
+
+    function formatChange(quote) {
+      const sign = quote.change >= 0 ? "+" : "";
+      return sign + quote.percent.toFixed(2) + "%";
+    }
+
+    function formatUpdated(quote) {
+      if (!quote.updated) return "Live API unavailable";
+      const date = new Date(quote.updated);
+      return "Updated " + date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function toPolyline(values, width, height, pad) {
+      const safe = values.filter((value) => Number.isFinite(value));
+      if (!safe.length) return "";
+      const min = Math.min(...safe);
+      const max = Math.max(...safe);
+      const range = max - min || 1;
+      const span = Math.max(safe.length - 1, 1);
+      return safe.map((value, index) => {
+        const x = pad + ((width - pad * 2) * index) / span;
+        const y = height - pad - ((value - min) / range) * (height - pad * 2);
+        return x.toFixed(1) + "," + y.toFixed(1);
+      }).join(" ");
+    }
+
+    function updateWidget(target, quote) {
+      $$("[data-stock-trigger][data-stock-target='" + target + "']").forEach((trigger) => {
+        const down = quote.change < 0;
+        trigger.classList.toggle("stock-is-down", down);
+        trigger.setAttribute("aria-label", quote.symbol + " Stock " + formatPrice(quote.price) + " " + formatChange(quote));
+
+        const symbol = $("[data-stock-symbol]", trigger);
+        const change = $("[data-stock-change]", trigger);
+        const tooltip = $("[data-stock-tooltip]", trigger);
+        if (symbol) symbol.textContent = quote.symbol;
+        if (change) {
+          change.textContent = formatChange(quote);
+          change.classList.toggle("is-down", down);
+        }
+        if (tooltip) tooltip.textContent = quote.symbol + " " + formatPrice(quote.price) + " " + formatChange(quote);
+        $$("[data-stock-sparkline]", trigger).forEach((line) => {
+          line.setAttribute("points", toPolyline(quote.points, 64, 32, 4));
+        });
+      });
+    }
+
+    function renderTarget(target) {
+      updateWidget(target, quoteFor(symbolForTarget(target)));
+    }
+
+    function renderPopover(symbol) {
+      const popover = $("[data-stock-popover]");
+      if (!popover || !symbol) return;
+      const quote = quoteFor(symbol);
+      const down = quote.change < 0;
+      popover.classList.toggle("stock-is-down", down);
+      const title = $("[data-stock-popover-title]", popover);
+      const price = $("[data-stock-price]", popover);
+      const change = $("[data-stock-detail-change]", popover);
+      const company = $("[data-stock-company]", popover);
+      const updated = $("[data-stock-updated]", popover);
+      const source = $("[data-stock-source]", popover);
+      const line = $("[data-stock-detail-line]", popover);
+      if (title) title.textContent = quote.symbol;
+      if (price) price.textContent = formatPrice(quote.price);
+      if (change) {
+        change.textContent = (quote.change >= 0 ? "+" : "") + quote.change.toFixed(2) + " (" + formatChange(quote) + ")";
+        change.classList.toggle("is-down", down);
+      }
+      if (company) company.textContent = quote.company;
+      if (updated) updated.textContent = formatUpdated(quote);
+      if (source) source.textContent = quote.source;
+      if (line) line.setAttribute("points", toPolyline(quote.points, 320, 128, 10));
+    }
+
+    function positionPopover(trigger) {
+      const popover = $("[data-stock-popover]");
+      if (!popover) return;
+      const rect = trigger.getBoundingClientRect();
+      const width = popover.offsetWidth || 340;
+      const height = popover.offsetHeight || 245;
+      const left = clamp(rect.left + rect.width / 2, width / 2 + 12, window.innerWidth - width / 2 - 12);
+      let top = rect.top - height - 14;
+      if (top < 58) top = rect.bottom + 14;
+      top = clamp(top, 58, window.innerHeight - height - 12);
+      popover.style.left = left.toFixed(1) + "px";
+      popover.style.top = top.toFixed(1) + "px";
+      popover.style.bottom = "auto";
+    }
+
+    function openPopover(trigger) {
+      const popover = $("[data-stock-popover]");
+      if (!popover) return;
+      const symbol = symbolForTarget(trigger.dataset.stockTarget || "dock");
+      activePopoverSymbol = symbol;
+      renderPopover(symbol);
+      positionPopover(trigger);
+      popover.classList.add("is-open");
+      popover.setAttribute("aria-hidden", "false");
+      refreshSymbol(symbol);
+    }
+
+    function closePopover() {
+      const popover = $("[data-stock-popover]");
+      if (!popover) return;
+      popover.classList.remove("is-open");
+      popover.setAttribute("aria-hidden", "true");
+      activePopoverSymbol = null;
+    }
+
+    async function refreshSymbol(symbol) {
+      renderTarget("dock");
+      renderTarget("windows");
+      try {
+        const quote = await fetchYahoo(symbol);
+        storeCache(symbol, quote);
+      } catch (_) {
+        if (!readStoredCache(symbol)) storeCache(symbol, fallbackQuote(symbol));
+      }
+      renderTarget("dock");
+      renderTarget("windows");
+      if (activePopoverSymbol === symbol) renderPopover(symbol);
+    }
+
+    function refreshVisible() {
+      const symbols = new Set([symbolForTarget("dock"), CONFIG.windows.symbol]);
+      symbols.forEach((symbol) => refreshSymbol(symbol));
+    }
+
+    function setMode(mode) {
+      activeMode = mode === "windows" || mode === "nvidia" || mode === "macos" ? mode : "macos";
+      closePopover();
+      renderTarget("dock");
+      renderTarget("windows");
+      refreshVisible();
+    }
+
+    function init() {
+      const inferred = document.body.classList.contains("theme-dgx")
+        ? "nvidia"
+        : (document.body.classList.contains("theme-windows-only") ? "windows" : "macos");
+      setMode(inferred);
+      $$("[data-stock-trigger]").forEach((trigger) => {
+        trigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const popover = $("[data-stock-popover]");
+          if (popover && popover.classList.contains("is-open") && activePopoverSymbol === symbolForTarget(trigger.dataset.stockTarget || "dock")) {
+            closePopover();
+          } else {
+            openPopover(trigger);
+          }
+        });
+      });
+      document.addEventListener("pointerdown", (e) => {
+        const popover = $("[data-stock-popover]");
+        if (!popover || !popover.classList.contains("is-open")) return;
+        if (popover.contains(e.target) || e.target.closest("[data-stock-trigger]")) return;
+        closePopover();
+      });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closePopover();
+      });
+      window.addEventListener("resize", closePopover);
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) refreshVisible();
+      });
+      refreshTimer = window.setInterval(refreshVisible, 120000);
+    }
+
+    return { init, setMode };
+  })();
 
   function taskbarPlacement() {
     const taskbar = $(".windows-taskbar");
@@ -1425,6 +1717,22 @@
         overlay.appendChild(ripple);
       });
 
+      const marketChart = document.createElement("div");
+      marketChart.className = "bigbang-market-chart";
+      marketChart.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+      marketChart.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+      marketChart.innerHTML = [
+        "<svg viewBox='0 0 1000 520' preserveAspectRatio='none' aria-hidden='true'>",
+        "<path class='market-grid' d='M40 430H960M40 330H960M40 230H960M40 130H960M120 70V455M320 70V455M520 70V455M720 70V455M920 70V455'/>",
+        "<path class='market-ghost-line' pathLength='1000' d='M48 410 C145 398 214 402 282 390 S424 394 508 374 S632 365 706 350 S808 334 860 306 S918 246 958 82'/>",
+        "<path class='market-god-line' pathLength='1000' d='M48 410 C145 398 214 402 282 390 S424 394 508 374 S632 365 706 350 S808 334 860 306 S918 246 958 82'/>",
+        "<line class='market-god-wick' x1='895' y1='302' x2='895' y2='68'/>",
+        "<rect class='market-god-body' x='858' y='126' width='74' height='176' rx='8'/>",
+        "<text class='market-god-label' x='724' y='118'>NVDA</text>",
+        "</svg>",
+      ].join("");
+      overlay.appendChild(marketChart);
+
       const core = document.createElement("div");
       core.className = "bigbang-green-core";
       core.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
@@ -1956,6 +2264,7 @@
     dock();
     osSwitcher();
     windowsSearch();
+    STOCK.init();
     taskbarPlacement();
     globalHooks();
     skillBars();
