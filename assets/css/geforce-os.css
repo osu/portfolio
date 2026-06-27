@@ -976,46 +976,35 @@ body.os-glitching #os {
   animation: iris-spoke-cycle 22s ease-out forwards;
   animation-delay: calc(var(--blade-i) * 0.03s);
 }
-.bigbang-nvidia-eye {
+.bigbang-nvidia-eye.iris-boot-scanner {
   position: absolute;
   left: var(--impact-x, 50%);
   top: var(--impact-y, 50%);
-  width: min(200px, 22vmin);
+  width: min(220px, 52vw);
   aspect-ratio: 1;
   display: grid;
   place-items: center;
-  border-radius: 50%;
+  z-index: 4;
+  pointer-events: none;
   opacity: 0;
-  transform: translate(-50%, -50%) scale(0.12) rotate(-18deg);
-  filter: blur(16px) brightness(2.8);
-  mix-blend-mode: screen;
+  transform: translate(-50%, -50%) scale(0.82);
+  filter: blur(8px) brightness(1.6);
   animation: nvidia-eye-formation 22s ease-in-out forwards;
 }
-.bigbang-nvidia-eye::before,
-.bigbang-nvidia-eye::after {
-  content: "";
-  position: absolute;
-  inset: 14%;
-  border-radius: 50% 10% 50% 10%;
-  border: 2px solid rgba(118,185,0,0.72);
-  box-shadow:
-    0 0 30px rgba(118,185,0,0.58),
-    inset 0 0 24px rgba(96,221,142,0.28);
-  transform: rotate(-20deg) scaleX(1.42);
-  animation: iris-eye-ring 22s ease-in-out forwards;
+.bigbang-nvidia-eye .iris-boot-housing {
+  animation: bigbang-eye-housing 22s ease-in-out forwards;
 }
-.bigbang-nvidia-eye::after {
-  inset: 30%;
-  border-color: rgba(246,255,237,0.86);
-  transform: rotate(-20deg) scaleX(1.08);
+.bigbang-nvidia-eye .iris-boot-blade {
+  opacity: 0;
+  transition: none;
+  animation: bigbang-eye-blade-verify 22s cubic-bezier(0.18, 0.86, 0.2, 1) forwards;
 }
-.bigbang-nvidia-eye img {
-  width: 62%;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 0 22px rgba(118,185,0,0.88));
-  opacity: 0.92;
-  animation: iris-eye-logo 22s ease-in-out forwards;
+.bigbang-nvidia-eye .iris-boot-scanline {
+  animation: bigbang-eye-scan 22s ease-in-out forwards;
+}
+.bigbang-nvidia-eye .iris-boot-pupil {
+  transition: none;
+  animation: bigbang-eye-pupil-verify 22s ease-in-out forwards;
 }
 .blackhole-warped {
   --bh-warp-x: 0px;
@@ -1135,24 +1124,34 @@ body.os-glitching #os {
   62% { opacity: 0.42; transform: translate(-50%, -50%) scale(0.18); filter: blur(4px) brightness(2.6); }
   100% { opacity: 0; transform: translate(-50%, -50%) scale(0.08); filter: blur(12px) brightness(3); }
 }
-@keyframes iris-eye-ring {
-  0%, 78% { opacity: 0; transform: rotate(-20deg) scaleX(1.42) scale(0.4); }
-  84% { opacity: 1; transform: rotate(-8deg) scaleX(1.38) scale(1.05); }
-  92% { opacity: 0.9; transform: rotate(0deg) scaleX(1.32) scale(1); }
-  100% { opacity: 0; transform: rotate(12deg) scaleX(1.2) scale(0.7); }
-}
-@keyframes iris-eye-logo {
-  0%, 80% { opacity: 0; transform: scale(0.2); filter: blur(8px) brightness(2.6); }
-  86% { opacity: 0.95; transform: scale(1.08); filter: blur(0) brightness(1.5); }
-  94% { opacity: 0.88; transform: scale(1); }
-  100% { opacity: 0; transform: scale(0.72); filter: blur(6px) brightness(2.2); }
-}
 @keyframes nvidia-eye-formation {
-  0%, 78% { opacity: 0; transform: translate(-50%, -50%) scale(0.12) rotate(-18deg); filter: blur(16px) brightness(2.8); }
-  84% { opacity: 0.98; transform: translate(-50%, -50%) scale(1.08) rotate(-4deg); filter: blur(1px) brightness(1.75); }
-  90% { opacity: 0.94; transform: translate(-50%, -50%) scale(1) rotate(0deg); filter: blur(0) brightness(1.4); }
-  96% { opacity: 0.82; transform: translate(-50%, -50%) scale(0.96) rotate(2deg); filter: blur(0) brightness(1.5); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.58) rotate(10deg); filter: blur(10px) brightness(2.2); }
+  0%, 78% { opacity: 0; transform: translate(-50%, -50%) scale(0.82); filter: blur(8px) brightness(1.6); }
+  84% { opacity: 0.98; transform: translate(-50%, -50%) scale(1.04); filter: blur(0) brightness(1.12); }
+  92%, 97% { opacity: 1; transform: translate(-50%, -50%) scale(1); filter: blur(0) brightness(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.92); filter: blur(6px) brightness(1.5); }
+}
+@keyframes bigbang-eye-housing {
+  0%, 78% { box-shadow: 0 0 0 2px rgba(118,185,0,0), 0 0 0 rgba(118,185,0,0), inset 0 0 36px rgba(0,0,0,0.72); }
+  88%, 97% { box-shadow: 0 0 0 2px rgba(118,185,0,0.28), 0 0 42px rgba(118,185,0,0.18), inset 0 0 36px rgba(0,0,0,0.72); }
+  100% { box-shadow: 0 0 0 2px rgba(118,185,0,0), 0 0 56px rgba(118,185,0,0), inset 0 0 36px rgba(0,0,0,0.72); }
+}
+@keyframes bigbang-eye-blade-verify {
+  0%, 78% { opacity: 0; transform: rotate(var(--blade-angle)) rotate(-46deg); filter: brightness(1); }
+  84% { opacity: 1; transform: rotate(var(--blade-angle)) rotate(0deg); filter: brightness(1); }
+  94%, 97% { opacity: 1; transform: rotate(var(--blade-angle)) rotate(8deg); filter: brightness(1.35); }
+  100% { opacity: 0; transform: rotate(var(--blade-angle)) rotate(12deg); filter: brightness(1.5); }
+}
+@keyframes bigbang-eye-scan {
+  0%, 82% { top: 18%; opacity: 0; }
+  85% { top: 18%; opacity: 1; }
+  96% { top: 82%; opacity: 1; }
+  100% { top: 82%; opacity: 0; }
+}
+@keyframes bigbang-eye-pupil-verify {
+  0%, 80% { opacity: 0; transform: scale(0.82); filter: blur(5px) drop-shadow(0 0 18px rgba(118,185,0,0.45)); }
+  86% { opacity: 0.88; transform: scale(1); filter: blur(0) drop-shadow(0 0 18px rgba(118,185,0,0.55)); }
+  92%, 97% { opacity: 1; transform: scale(1); filter: blur(0) drop-shadow(0 0 28px rgba(118,185,0,0.95)); }
+  100% { opacity: 0; transform: scale(0.94); filter: blur(5px) drop-shadow(0 0 32px rgba(118,185,0,0.8)); }
 }
 @keyframes market-chart-reveal {
   0%, 76% { opacity: 0; transform: translate(-50%, -50%) scale(0.82); filter: blur(8px) brightness(1.8); }

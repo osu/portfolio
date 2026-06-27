@@ -2506,10 +2506,22 @@
       overlay.appendChild(core);
 
       const eye = document.createElement("div");
-      eye.className = "bigbang-nvidia-eye";
+      eye.className = "bigbang-nvidia-eye iris-boot-scanner";
       eye.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       eye.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
-      eye.innerHTML = "<img src='./assets/images/nvda-eye.png' alt=''>";
+      eye.innerHTML = [
+        "<div class='iris-boot-housing'></div>",
+        "<div class='iris-boot-blades'></div>",
+        "<div class='iris-boot-scanline'></div>",
+        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye.png' alt=''>",
+      ].join("");
+      const eyeBlades = $(".iris-boot-blades", eye);
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const blade = document.createElement("div");
+        blade.className = "iris-boot-blade";
+        blade.style.setProperty("--blade-angle", (i * (360 / IRIS_BLADES)) + "deg");
+        eyeBlades.appendChild(blade);
+      }
       overlay.appendChild(eye);
 
       const colors = [

@@ -1,4 +1,4 @@
-const CACHE = "portfolio-shell-v1";
+const CACHE = "portfolio-shell-v2";
 const SHELL = [
   "./",
   "./index.html",
