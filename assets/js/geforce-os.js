@@ -31,7 +31,7 @@
   function appTitle(id, mode = currentOsMode) {
     const meta = appMeta(id);
     if (!meta) return id || "";
-    return (meta.names && meta.names[mode]) || meta.title;
+    return meta.title;
   }
 
   function appDescription(id) {
@@ -59,20 +59,87 @@
   }
 
   /* =============================================================
-     BOOT SPLASH
+     CINEMATIC LOGIN FLOW
      ============================================================= */
-  function boot() {
-    const el = $("#boot");
-    if (!el) return;
-    try {
-      if (window.localStorage.getItem("portfolio-boot-seen") === "1") {
-        el.remove();
-        return;
-      }
-    } catch (_) {}
+  function setFlowPhase(phase, detail = {}) {
+    if (!phase) return;
+    document.body.dataset.flowPhase = phase;
+    window.dispatchEvent(new CustomEvent("portfolio:flow-phase", {
+      detail: { ...detail, phase },
+    }));
+  }
 
-    const bladesHost = $(".iris-boot-blades", el);
-    if (bladesHost && !bladesHost.childElementCount) {
+  function setDesktopLocked(locked) {
+    const os = $("#os");
+    const skipLink = $(".skip-link");
+    document.body.classList.toggle("login-active", locked);
+    [os, skipLink].forEach((el) => {
+      if (!el) return;
+      if (locked) {
+        el.setAttribute("aria-hidden", "true");
+        el.inert = true;
+      } else {
+        el.removeAttribute("aria-hidden");
+        el.inert = false;
+      }
+    });
+  }
+
+  const LOGIN_FLOW = (function () {
+    const authenticatedModes = new Set();
+    let active = null;
+
+    function updateClock(overlay) {
+      const now = new Date();
+      const time = $("[data-login-time]", overlay);
+      const date = $("[data-login-date]", overlay);
+      if (time) time.textContent = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      if (date) date.textContent = now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+    }
+
+    function accountMarkup(mode, titleId) {
+      const windows = mode === "windows";
+      const logo = windows ? "./assets/images/Microsoft_icon.svg.png" : "./assets/images/apple-logo.svg";
+      const kicker = windows ? "Windows Hello" : (mode === "macos" ? "macOS Login" : "macOS Secure Login");
+      return [
+        "<div class='login-lock-clock' aria-hidden='true'>",
+        "<time data-login-time>9:41</time><span data-login-date>Friday, June 26</span>",
+        "</div>",
+        "<div class='login-card'>",
+        "<div class='login-avatar' aria-hidden='true'><img src='" + logo + "' alt='' width='58' height='70'></div>",
+        "<p class='login-kicker'>" + kicker + "</p>",
+        "<h1 class='login-title' id='" + titleId + "'>Hasan Khan</h1>",
+        "<label class='login-password-shell'>",
+        "<span class='sr-only'>Password is being filled automatically for this visual login sequence</span>",
+        "<input class='login-password' type='password' value='' readonly tabindex='-1' autocomplete='off' aria-readonly='true'>",
+        "<span class='login-password-icon' aria-hidden='true'>→</span>",
+        "</label>",
+        "<p class='login-status' data-login-status aria-live='polite'>Preparing automatic sign-in…</p>",
+        "<div class='login-progress' aria-hidden='true'><span></span></div>",
+        "</div>",
+        "<button class='boot-hint login-skip' type='button'>Skip login animation</button>",
+      ].join("");
+    }
+
+    function irisMarkup(titleId) {
+      return [
+        "<div class='iris-boot'>",
+        "<div class='iris-boot-scanner' aria-hidden='true'>",
+        "<div class='iris-boot-housing'></div><div class='iris-boot-blades'></div><div class='iris-boot-scanline'></div>",
+        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye-ui.webp' alt='' width='32' height='18'>",
+        "</div>",
+        "<p class='iris-boot-kicker'>DGX CLEARANCE PROTOCOL</p>",
+        "<h1 class='iris-boot-title' id='" + titleId + "'>IRIS VERIFICATION</h1>",
+        "<p class='iris-boot-status' data-login-status aria-live='polite'>Initializing optics…</p>",
+        "<div class='boot-bar iris-boot-bar'><div class='boot-bar-fill'></div></div>",
+        "</div>",
+        "<button class='boot-hint login-skip' type='button'>Skip verification</button>",
+      ].join("");
+    }
+
+    function addIrisBlades(overlay) {
+      const bladesHost = $(".iris-boot-blades", overlay);
+      if (!bladesHost || bladesHost.childElementCount) return;
       for (let i = 0; i < 12; i++) {
         const blade = document.createElement("div");
         blade.className = "iris-boot-blade";
@@ -81,59 +148,195 @@
       }
     }
 
-    const fill = $(".boot-bar-fill", el);
-    const status = $("#iris-boot-status");
-    const scanner = $(".iris-boot-scanner", el);
-    const statuses = reduceMotion
-      ? ["Verifying clearance…", "Identity confirmed"]
-      : ["Initializing optics…", "Scanning biometrics…", "Subject: HASAN KHAN", "Clearance granted"];
-    let statusIdx = 0;
-    const statusTimer = window.setInterval(() => {
-      if (!status || statusIdx >= statuses.length) return;
-      status.textContent = statuses[statusIdx++];
-    }, reduceMotion ? 180 : 520);
-
-    const duration = reduceMotion ? 320 : 2800;
-    const start = performance.now();
-    let raf;
-    if (scanner && !reduceMotion) {
-      window.setTimeout(() => scanner.classList.add("is-scanning"), 120);
-      window.setTimeout(() => scanner.classList.add("is-verified"), duration * 0.72);
+    function hasAuthenticated(mode) {
+      return authenticatedModes.has(mode);
     }
 
-    function step(now) {
-      const p = clamp((now - start) / duration, 0, 1);
-      if (fill) fill.style.width = (p * 100).toFixed(1) + "%";
-      if (p < 1) raf = requestAnimationFrame(step);
-      else finish();
+    function run(mode, options = {}) {
+      if (active) return active.promise;
+
+      const initial = Boolean(options.initial);
+      const previousFocus = document.activeElement;
+      const previousPhase = document.body.dataset.flowPhase || "brand-desktop";
+      const overlay = initial ? $("#boot") : document.createElement("div");
+      if (!overlay) return Promise.resolve({ mode, skipped: true });
+
+      const titleId = "login-title-" + mode + "-" + Date.now();
+      overlay.className = "boot os-login-screen login-screen--" + mode;
+      overlay.setAttribute("role", "dialog");
+      overlay.setAttribute("aria-modal", "true");
+      overlay.setAttribute("aria-labelledby", titleId);
+      overlay.tabIndex = -1;
+      overlay.innerHTML = mode === "iris" ? irisMarkup(titleId) : accountMarkup(mode, titleId);
+      if (!initial) document.body.appendChild(overlay);
+      if (mode === "iris") addIrisBlades(overlay);
+      else updateClock(overlay);
+
+      setDesktopLocked(true);
+      if (mode === "iris") setFlowPhase("nvidia-login", { mode: "nvidia" });
+      else if (initial) setFlowPhase("apple-lock", { mode: "apple" });
+      else setFlowPhase("os-login", { mode });
+
+      let resolveRun;
+      const timers = [];
+      let progressRaf = 0;
+      let finished = false;
+      const promise = new Promise((resolve) => { resolveRun = resolve; });
+      active = { mode, overlay, promise };
+
+      const schedule = (fn, delay) => {
+        const timer = window.setTimeout(fn, delay);
+        timers.push(timer);
+        return timer;
+      };
+      const status = $("[data-login-status]", overlay);
+      const skipButton = $(".login-skip", overlay);
+
+      function cleanup() {
+        timers.forEach(window.clearTimeout);
+        window.cancelAnimationFrame(progressRaf);
+        document.removeEventListener("keydown", onKeydown);
+      }
+
+      function finish(skipped = false) {
+        if (finished) return;
+        finished = true;
+        cleanup();
+        if (mode === "iris") {
+          const scanner = $(".iris-boot-scanner", overlay);
+          const fill = $(".boot-bar-fill", overlay);
+          if (scanner) scanner.classList.add("is-scanning", "is-verified");
+          if (fill) fill.style.width = "100%";
+          if (status) status.textContent = "Identity confirmed · Desktop unlocked";
+        } else {
+          const input = $(".login-password", overlay);
+          if (input && !input.value) input.value = "platform";
+          overlay.classList.add("is-filling", "is-authenticating", "is-verified");
+          if (status) status.textContent = "Welcome, Hasan";
+        }
+        overlay.classList.add("is-done");
+
+        schedule(() => {
+          if (mode === "windows" || mode === "macos") authenticatedModes.add(mode);
+          overlay.remove();
+          active = null;
+          setDesktopLocked(false);
+          if (!initial && mode !== "iris") setFlowPhase(previousPhase, { mode });
+          resolveRun({ mode, skipped });
+          window.requestAnimationFrame(() => {
+            const target = previousFocus && previousFocus.isConnected && !previousFocus.closest(".os-login-screen")
+              ? previousFocus
+              : ($(".win.is-focused.is-open:not(.is-min)") || $("#desktop"));
+            if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+          });
+        }, reduceMotion ? 80 : 360);
+      }
+
+      function onKeydown(event) {
+        if (event.key !== "Escape") return;
+        event.preventDefault();
+        finish(true);
+      }
+      document.addEventListener("keydown", onKeydown);
+      if (skipButton) {
+        skipButton.addEventListener("click", () => finish(true), { once: true });
+      }
+      overlay.focus({ preventScroll: true });
+
+      if (mode === "iris") {
+        const scanner = $(".iris-boot-scanner", overlay);
+        const fill = $(".boot-bar-fill", overlay);
+        const duration = reduceMotion ? 420 : 2050;
+        const startedAt = performance.now();
+        const statuses = reduceMotion
+          ? [[80, "Verifying clearance…"], [260, "Identity confirmed"]]
+          : [[220, "Initializing optics…"], [640, "Scanning biometrics…"], [1120, "Subject: HASAN KHAN"], [1660, "Clearance granted"]];
+        statuses.forEach(([delay, message]) => schedule(() => { if (status) status.textContent = message; }, delay));
+        if (scanner && !reduceMotion) {
+          schedule(() => scanner.classList.add("is-scanning"), 120);
+          schedule(() => scanner.classList.add("is-verified"), duration * 0.72);
+        }
+        const step = (now) => {
+          const progress = clamp((now - startedAt) / duration, 0, 1);
+          if (fill) fill.style.width = (progress * 100).toFixed(1) + "%";
+          if (progress < 1 && !finished) progressRaf = requestAnimationFrame(step);
+        };
+        progressRaf = requestAnimationFrame(step);
+        schedule(() => finish(false), duration + (reduceMotion ? 40 : 180));
+      } else {
+        const input = $(".login-password", overlay);
+        const visualPassword = "platform";
+        if (reduceMotion) {
+          if (input) input.value = visualPassword;
+          overlay.classList.add("is-filling", "is-authenticating", "is-verified");
+          if (status) status.textContent = "Welcome, Hasan";
+          schedule(() => finish(false), 460);
+        } else {
+          const typeStart = initial ? 180 : 620;
+          const characterDelay = initial ? 45 : 105;
+          schedule(() => overlay.classList.add("is-filling"), initial ? 100 : 260);
+          visualPassword.split("").forEach((_, index) => {
+            schedule(() => {
+              if (input) input.value = visualPassword.slice(0, index + 1);
+            }, typeStart + index * characterDelay);
+          });
+          const filledAt = typeStart + visualPassword.length * characterDelay;
+          schedule(() => {
+            overlay.classList.add("is-authenticating");
+            if (status) status.textContent = mode === "windows" ? "Signing in with Windows Hello…" : "Unlocking with Secure Enclave…";
+          }, filledAt + (initial ? 70 : 140));
+          schedule(() => {
+            overlay.classList.add("is-verified");
+            if (status) status.textContent = "Welcome, Hasan";
+          }, filledAt + (initial ? 230 : 920));
+          schedule(() => finish(false), filledAt + (initial ? 430 : 1420));
+        }
+      }
+
+      return promise;
     }
-    function finish() {
-      if (el.classList.contains("is-done")) return;
-      window.clearInterval(statusTimer);
-      if (status) status.textContent = "Desktop unlocked";
-      el.classList.add("is-done");
-      try { window.localStorage.setItem("portfolio-boot-seen", "1"); } catch (_) {}
-      window.dispatchEvent(new CustomEvent("portfolio:iris-boot"));
-      window.setTimeout(() => el.remove(), 650);
+
+    return {
+      run,
+      hasAuthenticated,
+      isActive() { return Boolean(active); },
+      getAuthenticatedModes() { return Array.from(authenticatedModes); },
+    };
+  })();
+
+  function boot() {
+    return LOGIN_FLOW.run("apple", { initial: true }).then(() => {
+      setFlowPhase("brand-desktop", { mode: "split" });
+      window.dispatchEvent(new CustomEvent("portfolio:login-complete", { detail: { mode: "apple" } }));
+    });
+  }
+
+  function syncWallpaperVideo(mode = currentOsMode) {
+    const video = $(".desktop-video");
+    const source = video && $("source[data-src]", video);
+    if (!video) return;
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const allowed = mode === "nvidia" && !reduceMotion && !isMobile() && !(connection && connection.saveData);
+    if (!allowed || document.hidden) {
+      video.pause();
+      return;
     }
-    let skipped = false;
-    function skip() {
-      if (skipped) return;
-      skipped = true;
-      document.removeEventListener("keydown", onKey);
-      cancelAnimationFrame(raf);
-      window.clearInterval(statusTimer);
-      if (fill) fill.style.width = "100%";
-      if (scanner) scanner.classList.add("is-scanning", "is-verified");
-      finish();
+
+    const play = () => video.play().catch(() => {});
+    if (source && !source.src) {
+      source.src = source.dataset.src;
+      video.load();
+      video.addEventListener("canplay", play, { once: true });
+      return;
     }
-    function onKey(e) {
-      if (e.key === "Shift" || e.key === "Control" || e.key === "Alt" || e.key === "Meta") return;
-      skip();
-    }
-    raf = requestAnimationFrame(step);
-    el.addEventListener("click", skip);
-    document.addEventListener("keydown", onKey);
+    play();
+  }
+
+  function initWallpaperVideo() {
+    const start = () => syncWallpaperVideo(currentOsMode);
+    window.addEventListener("pointerdown", start, { once: true, passive: true });
+    window.addEventListener("keydown", start, { once: true });
+    document.addEventListener("visibilitychange", () => syncWallpaperVideo(currentOsMode));
   }
 
   /* =============================================================
@@ -170,11 +373,31 @@
       button.classList.toggle("is-active", active);
       button.setAttribute("aria-pressed", active ? "true" : "false");
     });
+    const cycle = $("[data-theme-cycle-label]");
+    const cycleButton = cycle && cycle.closest("button");
+    const labels = { macos: "Mac", windows: "Win", nvidia: "DGX" };
+    const fullLabels = { macos: "macOS", windows: "Windows 11", nvidia: "NVIDIA DGX OS" };
+    const themeColors = { macos: "#eff4ff", windows: "#071839", nvidia: "#0c0e0c" };
+    const osLabel = $(".menubar-os");
+    const themeColor = $('meta[name="theme-color"]');
+    if (cycle) cycle.textContent = labels[mode] || "OS";
+    if (cycleButton) cycleButton.setAttribute("aria-label", "Current theme: " + (labels[mode] || "OS") + ". Switch operating system theme");
+    if (osLabel && fullLabels[mode]) osLabel.textContent = fullLabels[mode];
+    if (themeColor && themeColors[mode]) themeColor.setAttribute("content", themeColors[mode]);
   }
 
   function setOsMode(mode, options = {}) {
     const target = mode === "nvidia" ? "nvidia" : mode;
     const prev = currentOsMode;
+
+    if (
+      (mode === "macos" || mode === "windows")
+      && !options.skipLogin
+      && !LOGIN_FLOW.hasAuthenticated(mode)
+    ) {
+      if (LOGIN_FLOW.isActive()) return Promise.resolve(currentOsMode);
+      return LOGIN_FLOW.run(mode).then(() => setOsMode(mode, { ...options, skipLogin: true, skipGlitch: true }));
+    }
 
     const apply = () => {
       document.body.classList.remove("theme-macos", "theme-dgx", "theme-mac-only", "theme-windows-only");
@@ -201,12 +424,12 @@
       currentOsMode = activeMode;
       syncOsSwitcher(activeMode);
       syncAppLabels(activeMode);
+      syncWallpaperVideo(activeMode);
       window.dispatchEvent(new CustomEvent("portfolio:os-mode", { detail: { mode: activeMode } }));
 
       if (typeof TERM !== "undefined") TERM.setMode(activeMode);
       if (typeof STOCK !== "undefined") STOCK.setMode(activeMode);
-      if (options.layout !== false) applyOsWindowLayout(activeMode);
-      playTaskbarIntro(activeMode);
+      if (options.layout === true) applyOsWindowLayout(activeMode);
 
       if (typeof GPU !== "undefined") GPU.refreshMenubar();
     };
@@ -233,7 +456,7 @@
     $$("[data-os-mode]").forEach((button) => {
       button.addEventListener("click", () => setOsMode(button.dataset.osMode));
     });
-    syncOsSwitcher(document.body.classList.contains("theme-dgx") ? "nvidia" : "");
+    syncOsSwitcher(currentOsMode);
   }
 
   function syncAppLabels(mode = currentOsMode) {
@@ -271,6 +494,18 @@
     });
   }
 
+  function hydrateDeferredMedia(root) {
+    if (!root) return;
+    $$("img[data-src]", root).forEach((img) => {
+      if (img.getAttribute("src")) return;
+      img.addEventListener("load", () => img.classList.add("media-loaded"), { once: true });
+      img.src = img.dataset.src;
+    });
+    $$("source[data-src]", root).forEach((source) => {
+      if (!source.getAttribute("src")) source.src = source.dataset.src;
+    });
+  }
+
   /* =============================================================
      WINDOW MANAGER
      ============================================================= */
@@ -281,8 +516,17 @@
     const placed = {};      // id -> bool (has been positioned once)
     const openers = {};     // id -> element that triggered the open (for focus restore)
 
+    function setWindowVisibility(win, visible) {
+      win.setAttribute("aria-hidden", visible ? "false" : "true");
+      win.inert = !visible;
+    }
+
     function init() {
-      $$(".win").forEach((w) => { wins[w.dataset.app] = w; w.setAttribute("tabindex", "-1"); });
+      $$(".win").forEach((w) => {
+        wins[w.dataset.app] = w;
+        w.setAttribute("tabindex", "-1");
+        setWindowVisibility(w, false);
+      });
 
       // titlebar light controls (with per-window descriptive labels)
       $$(".win-light").forEach((b) => {
@@ -329,6 +573,7 @@
     function open(id) {
       const win = wins[id];
       if (!win) return;
+      hydrateDeferredMedia(win);
       const wasOpen = win.classList.contains("is-open") && !win.classList.contains("is-min");
       win._minimizeToken = (win._minimizeToken || 0) + 1;
       if (!wasOpen) {
@@ -336,6 +581,7 @@
         if (trigger && trigger !== document.body && win !== trigger && !win.contains(trigger)) openers[id] = trigger;
       }
       win.classList.remove("is-min", "is-minimizing");
+      setWindowVisibility(win, true);
       if (!win.classList.contains("is-open")) {
         win.classList.add("is-open");
         place(win);
@@ -363,6 +609,7 @@
       const win = wins[id];
       if (!win) return;
       win.classList.remove("is-open", "is-focused", "is-min", "is-minimizing");
+      setWindowVisibility(win, false);
       syncDock();
       if (!restoreOpener(id)) focusTopMost();
     }
@@ -371,6 +618,7 @@
       Object.keys(wins).forEach((id) => {
         const win = wins[id];
         win.classList.remove("is-open", "is-focused", "is-min", "is-max", "is-minimizing");
+        setWindowVisibility(win, false);
         delete openers[id];
       });
       z = 20;
@@ -385,6 +633,7 @@
       if (reduceMotion) {
         win.classList.add("is-min");
         win.classList.remove("is-focused", "is-minimizing");
+        setWindowVisibility(win, false);
         syncDock();
         if (!restoreOpener(id)) focusTopMost();
         return;
@@ -397,6 +646,7 @@
         if (win._minimizeToken !== token) return;
         win.classList.add("is-min");
         win.classList.remove("is-focused", "is-minimizing");
+        setWindowVisibility(win, false);
         syncDock();
         if (!restoreOpener(id)) focusTopMost();
       }, 245);
@@ -622,6 +872,7 @@
         const w = wins[id];
         const live = w && w.classList.contains("is-open") && !w.classList.contains("is-min");
         it.classList.toggle("is-open", !!live);
+        if (id) it.setAttribute("aria-pressed", live ? "true" : "false");
       });
     }
 
@@ -660,24 +911,6 @@
         window.dispatchEvent(new CustomEvent("portfolio:dock-click"));
         WM.toggle(it.dataset.app);
       });
-    });
-  }
-
-  let taskbarIntroTimers = [];
-  function playTaskbarIntro(mode) {
-    taskbarIntroTimers.forEach((timer) => window.clearTimeout(timer));
-    taskbarIntroTimers = [];
-    if (reduceMotion || isMobile()) return;
-    const selector = mode === "windows"
-      ? ".win-taskbar-button, .win-search, .win-taskbar-app, .win-stock-widget"
-      : ".dock-item";
-    const items = $$(selector).filter((item) => {
-      const rect = item.getBoundingClientRect();
-      return rect.width > 0 && rect.height > 0;
-    });
-    items.forEach((item, index) => {
-      taskbarIntroTimers.push(window.setTimeout(() => item.classList.add("tooltip-demo"), 520 + index * 190));
-      taskbarIntroTimers.push(window.setTimeout(() => item.classList.remove("tooltip-demo"), 1080 + index * 190));
     });
   }
 
@@ -815,9 +1048,15 @@
     }
 
     async function fetchText(url) {
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      return res.text();
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 6500);
+      try {
+        const res = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.text();
+      } finally {
+        window.clearTimeout(timeout);
+      }
     }
 
     function yahooReaderUrl(symbol) {
@@ -962,6 +1201,7 @@
       if (!popover) return;
       const symbol = symbolForTarget(trigger.dataset.stockTarget || "dock");
       activePopoverSymbol = symbol;
+      $$('[data-stock-trigger]').forEach((item) => item.setAttribute("aria-expanded", item === trigger ? "true" : "false"));
       renderPopover(symbol);
       positionPopover(trigger);
       popover.classList.add("is-open");
@@ -975,6 +1215,7 @@
       popover.classList.remove("is-open");
       popover.setAttribute("aria-hidden", "true");
       activePopoverSymbol = null;
+      $$('[data-stock-trigger]').forEach((item) => item.setAttribute("aria-expanded", "false"));
     }
 
     async function refreshSymbol(symbol) {
@@ -991,17 +1232,11 @@
       if (activePopoverSymbol === symbol) renderPopover(symbol);
     }
 
-    function refreshVisible() {
-      const symbols = new Set([symbolForTarget("dock"), CONFIG.windows.symbol]);
-      symbols.forEach((symbol) => refreshSymbol(symbol));
-    }
-
     function setMode(mode) {
       activeMode = mode === "windows" || mode === "nvidia" || mode === "macos" ? mode : "macos";
       closePopover();
       renderTarget("dock");
       renderTarget("windows");
-      refreshVisible();
     }
 
     function summary() {
@@ -1017,6 +1252,8 @@
         : (document.body.classList.contains("theme-windows-only") ? "windows" : "macos");
       setMode(inferred);
       $$("[data-stock-trigger]").forEach((trigger) => {
+        trigger.setAttribute("aria-controls", "stock-popover");
+        trigger.setAttribute("aria-expanded", "false");
         trigger.addEventListener("click", (e) => {
           e.stopPropagation();
           const popover = $("[data-stock-popover]");
@@ -1038,9 +1275,11 @@
       });
       window.addEventListener("resize", closePopover);
       document.addEventListener("visibilitychange", () => {
-        if (!document.hidden) refreshVisible();
+        if (!document.hidden && activePopoverSymbol) refreshSymbol(activePopoverSymbol);
       });
-      refreshTimer = window.setInterval(refreshVisible, 120000);
+      refreshTimer = window.setInterval(() => {
+        if (!document.hidden && activePopoverSymbol) refreshSymbol(activePopoverSymbol);
+      }, 120000);
     }
 
     return { init, setMode, summary };
@@ -1158,7 +1397,8 @@
       });
     });
     document.addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.code === "Space") {
+      if (trapSystemOverlayFocus(e)) return;
+      if ((e.metaKey || e.ctrlKey) && (e.code === "Space" || e.key.toLowerCase() === "k")) {
         e.preventDefault();
         if (currentOsMode === "nvidia") COMMAND_PALETTE.open();
         else UNIVERSAL_SEARCH.open(currentOsMode === "macos" ? "spotlight" : "windows");
@@ -1188,6 +1428,14 @@
       WM.open("diagnostics");
       notify("Diagnostics", "Fabric telemetry is live.");
     } else if (action === "demo") startProjectDemo();
+    else if (action === "iris-sequence") BRAND_COLLISION.armCollision();
+    else if (action === "theme-cycle") {
+      const modes = ["nvidia", "macos", "windows"];
+      const next = modes[(modes.indexOf(currentOsMode) + 1) % modes.length];
+      Promise.resolve(setOsMode(next, { layout: false })).then(() => {
+        notify("Theme changed", next === "nvidia" ? "NVIDIA DGX OS" : (next === "macos" ? "macOS" : "Windows 11"));
+      });
+    }
   }
 
   function closeSystemOverlays() {
@@ -1214,6 +1462,58 @@
       iconUse(item.icon || "i-grid") +
       "<div><b>" + escapePlain(label) + "</b><span>" + escapePlain(item.desc || appDescription(item.id)) + "</span></div>" +
       "</button>";
+  }
+
+  const SYSTEM_OVERLAY_SELECTOR = ".mission-control.is-open, .universal-search.is-open, .app-launcher.is-open, .command-palette.is-open";
+  let systemOverlayOpener = null;
+
+  function overlayFocusables(el) {
+    return $$("button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex='-1'])", el)
+      .filter((item) => item.offsetParent !== null);
+  }
+
+  function showSystemOverlay(el, preferredFocus) {
+    if (!el) return;
+    if (!$$(SYSTEM_OVERLAY_SELECTOR).length) {
+      const active = document.activeElement;
+      systemOverlayOpener = active && active !== document.body ? active : null;
+    }
+    el.classList.add("is-open");
+    el.setAttribute("aria-hidden", "false");
+    document.body.classList.add("system-overlay-open");
+    window.setTimeout(() => {
+      const target = preferredFocus || overlayFocusables(el)[0];
+      if (target) target.focus({ preventScroll: true });
+    }, 30);
+  }
+
+  function hideSystemOverlay(el) {
+    if (!el || !el.classList.contains("is-open")) return;
+    el.classList.remove("is-open");
+    el.setAttribute("aria-hidden", "true");
+    if ($$(SYSTEM_OVERLAY_SELECTOR).length) return;
+    document.body.classList.remove("system-overlay-open");
+    const opener = systemOverlayOpener;
+    systemOverlayOpener = null;
+    if (opener && document.body.contains(opener) && opener.offsetParent !== null) opener.focus({ preventScroll: true });
+  }
+
+  function trapSystemOverlayFocus(e) {
+    if (e.key !== "Tab") return false;
+    const activeOverlay = $(SYSTEM_OVERLAY_SELECTOR);
+    if (!activeOverlay) return false;
+    const focusable = overlayFocusables(activeOverlay);
+    if (!focusable.length) return false;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+    return true;
   }
 
   const MISSION = (function () {
@@ -1255,14 +1555,12 @@
       if (!el) return;
       closeSystemOverlays();
       render();
-      el.classList.add("is-open");
-      el.setAttribute("aria-hidden", "false");
+      showSystemOverlay(el, $("[data-overlay-close]", el) || $(".mission-card", el));
       notify("Mission Control", "Showing active panes.");
     }
     function close() {
       if (!el) return;
-      el.classList.remove("is-open");
-      el.setAttribute("aria-hidden", "true");
+      hideSystemOverlay(el);
     }
     return { init, open, close };
   })();
@@ -1281,7 +1579,11 @@
       if (!el || !input || !results) return;
       input.addEventListener("input", render);
       input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") close();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         if (e.key === "Enter") activate($(".search-result-row", results));
       });
       results.addEventListener("click", (e) => activate(e.target.closest(".search-result-row")));
@@ -1311,14 +1613,11 @@
       input.placeholder = variant === "windows" ? "Search apps, repos, and settings" : "Spotlight Search";
       input.value = "";
       render();
-      el.classList.add("is-open");
-      el.setAttribute("aria-hidden", "false");
-      window.setTimeout(() => input.focus(), 30);
+      showSystemOverlay(el, input);
     }
     function close() {
       if (!el) return;
-      el.classList.remove("is-open");
-      el.setAttribute("aria-hidden", "true");
+      hideSystemOverlay(el);
     }
     return { init, open, close };
   })();
@@ -1357,14 +1656,12 @@
       if (!el) return;
       closeSystemOverlays();
       render();
-      el.classList.add("is-open");
-      el.setAttribute("aria-hidden", "false");
+      showSystemOverlay(el, $(".launcher-tile", el) || $("[data-overlay-close]", el));
       notify(currentOsMode === "windows" ? "Start" : "Launchpad", "Choose an app.");
     }
     function close() {
       if (!el) return;
-      el.classList.remove("is-open");
-      el.setAttribute("aria-hidden", "true");
+      hideSystemOverlay(el);
     }
     return { init, open, close };
   })();
@@ -1387,7 +1684,11 @@
       if (!el || !input || !results) return;
       input.addEventListener("input", render);
       input.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") close();
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          close();
+        }
         if (e.key === "Enter") activate($(".search-result-row", results));
       });
       results.addEventListener("click", (e) => activate(e.target.closest(".search-result-row")));
@@ -1412,14 +1713,11 @@
       closeSystemOverlays();
       input.value = "";
       render();
-      el.classList.add("is-open");
-      el.setAttribute("aria-hidden", "false");
-      window.setTimeout(() => input.focus(), 30);
+      showSystemOverlay(el, input);
     }
     function close() {
       if (!el) return;
-      el.classList.remove("is-open");
-      el.setAttribute("aria-hidden", "true");
+      hideSystemOverlay(el);
     }
     return { init, open, close };
   })();
@@ -1466,9 +1764,14 @@
   function projectFilters() {
     const btns = $$(".filter-btn");
     btns.forEach((b) => {
+      b.setAttribute("aria-pressed", b.classList.contains("active") ? "true" : "false");
       b.addEventListener("click", () => {
-        btns.forEach((x) => x.classList.remove("active"));
+        btns.forEach((x) => {
+          x.classList.remove("active");
+          x.setAttribute("aria-pressed", "false");
+        });
         b.classList.add("active");
+        b.setAttribute("aria-pressed", "true");
         const f = b.dataset.filter;
         $$(".proj").forEach((p) => {
           const cats = (p.dataset.category || "").toLowerCase();
@@ -1482,21 +1785,54 @@
      CERTIFICATE LIGHTBOX
      ============================================================= */
   function lightbox() {
-    let ov;
+    let ov, opener;
+    function close() {
+      if (!ov) return;
+      ov.remove();
+      ov = null;
+      if (opener && document.body.contains(opener)) opener.focus({ preventScroll: true });
+      opener = null;
+    }
+    function open(img) {
+      close();
+      opener = img;
+      ov = document.createElement("div");
+      ov.className = "lb-overlay";
+      ov.setAttribute("role", "dialog");
+      ov.setAttribute("aria-modal", "true");
+      ov.setAttribute("aria-label", (img.alt || "Certificate") + " preview");
+      const big = document.createElement("img");
+      big.src = img.currentSrc || img.src;
+      big.alt = img.alt || "Certificate preview";
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.className = "lb-close";
+      closeButton.textContent = "Close";
+      closeButton.addEventListener("click", close);
+      ov.append(big, closeButton);
+      ov.addEventListener("pointerdown", (e) => { if (e.target === ov) close(); });
+      document.body.appendChild(ov);
+      closeButton.focus();
+    }
     $$("[data-zoom]").forEach((img) => {
-      img.addEventListener("click", () => {
-        ov = document.createElement("div");
-        ov.className = "lb-overlay";
-        ov.style.cssText = "position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)";
-        const big = document.createElement("img");
-        big.src = img.src;
-        big.style.cssText = "max-width:92vw;max-height:90vh;border:2px solid var(--green);border-radius:10px;box-shadow:var(--glow)";
-        ov.appendChild(big);
-        ov.addEventListener("click", () => ov.remove());
-        document.body.appendChild(ov);
+      img.tabIndex = 0;
+      img.setAttribute("role", "button");
+      img.setAttribute("aria-label", "Open " + (img.alt || "certificate") + " preview");
+      img.addEventListener("click", () => open(img));
+      img.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        open(img);
       });
     });
-    document.addEventListener("keydown", (e) => { if (e.key === "Escape") { const x = $(".lb-overlay"); if (x) x.remove(); } });
+    document.addEventListener("keydown", (e) => {
+      if (!ov) return;
+      if (e.key === "Escape") close();
+      if (e.key === "Tab") {
+        e.preventDefault();
+        $(".lb-close", ov).focus();
+      }
+    });
   }
 
   /* =============================================================
@@ -1507,7 +1843,6 @@
     if (!stack) return toastFallback((body ? title + " — " + body : title));
     const note = document.createElement("div");
     note.className = "notification";
-    note.setAttribute("role", "status");
     note.innerHTML = [
       "<strong>" + escapePlain(title) + "</strong>",
       body ? "<span>" + escapePlain(body) + "</span>" : "",
@@ -1768,6 +2103,7 @@
     }
 
     function init() {
+      if (reduceMotion) return;
       window.setInterval(() => {
         const win = WM.wins["diagnostics"];
         if (win && win.classList.contains("is-open") && !win.classList.contains("is-min")) refresh();
@@ -2176,17 +2512,26 @@
   })();
 
   /* =============================================================
-     SPACE WELLS
+     MICROSOFT × APPLE BRAND COLLISION
      ============================================================= */
-  const SPACE_WELLS = (function () {
+  const BRAND_COLLISION = (function () {
     const SPEED = 80; // pixels per second
-    const GROWTH_PER_SECOND = 0.01;
+    const GROWTH_PER_SECOND = 0.007;
+    const MAX_GROWTH = 0.4;
     const BIG_BANG_DURATION = 22000;
     const IRIS_BLADES = 12;
-    const SCREEN_SHATTER_DURATION = 7600;
-    const PANEL_SHATTER_DURATION = 6700;
+    const SCREEN_SHATTER_DURATION = 5600;
+    const PANEL_SHATTER_DURATION = 4200;
     const PRE_EXPLOSION_PULL_DURATION = 1180;
-    const BLAST_DELAY = PRE_EXPLOSION_PULL_DURATION + 420;
+    const BIG_BANG_PHASES = [
+      { phase: "void", at: 0 },
+      { phase: "singularity", at: 500 },
+      { phase: "eruption", at: 1900 },
+      { phase: "shatter-primary", at: 2050 },
+      { phase: "shockwaves", at: 2450 },
+      { phase: "green-pulses", at: 3600 },
+      { phase: "nvidia-formation", at: 14500 },
+    ];
     const BIG_BANG_TARGET_SELECTOR = [
       ".desktop-video",
       ".desktop-bg",
@@ -2225,37 +2570,43 @@
       ".win.is-open:not(.is-min):not(.is-max) .term-output .ln",
       ".win.is-open:not(.is-min):not(.is-max) .term-inputline",
     ].join(", ");
-    const WELL_CONFIGS = [
-      { id: "blackhole", x: 0.72, y: 0.24, vx: -SPEED * 0.72, vy: SPEED * 0.7, gravity: 1, spin: 1 },
-      { id: "whitehole", x: 0.28, y: 0.72, vx: SPEED * 0.72, vy: -SPEED * 0.7, gravity: -1, spin: -1 },
+    const BRAND_CONFIGS = [
+      { id: "microsoft-orb", x: 0.68, y: 0.24, vx: SPEED * 0.24, vy: SPEED * 0.16, gravity: 1, spin: 1 },
+      { id: "apple-orb", x: 0.32, y: 0.72, vx: -SPEED * 0.24, vy: -SPEED * 0.16, gravity: -1, spin: -1 },
     ];
-    let desk, wells = [], collisionDone = false;
+    let desk, wells = [], collisionDone = false, collisionArmed = false, motionStarted = false;
+    let raf = 0;
+    let lightningMounts = [];
 
     function getBaseSize() {
-      if (!desk) return 105;
-      return isMobile() ? 92 : clamp(desk.clientWidth * 0.098, 105, 168);
+      if (!desk) return 112 / 3;
+      return (isMobile() ? 92 : clamp(desk.clientWidth * 0.108, 112, 180)) / 3;
     }
 
     function getSize(well, now) {
-      const seconds = Math.floor((now - well.startTime) / 1000);
-      return well.baseSize * (1 + seconds * GROWTH_PER_SECOND);
+      const seconds = Math.max(0, (now - well.startTime) / 1000);
+      const growth = Math.min(seconds * GROWTH_PER_SECOND, MAX_GROWTH);
+      return well.baseSize * (1 + growth);
     }
 
     function keepInBounds(well) {
       const dw = desk.clientWidth;
       const dh = desk.clientHeight;
-      if (well.size >= dw) well.cx = dw / 2;
+      const visualRadius = well.size * 1.05;
+      const lowerChromeReserve = isMobile() ? 72 : 84;
+      if (visualRadius * 2 >= dw) well.cx = dw / 2;
       else {
-        const minX = well.size / 2;
-        const maxX = dw - well.size / 2;
+        const minX = visualRadius;
+        const maxX = dw - visualRadius;
         if (well.cx < minX) { well.cx = minX; well.vx = Math.abs(well.vx); }
         if (well.cx > maxX) { well.cx = maxX; well.vx = -Math.abs(well.vx); }
       }
 
-      if (well.size >= dh) well.cy = dh / 2;
+      const usableHeight = Math.max(visualRadius * 2, dh - lowerChromeReserve);
+      if (visualRadius * 2 >= usableHeight) well.cy = usableHeight / 2;
       else {
-        const minY = well.size / 2;
-        const maxY = dh - well.size / 2;
+        const minY = visualRadius;
+        const maxY = usableHeight - visualRadius;
         if (well.cy < minY) { well.cy = minY; well.vy = Math.abs(well.vy); }
         if (well.cy > maxY) { well.cy = maxY; well.vy = -Math.abs(well.vy); }
       }
@@ -2266,20 +2617,20 @@
       well.el.style.transform = "translate3d(" + (well.cx - well.size / 2).toFixed(2) + "px, " + (well.cy - well.size / 2).toFixed(2) + "px, 0)";
     }
 
-    function aimPrimaryWellsAtEachOther() {
-      const black = wells.find((well) => well.id === "blackhole");
-      const white = wells.find((well) => well.id === "whitehole");
-      if (!black || !white) return;
+    function aimBrandCoresAtEachOther() {
+      const microsoft = wells.find((well) => well.id === "microsoft-orb");
+      const apple = wells.find((well) => well.id === "apple-orb");
+      if (!microsoft || !apple) return;
 
-      const dx = white.cx - black.cx;
-      const dy = white.cy - black.cy;
+      const dx = apple.cx - microsoft.cx;
+      const dy = apple.cy - microsoft.cy;
       const distance = Math.max(Math.hypot(dx, dy), 1);
       const vx = (dx / distance) * SPEED;
       const vy = (dy / distance) * SPEED;
-      black.vx = vx;
-      black.vy = vy;
-      white.vx = -vx;
-      white.vy = -vy;
+      microsoft.vx = vx;
+      microsoft.vy = vy;
+      apple.vx = -vx;
+      apple.vy = -vy;
     }
 
     function resetTarget(target) {
@@ -2328,50 +2679,142 @@
       }).filter(Boolean);
     }
 
+    function createSeededRandom(seed) {
+      let state = seed >>> 0;
+      return function random() {
+        state = (state * 1664525 + 1013904223) >>> 0;
+        return state / 4294967296;
+      };
+    }
+
+    function useLowEffectsQuality() {
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      return isMobile()
+        || Boolean(connection && connection.saveData)
+        || (Number(navigator.deviceMemory) > 0 && Number(navigator.deviceMemory) <= 4)
+        || (Number(navigator.hardwareConcurrency) > 0 && Number(navigator.hardwareConcurrency) <= 4);
+    }
+
     function createShatterOverlay(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
       const impactY = deskRect.top + cy;
+      const lowQuality = useLowEffectsQuality();
+      const random = createSeededRandom(Math.round(impactX * 31 + impactY * 17 + window.innerWidth * 13));
       const overlay = document.createElement("div");
       overlay.className = "cosmic-shatter";
+      overlay.dataset.bigbangLayer = "shatter";
+      overlay.setAttribute("aria-hidden", "true");
       overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
 
-      const columns = Math.max(6, Math.ceil(window.innerWidth / 170));
-      const rows = Math.max(4, Math.ceil(window.innerHeight / 145));
-      const shardW = 100 / columns;
-      const shardH = 100 / rows;
+      const svgNS = "http://www.w3.org/2000/svg";
+      const crackMap = document.createElementNS(svgNS, "svg");
+      crackMap.classList.add("shatter-crack-map");
+      crackMap.dataset.bigbangLayer = "fracture";
+      crackMap.setAttribute("viewBox", "0 0 " + window.innerWidth + " " + window.innerHeight);
+      crackMap.setAttribute("preserveAspectRatio", "none");
+      crackMap.setAttribute("aria-hidden", "true");
 
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < columns; col++) {
-          const centerX = (col + 0.5) * window.innerWidth / columns;
-          const centerY = (row + 0.5) * window.innerHeight / rows;
-          const dx = centerX - impactX;
-          const dy = centerY - impactY;
-          const dist = Math.max(Math.hypot(dx, dy), 1);
-          const blast = 190 + Math.random() * 280;
-          const burstX = (dx / dist) * blast + (Math.random() - 0.5) * 150;
-          const burstY = (dy / dist) * blast + (Math.random() - 0.5) * 150;
-          const rot = (Math.random() - 0.5) * 110;
-          const shard = document.createElement("div");
-          shard.className = "shatter-shard";
-          shard.style.setProperty("--sx", (col * shardW).toFixed(3) + "vw");
-          shard.style.setProperty("--sy", (row * shardH).toFixed(3) + "vh");
-          shard.style.setProperty("--sw", "calc(" + shardW.toFixed(3) + "vw + 1px)");
-          shard.style.setProperty("--sh", "calc(" + shardH.toFixed(3) + "vh + 1px)");
-          shard.style.setProperty("--dx", burstX.toFixed(2) + "px");
-          shard.style.setProperty("--dy", burstY.toFixed(2) + "px");
-          shard.style.setProperty("--dx-end", (burstX * 0.18).toFixed(2) + "px");
-          shard.style.setProperty("--dy-end", (burstY * 0.18).toFixed(2) + "px");
-          shard.style.setProperty("--rot", rot.toFixed(2) + "deg");
-          shard.style.setProperty("--rot-end", (rot * 0.28).toFixed(2) + "deg");
-          shard.style.setProperty("--delay", (Math.random() * 0.12).toFixed(3) + "s");
-          shard.style.setProperty("--p1", Math.floor(Math.random() * 10) + "% " + Math.floor(Math.random() * 8) + "%");
-          shard.style.setProperty("--p2", (90 + Math.floor(Math.random() * 10)) + "% " + Math.floor(Math.random() * 12) + "%");
-          shard.style.setProperty("--p3", (88 + Math.floor(Math.random() * 12)) + "% " + (88 + Math.floor(Math.random() * 12)) + "%");
-          shard.style.setProperty("--p4", Math.floor(Math.random() * 12) + "% " + (86 + Math.floor(Math.random() * 14)) + "%");
-          overlay.appendChild(shard);
+      const farthestEdge = Math.hypot(
+        Math.max(impactX, window.innerWidth - impactX),
+        Math.max(impactY, window.innerHeight - impactY),
+      ) * 1.12;
+      const spokeCount = lowQuality ? 10 : 15;
+      for (let i = 0; i < spokeCount; i++) {
+        const baseAngle = (i / spokeCount) * Math.PI * 2 + (random() - 0.5) * 0.18;
+        const points = [{ x: impactX, y: impactY }];
+        for (let step = 1; step <= 5; step++) {
+          const distance = farthestEdge * (step / 5) * (0.9 + random() * 0.14);
+          const angle = baseAngle + (random() - 0.5) * (0.12 + step * 0.028);
+          points.push({
+            x: impactX + Math.cos(angle) * distance,
+            y: impactY + Math.sin(angle) * distance,
+          });
         }
+
+        const crack = document.createElementNS(svgNS, "path");
+        crack.classList.add("shatter-crack-ray");
+        crack.setAttribute("pathLength", "1");
+        crack.setAttribute("d", points.map((point, index) => (index ? "L" : "M") + point.x.toFixed(1) + " " + point.y.toFixed(1)).join(" "));
+        crack.style.setProperty("--crack-delay", (i * 0.014).toFixed(3) + "s");
+        crackMap.appendChild(crack);
+
+        if (i % 2 === 0 || !lowQuality) {
+          const forkFrom = points[2 + (i % 2)];
+          const forkAngle = baseAngle + (i % 2 ? -1 : 1) * (0.34 + random() * 0.28);
+          const forkLength = farthestEdge * (0.16 + random() * 0.18);
+          const elbow = {
+            x: forkFrom.x + Math.cos(forkAngle) * forkLength * 0.48,
+            y: forkFrom.y + Math.sin(forkAngle) * forkLength * 0.48,
+          };
+          const fork = document.createElementNS(svgNS, "path");
+          fork.classList.add("shatter-crack-branch");
+          fork.setAttribute("pathLength", "1");
+          fork.setAttribute("d", "M" + forkFrom.x.toFixed(1) + " " + forkFrom.y.toFixed(1)
+            + " L" + elbow.x.toFixed(1) + " " + elbow.y.toFixed(1)
+            + " L" + (forkFrom.x + Math.cos(forkAngle + (random() - 0.5) * 0.2) * forkLength).toFixed(1)
+            + " " + (forkFrom.y + Math.sin(forkAngle + (random() - 0.5) * 0.2) * forkLength).toFixed(1));
+          fork.style.setProperty("--crack-delay", (0.08 + i * 0.012).toFixed(3) + "s");
+          crackMap.appendChild(fork);
+        }
+      }
+
+      const impactRing = document.createElementNS(svgNS, "circle");
+      impactRing.classList.add("shatter-impact-ring");
+      impactRing.setAttribute("cx", impactX.toFixed(1));
+      impactRing.setAttribute("cy", impactY.toFixed(1));
+      impactRing.setAttribute("r", lowQuality ? "22" : "34");
+      crackMap.appendChild(impactRing);
+      overlay.appendChild(crackMap);
+
+      const shardCount = lowQuality ? 28 : 48;
+      const majorShardCount = lowQuality ? 20 : 36;
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      for (let i = 0; i < shardCount; i++) {
+        const angle = i * goldenAngle + (random() - 0.5) * 0.42;
+        const radius = farthestEdge * Math.sqrt((i + 0.7) / shardCount) * (0.55 + random() * 0.38);
+        const centerX = impactX + Math.cos(angle) * radius;
+        const centerY = impactY + Math.sin(angle) * radius;
+        const isSplinter = i >= majorShardCount;
+        const width = isSplinter ? 12 + random() * 26 : 52 + random() * 92;
+        const height = isSplinter ? 36 + random() * 68 : 48 + random() * 92;
+        const dist = Math.max(Math.hypot(centerX - impactX, centerY - impactY), 1);
+        const nx = (centerX - impactX) / dist;
+        const ny = (centerY - impactY) / dist;
+        const blast = (isSplinter ? 360 : 250) + random() * (isSplinter ? 430 : 350);
+        const burstX = nx * blast + (random() - 0.5) * 110;
+        const burstY = ny * blast + (random() - 0.5) * 110;
+        const rot = (random() - 0.5) * (isSplinter ? 260 : 150);
+        const shard = document.createElement("div");
+        shard.className = "shatter-shard" + (isSplinter ? " shatter-splinter" : "");
+        shard.dataset.bigbangLayer = "glass-shard";
+        shard.style.setProperty("--sx", (centerX - width / 2).toFixed(2) + "px");
+        shard.style.setProperty("--sy", (centerY - height / 2).toFixed(2) + "px");
+        shard.style.setProperty("--sw", width.toFixed(2) + "px");
+        shard.style.setProperty("--sh", height.toFixed(2) + "px");
+        shard.style.setProperty("--dx", burstX.toFixed(2) + "px");
+        shard.style.setProperty("--dy", burstY.toFixed(2) + "px");
+        shard.style.setProperty("--dx-end", (burstX * (1.5 + random() * 0.28)).toFixed(2) + "px");
+        shard.style.setProperty("--dy-end", (burstY * (1.5 + random() * 0.28)).toFixed(2) + "px");
+        shard.style.setProperty("--rot", rot.toFixed(2) + "deg");
+        shard.style.setProperty("--rot-end", (rot * (1.8 + random() * 0.55)).toFixed(2) + "deg");
+        shard.style.setProperty("--delay", (random() * 0.16).toFixed(3) + "s");
+        const shardShapes = isSplinter
+          ? [
+              "polygon(44% 0%, 72% 8%, 100% 100%, 18% 78%)",
+              "polygon(0% 18%, 82% 0%, 100% 26%, 24% 100%)",
+              "polygon(38% 0%, 100% 86%, 54% 100%, 0% 20%)",
+            ]
+          : [
+              "polygon(46% 0%, 100% 28%, 76% 100%, 0% 72%, 14% 18%)",
+              "polygon(8% 0%, 100% 14%, 72% 62%, 92% 100%, 18% 82%, 0% 34%)",
+              "polygon(34% 0%, 100% 8%, 84% 84%, 36% 100%, 0% 58%)",
+              "polygon(0% 22%, 70% 0%, 100% 46%, 58% 100%, 12% 76%)",
+              "polygon(20% 0%, 100% 38%, 62% 100%, 0% 64%)",
+            ];
+        shard.style.setProperty("--shard-clip", shardShapes[i % shardShapes.length]);
+        overlay.appendChild(shard);
       }
 
       document.body.appendChild(overlay);
@@ -2382,26 +2825,166 @@
       $$(COSMIC_SUPPRESS_SELECTOR).forEach((el) => el.classList.add("cosmic-suppressed"));
     }
 
+    function mountUniverseBurst(overlay, impactX, impactY, lowQuality) {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, lowQuality ? 1.25 : 1.5);
+      const canvas = document.createElement("canvas");
+      canvas.className = "bigbang-matter-canvas";
+      canvas.dataset.bigbangLayer = "matter-canvas";
+      canvas.width = Math.max(1, Math.floor(width * dpr));
+      canvas.height = Math.max(1, Math.floor(height * dpr));
+      canvas.setAttribute("aria-hidden", "true");
+      overlay.appendChild(canvas);
+
+      const context = canvas.getContext("2d", { alpha: true, desynchronized: true });
+      if (!context) {
+        canvas.remove();
+        return false;
+      }
+
+      const random = createSeededRandom(Math.round(impactX * 43 + impactY * 29 + width * height));
+      const count = lowQuality ? 170 : 560;
+      const maxTravel = Math.hypot(width, height) * 0.82;
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const particles = Array.from({ length: count }, (_, index) => {
+        const angle = index * goldenAngle + (random() - 0.5) * 0.28;
+        return {
+          angle,
+          delay: random() * 620,
+          life: 3900 + random() * 2600,
+          travel: maxTravel * (0.18 + Math.pow(random(), 0.64) * 0.82),
+          width: 0.35 + random() * 1.75,
+          alpha: 0.26 + random() * 0.7,
+          green: random() > 0.62,
+          bend: (random() - 0.5) * 0.52,
+        };
+      });
+      const eruptionAt = BIG_BANG_PHASES.find((item) => item.phase === "eruption").at;
+      const start = performance.now();
+      let raf = 0;
+
+      function draw(now) {
+        if (!overlay.isConnected) return;
+        const elapsed = now - start;
+        context.setTransform(dpr, 0, 0, dpr, 0, 0);
+        context.clearRect(0, 0, width, height);
+
+        const burstElapsed = elapsed - eruptionAt;
+        if (burstElapsed >= 0 && burstElapsed <= 8400) {
+          context.globalCompositeOperation = "lighter";
+          const coreProgress = Math.min(burstElapsed / 1200, 1);
+          const coreRadius = 22 + coreProgress * Math.min(width, height) * 0.22;
+          const coreAlpha = Math.max(0, 1 - burstElapsed / 2600);
+          if (coreAlpha > 0) {
+            const coreGlow = context.createRadialGradient(impactX, impactY, 0, impactX, impactY, coreRadius);
+            coreGlow.addColorStop(0, "rgba(255,255,255," + (coreAlpha * 0.94).toFixed(3) + ")");
+            coreGlow.addColorStop(0.12, "rgba(224,255,199," + (coreAlpha * 0.68).toFixed(3) + ")");
+            coreGlow.addColorStop(0.42, "rgba(118,185,0," + (coreAlpha * 0.3).toFixed(3) + ")");
+            coreGlow.addColorStop(1, "rgba(0,0,0,0)");
+            context.fillStyle = coreGlow;
+            context.beginPath();
+            context.arc(impactX, impactY, coreRadius, 0, Math.PI * 2);
+            context.fill();
+          }
+
+          particles.forEach((particle) => {
+            const age = burstElapsed - particle.delay;
+            if (age < 0 || age > particle.life) return;
+            const progress = age / particle.life;
+            const eased = 1 - Math.pow(1 - progress, 3.2);
+            const distance = particle.travel * eased;
+            const curve = Math.sin(progress * Math.PI) * particle.bend;
+            const angle = particle.angle + curve;
+            const x = impactX + Math.cos(angle) * distance;
+            const y = impactY + Math.sin(angle) * distance;
+            const tail = (10 + particle.width * 15) * (0.35 + progress * 1.5);
+            const alpha = particle.alpha * Math.sin(Math.min(progress * 1.5, 1) * Math.PI) * Math.pow(1 - progress, 0.45);
+            if (alpha <= 0.008) return;
+            context.strokeStyle = particle.green
+              ? "rgba(151,230,54," + alpha.toFixed(3) + ")"
+              : "rgba(235,249,255," + alpha.toFixed(3) + ")";
+            context.lineWidth = particle.width;
+            context.beginPath();
+            context.moveTo(x - Math.cos(angle) * tail, y - Math.sin(angle) * tail);
+            context.lineTo(x, y);
+            context.stroke();
+          });
+          context.globalCompositeOperation = "source-over";
+        }
+
+        if (elapsed < 10400) raf = window.requestAnimationFrame(draw);
+        else canvas.remove();
+      }
+
+      raf = window.requestAnimationFrame(draw);
+      canvas._cancelBurst = () => window.cancelAnimationFrame(raf);
+      return true;
+    }
+
+    function setBigBangPhase(overlay, phase, cx, cy) {
+      if (!overlay.isConnected) return;
+      overlay.dataset.bigbangPhase = phase;
+      document.body.dataset.bigbangPhase = phase;
+      window.dispatchEvent(new CustomEvent("portfolio:bigbang-phase", { detail: { phase } }));
+
+      if (phase === "eruption") {
+        document.body.classList.add("cosmic-strike");
+        window.dispatchEvent(new CustomEvent("portfolio:iris-bang"));
+        blastEverythingFromImpact();
+        window.setTimeout(() => document.body.classList.remove("cosmic-strike"), 820);
+      } else if (phase === "shatter-primary") {
+        createShatterOverlay(cx, cy);
+      }
+    }
+
+    function scheduleBigBangPhases(overlay, cx, cy) {
+      BIG_BANG_PHASES.forEach(({ phase, at }) => {
+        if (at === 0) setBigBangPhase(overlay, phase, cx, cy);
+        else window.setTimeout(() => setBigBangPhase(overlay, phase, cx, cy), at);
+      });
+    }
+
     function createBigBangOverlay(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
       const impactY = deskRect.top + cy;
       const overlay = document.createElement("div");
       overlay.className = "cosmic-bigbang";
+      overlay.dataset.bigbangLayer = "universe";
+      overlay.setAttribute("aria-hidden", "true");
       overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
-      const useWebglIris = !isMobile() && !reduceMotion && typeof IRIS_WEBGL !== "undefined";
-      if (useWebglIris) overlay.classList.add("cosmic-bigbang--webgl");
+      const lowQuality = useLowEffectsQuality();
+      const webglCandidate = !lowQuality && !reduceMotion && typeof IRIS_WEBGL !== "undefined";
+
+      [
+        ["bigbang-void", "void"],
+        ["bigbang-nebula-field", "nebula"],
+        ["bigbang-lensing", "lensing"],
+        ["bigbang-singularity", "singularity"],
+        ["bigbang-detonation", "eruption"],
+        ["bigbang-rayburst", "rayburst"],
+        ["bigbang-green-wash", "green-wash"],
+      ].forEach(([className, marker]) => {
+        const layer = document.createElement("div");
+        layer.className = className;
+        layer.dataset.bigbangLayer = marker;
+        overlay.appendChild(layer);
+      });
 
       const rings = [
-        { size: "10vmin", delay: "0s", color: "rgba(255,255,255,0.58)", mid: 6, end: 13 },
-        { size: "18vmin", delay: "0.7s", color: "rgba(118,185,0,0.28)", mid: 5.4, end: 10 },
-        { size: "26vmin", delay: "1.4s", color: "rgba(185,225,255,0.30)", mid: 4.8, end: 8.6 },
-        { size: "34vmin", delay: "2.1s", color: "rgba(255,255,255,0.18)", mid: 4.2, end: 7.4 },
+        { size: "7vmin", delay: "1.82s", color: "rgba(255,255,255,0.92)", mid: 11, end: 24 },
+        { size: "11vmin", delay: "2.02s", color: "rgba(214,255,178,0.72)", mid: 10, end: 21 },
+        { size: "16vmin", delay: "2.28s", color: "rgba(118,185,0,0.62)", mid: 8.8, end: 18 },
+        { size: "21vmin", delay: "2.62s", color: "rgba(185,225,255,0.52)", mid: 7.8, end: 15 },
+        { size: "28vmin", delay: "3.02s", color: "rgba(118,185,0,0.38)", mid: 6.8, end: 13 },
+        { size: "36vmin", delay: "3.48s", color: "rgba(255,255,255,0.24)", mid: 5.7, end: 11 },
       ];
-      rings.forEach((ring) => {
+      rings.slice(0, lowQuality ? 4 : rings.length).forEach((ring) => {
         const el = document.createElement("div");
-        el.className = "bigbang-ring";
+        el.className = "bigbang-ring bigbang-shockwave";
+        el.dataset.bigbangLayer = "shockwave";
         el.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
         el.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
         el.style.setProperty("--ring-size", ring.size);
@@ -2412,9 +2995,28 @@
         overlay.appendChild(el);
       });
 
+      const pulseCount = lowQuality ? 4 : 7;
+      for (let i = 0; i < pulseCount; i++) {
+        const pulse = document.createElement("div");
+        pulse.className = "bigbang-green-pulse";
+        pulse.dataset.bigbangLayer = "green-pulse";
+        pulse.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+        pulse.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+        pulse.style.setProperty("--pulse-size", (11 + i * 3.8).toFixed(1) + "vmin");
+        pulse.style.setProperty("--pulse-delay", (2.7 + i * 0.38).toFixed(2) + "s");
+        const pulseScaleX = 15.5 + i * 1.3;
+        const pulseScaleY = 13 + (i % 3) * 1.9;
+        pulse.style.setProperty("--pulse-scale-x", pulseScaleX.toFixed(2));
+        pulse.style.setProperty("--pulse-scale-y", pulseScaleY.toFixed(2));
+        pulse.style.setProperty("--pulse-scale-x-end", (pulseScaleX * 1.35).toFixed(2));
+        pulse.style.setProperty("--pulse-scale-y-end", (pulseScaleY * 1.35).toFixed(2));
+        pulse.style.setProperty("--pulse-rotation", ((i % 2 ? -1 : 1) * (4 + i * 2.7)).toFixed(1) + "deg");
+        overlay.appendChild(pulse);
+      }
+
       const rippleOrigins = [];
       const irisRadius = Math.min(window.innerWidth, window.innerHeight) * 0.46;
-      const rippleBlades = useWebglIris ? 6 : IRIS_BLADES;
+      const rippleBlades = lowQuality ? 5 : 8;
       for (let i = 0; i < rippleBlades; i++) {
         const angle = (i / rippleBlades) * Math.PI * 2 - Math.PI / 2;
         rippleOrigins.push({
@@ -2423,21 +3025,13 @@
           petal: i,
         });
       }
-      if (!useWebglIris) {
-        [
-          { x: impactX, y: -90 },
-          { x: impactX, y: window.innerHeight + 90 },
-          { x: -90, y: impactY },
-          { x: window.innerWidth + 90, y: impactY },
-        ].forEach((origin, offset) => rippleOrigins.push({ ...origin, petal: IRIS_BLADES + offset }));
-      }
-
       rippleOrigins.forEach((origin, index) => {
         const ripple = document.createElement("div");
-        const orbitScale = useWebglIris ? 0.1 : (0.14 + (index % IRIS_BLADES) * 0.018);
+        const orbitScale = 0.13 + (index % rippleBlades) * 0.018;
         const orbitX = (impactX - origin.x) * orbitScale + (index % 2 ? 64 : -64);
         const orbitY = (impactY - origin.y) * orbitScale + (index % 3 ? -52 : 52);
         ripple.className = "bigbang-green-ripple";
+        ripple.dataset.bigbangLayer = "green-ripple";
         ripple.style.setProperty("--start-x", origin.x.toFixed(2) + "px");
         ripple.style.setProperty("--start-y", origin.y.toFixed(2) + "px");
         ripple.style.setProperty("--to-x", (impactX - origin.x).toFixed(2) + "px");
@@ -2445,12 +3039,13 @@
         ripple.style.setProperty("--orbit-x", orbitX.toFixed(2) + "px");
         ripple.style.setProperty("--orbit-y", orbitY.toFixed(2) + "px");
         ripple.style.setProperty("--ripple-size", (16 + (index % rippleBlades) * 2.2).toFixed(2) + "vmin");
-        ripple.style.setProperty("--delay", (0.12 + index * (useWebglIris ? 0.18 : 0.11)).toFixed(2) + "s");
+        ripple.style.setProperty("--delay", (index * 0.08).toFixed(2) + "s");
         overlay.appendChild(ripple);
       });
 
       const iris = document.createElement("div");
-      iris.className = "bigbang-iris" + (useWebglIris ? " bigbang-iris--webgl" : "");
+      iris.className = "bigbang-iris";
+      iris.dataset.bigbangLayer = "iris";
       iris.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       iris.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
 
@@ -2458,33 +3053,30 @@
       irisRing.className = "bigbang-iris-ring";
       iris.appendChild(irisRing);
 
-      if (!useWebglIris) {
-        for (let i = 0; i < IRIS_BLADES; i++) {
-          const angle = (i / IRIS_BLADES) * 360;
-          const spoke = document.createElement("div");
-          spoke.className = "bigbang-iris-spoke";
-          spoke.style.setProperty("--blade-i", String(i));
-          spoke.style.setProperty("--blade-angle", angle + "deg");
-          iris.appendChild(spoke);
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const angle = (i / IRIS_BLADES) * 360;
+        const spoke = document.createElement("div");
+        spoke.className = "bigbang-iris-spoke";
+        spoke.style.setProperty("--blade-i", String(i));
+        spoke.style.setProperty("--blade-angle", angle + "deg");
+        iris.appendChild(spoke);
 
-          const blade = document.createElement("div");
-          blade.className = "bigbang-iris-blade";
-          blade.style.setProperty("--blade-i", String(i));
-          blade.style.setProperty("--blade-angle", angle + "deg");
-          iris.appendChild(blade);
-        }
-
-        const pupil = document.createElement("div");
-        pupil.className = "bigbang-iris-pupil";
-        iris.appendChild(pupil);
+        const blade = document.createElement("div");
+        blade.className = "bigbang-iris-blade";
+        blade.style.setProperty("--blade-i", String(i));
+        blade.style.setProperty("--blade-angle", angle + "deg");
+        iris.appendChild(blade);
       }
+
+      const pupil = document.createElement("div");
+      pupil.className = "bigbang-iris-pupil";
+      iris.appendChild(pupil);
 
       overlay.appendChild(iris);
 
-      if (useWebglIris) IRIS_WEBGL.mount(overlay, impactX, impactY);
-
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
+      marketChart.dataset.bigbangLayer = "nvidia-market";
       marketChart.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       marketChart.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       marketChart.innerHTML = [
@@ -2501,19 +3093,21 @@
 
       const core = document.createElement("div");
       core.className = "bigbang-green-core";
+      core.dataset.bigbangLayer = "green-core";
       core.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       core.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       overlay.appendChild(core);
 
       const eye = document.createElement("div");
       eye.className = "bigbang-nvidia-eye iris-boot-scanner";
+      eye.dataset.bigbangLayer = "nvidia-formation";
       eye.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       eye.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       eye.innerHTML = [
         "<div class='iris-boot-housing'></div>",
         "<div class='iris-boot-blades'></div>",
         "<div class='iris-boot-scanline'></div>",
-        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye.png' alt=''>",
+        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye-ui.webp' alt='' width='32' height='18'>",
       ].join("");
       const eyeBlades = $(".iris-boot-blades", eye);
       for (let i = 0; i < IRIS_BLADES; i++) {
@@ -2524,43 +3118,25 @@
       }
       overlay.appendChild(eye);
 
-      const colors = [
-        "rgba(255,255,255,0.88)",
-        "rgba(185,225,255,0.76)",
-        "rgba(118,185,0,0.58)",
-        "rgba(210,216,214,0.64)",
-      ];
-      const particleCount = useWebglIris
-        ? Math.min(72, Math.max(40, Math.floor((window.innerWidth * window.innerHeight) / 22000)))
-        : Math.min(180, Math.max(96, Math.floor((window.innerWidth * window.innerHeight) / 11000)));
-      const maxTravel = Math.hypot(window.innerWidth, window.innerHeight) * 0.86;
-      for (let i = 0; i < particleCount; i++) {
-        const sector = i % IRIS_BLADES;
-        const sectorAngle = (sector / IRIS_BLADES) * Math.PI * 2 - Math.PI / 2;
-        const jitter = (Math.random() - 0.5) * (Math.PI / IRIS_BLADES) * 0.9;
-        const angle = sectorAngle + jitter;
-        const travel = maxTravel * (0.22 + Math.random() * 0.78);
-        const drift = (Math.random() - 0.5) * 90;
-        const dx = Math.cos(angle) * travel + Math.cos(angle + Math.PI / 2) * drift;
-        const dy = Math.sin(angle) * travel + Math.sin(angle + Math.PI / 2) * drift;
-        const particle = document.createElement("div");
-        particle.className = "bigbang-particle";
-        particle.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
-        particle.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
-        particle.style.setProperty("--dx", dx.toFixed(2) + "px");
-        particle.style.setProperty("--dy", dy.toFixed(2) + "px");
-        particle.style.setProperty("--dx-mid", (dx * (0.42 + Math.random() * 0.18)).toFixed(2) + "px");
-        particle.style.setProperty("--dy-mid", (dy * (0.42 + Math.random() * 0.18)).toFixed(2) + "px");
-        particle.style.setProperty("--particle-size", (1.5 + Math.random() * 4.5).toFixed(2) + "px");
-        particle.style.setProperty("--particle-glow", (8 + Math.random() * 22).toFixed(2) + "px");
-        particle.style.setProperty("--particle-color", colors[Math.floor(Math.random() * colors.length)]);
-        particle.style.setProperty("--particle-opacity", (0.36 + Math.random() * 0.5).toFixed(2));
-        particle.style.setProperty("--delay", (Math.random() * 2.8).toFixed(3) + "s");
-        overlay.appendChild(particle);
+      document.body.appendChild(overlay);
+      mountUniverseBurst(overlay, impactX, impactY, lowQuality);
+
+      if (webglCandidate) {
+        let webglMounted = false;
+        try {
+          webglMounted = IRIS_WEBGL.mount(overlay, impactX, impactY);
+        } catch (error) {
+          console.warn("WebGL IRIS fallback engaged", error);
+        }
+        if (webglMounted) {
+          overlay.classList.add("cosmic-bigbang--webgl");
+          iris.classList.add("bigbang-iris--webgl");
+        }
       }
 
-      document.body.appendChild(overlay);
+      scheduleBigBangPhases(overlay, cx, cy);
       window.setTimeout(() => overlay.remove(), BIG_BANG_DURATION + 500);
+      return overlay;
     }
 
     function clearWarpClasses() {
@@ -2594,7 +3170,8 @@
     }
 
     function cleanupBigBangState() {
-      document.body.classList.remove("cosmic-active");
+      document.body.classList.remove("cosmic-active", "cosmic-armed", "cosmic-strike");
+      document.body.removeAttribute("data-bigbang-phase");
       $$(".panel-shatter, .cosmic-shatter, .cosmic-bigbang").forEach((node) => node.remove());
       $$(".bigbang-target, .bigbang-pulled, .bigbang-blasted, .bigbang-hidden").forEach(clearBigBangMotion);
       $$(COSMIC_SUPPRESS_SELECTOR).forEach((el) => el.classList.remove("cosmic-suppressed"));
@@ -2652,53 +3229,66 @@
     }
 
     function createPanelShatter(rect, nx, ny) {
-      const overlay = document.createElement("div");
-      overlay.className = "panel-shatter";
+      let overlay = $(".panel-shatter");
+      if (!overlay) {
+        overlay = document.createElement("div");
+        overlay.className = "panel-shatter";
+        overlay.dataset.bigbangLayer = "panel-shatter";
+        overlay.setAttribute("aria-hidden", "true");
+        document.body.appendChild(overlay);
+        window.setTimeout(() => overlay.remove(), PANEL_SHATTER_DURATION);
+      }
+
+      const maxPieces = useLowEffectsQuality() ? 12 : 24;
+      const availablePieces = Math.max(0, maxPieces - overlay.childElementCount);
+      if (!availablePieces) return;
       const columns = 4;
       const rows = 3;
       const pieceW = rect.width / columns;
       const pieceH = rect.height / rows;
+      const random = createSeededRandom(Math.round(rect.left * 23 + rect.top * 41 + rect.width * rect.height));
+      let created = 0;
 
       for (let row = 0; row < rows; row++) {
         for (let col = 0; col < columns; col++) {
+          if (created >= availablePieces) break;
           const shard = document.createElement("div");
-          const dx = nx * (130 + Math.random() * 180) + (Math.random() - 0.5) * 140;
-          const dy = ny * (130 + Math.random() * 180) + (Math.random() - 0.5) * 140;
-          const rot = (Math.random() - 0.5) * 120;
+          const dx = nx * (190 + random() * 260) + (random() - 0.5) * 170;
+          const dy = ny * (190 + random() * 260) + (random() - 0.5) * 170;
+          const rot = (random() - 0.5) * 180;
           shard.className = "panel-shard";
+          shard.dataset.bigbangLayer = "panel-shard";
           shard.style.setProperty("--psx", (rect.left + col * pieceW).toFixed(2) + "px");
           shard.style.setProperty("--psy", (rect.top + row * pieceH).toFixed(2) + "px");
           shard.style.setProperty("--psw", (pieceW + 1).toFixed(2) + "px");
           shard.style.setProperty("--psh", (pieceH + 1).toFixed(2) + "px");
           shard.style.setProperty("--pdx", dx.toFixed(2) + "px");
           shard.style.setProperty("--pdy", dy.toFixed(2) + "px");
-          shard.style.setProperty("--pdx-end", (dx * 0.35).toFixed(2) + "px");
-          shard.style.setProperty("--pdy-end", (dy * 0.35).toFixed(2) + "px");
+          shard.style.setProperty("--pdx-end", (dx * 1.55).toFixed(2) + "px");
+          shard.style.setProperty("--pdy-end", (dy * 1.55).toFixed(2) + "px");
           shard.style.setProperty("--prot", rot.toFixed(2) + "deg");
-          shard.style.setProperty("--prot-end", (rot * 0.45).toFixed(2) + "deg");
-          shard.style.setProperty("--p1", Math.floor(Math.random() * 10) + "% " + Math.floor(Math.random() * 8) + "%");
-          shard.style.setProperty("--p2", (90 + Math.floor(Math.random() * 10)) + "% " + Math.floor(Math.random() * 12) + "%");
-          shard.style.setProperty("--p3", (88 + Math.floor(Math.random() * 12)) + "% " + (88 + Math.floor(Math.random() * 12)) + "%");
-          shard.style.setProperty("--p4", Math.floor(Math.random() * 12) + "% " + (86 + Math.floor(Math.random() * 14)) + "%");
+          shard.style.setProperty("--prot-end", (rot * 2.1).toFixed(2) + "deg");
+          shard.style.setProperty("--p1", Math.floor(random() * 14) + "% " + Math.floor(random() * 10) + "%");
+          shard.style.setProperty("--p2", (86 + Math.floor(random() * 14)) + "% " + Math.floor(random() * 16) + "%");
+          shard.style.setProperty("--p3", (82 + Math.floor(random() * 18)) + "% " + (82 + Math.floor(random() * 18)) + "%");
+          shard.style.setProperty("--p4", Math.floor(random() * 18) + "% " + (82 + Math.floor(random() * 18)) + "%");
           overlay.appendChild(shard);
+          created += 1;
         }
       }
-
-      document.body.appendChild(overlay);
-      window.setTimeout(() => overlay.remove(), PANEL_SHATTER_DURATION);
     }
 
     function blastEverythingFromImpact() {
       getBigBangTargets().forEach((target) => {
         const vector = target._bbVector || { nx: Math.random() > 0.5 ? 1 : -1, ny: Math.random() > 0.5 ? 1 : -1 };
-        const rect = target.getBoundingClientRect();
+        const impactRect = target.getBoundingClientRect();
         const blast = Math.max(window.innerWidth, window.innerHeight) * 0.9 + Math.random() * 260;
         const blastX = vector.nx * blast;
         const blastY = vector.ny * blast;
-        const finalLeft = rect.left + blastX;
-        const finalRight = rect.right + blastX;
-        const finalTop = rect.top + blastY;
-        const finalBottom = rect.bottom + blastY;
+        const finalLeft = impactRect.left + blastX;
+        const finalRight = impactRect.right + blastX;
+        const finalTop = impactRect.top + blastY;
+        const finalBottom = impactRect.bottom + blastY;
         const hitWall = finalLeft < 0 || finalRight > window.innerWidth || finalTop < 0 || finalBottom > window.innerHeight;
 
         target.style.setProperty("--bb-blast-x", blastX.toFixed(2) + "px");
@@ -2708,47 +3298,62 @@
         target.classList.add("bigbang-blasted");
 
         if (hitWall) {
-          window.setTimeout(() => {
-            createPanelShatter(target.getBoundingClientRect(), vector.nx, vector.ny);
-            target.classList.add("bigbang-hidden");
-          }, 1250);
+          const shatterEligible = !target.matches(".desktop-video, .desktop-bg")
+            && impactRect.width < window.innerWidth * 0.78
+            && impactRect.height < window.innerHeight * 0.78;
+          if (shatterEligible) {
+            window.setTimeout(() => createPanelShatter(impactRect, vector.nx, vector.ny), 340);
+          }
+          window.setTimeout(() => target.classList.add("bigbang-hidden"), 760);
         }
       });
     }
 
     function closePanelsForReconstruct() {
+      WM.closeAll();
       $$(".win").forEach((panel) => {
         clearReconstructState(panel);
-        panel.classList.remove("is-open", "is-focused", "is-min", "is-max");
         panel.style.removeProperty("transform");
         panel.style.removeProperty("filter");
       });
-      const label = $("#mb-app");
-      if (label) label.textContent = desktopAppName();
-      WM.syncDock();
     }
 
-    function dismissSpaceWells() {
-      const black = $("#blackhole");
-      const white = $("#whitehole");
+    function dismissBrandCores() {
+      const microsoft = $("#microsoft-orb");
+      const apple = $("#apple-orb");
       const grey = $("#greyhole");
-      if (black) black.classList.add("is-collapsed");
-      if (white) white.classList.add("is-collapsed");
+      if (microsoft) microsoft.classList.add("is-collapsed");
+      if (apple) apple.classList.add("is-collapsed");
       if (grey) {
         grey.classList.remove("is-formed", "is-active");
         grey.style.removeProperty("--gh-x");
         grey.style.removeProperty("--gh-y");
       }
+      lightningMounts.forEach((mount) => { if (mount) mount.destroy(); });
+      lightningMounts = [];
+      window.cancelAnimationFrame(raf);
+      raf = 0;
       wells = [];
+      motionStarted = false;
+    }
+
+    function consumeIrisLauncher() {
+      const launcher = $("[data-iris-launch]");
+      const trigger = launcher && $("[data-action='iris-sequence']", launcher);
+      if (trigger) trigger.disabled = true;
+      if (launcher) {
+        launcher.classList.add("is-consumed");
+        launcher.inert = true;
+        window.setTimeout(() => launcher.remove(), 520);
+      }
+      const desktop = $("#desktop");
+      if (desktop) desktop.focus({ preventScroll: true });
     }
 
     function restoreStartupWindowsStaged(startDelay) {
       const startup = isMobile()
-        ? [{ id: "about", delay: startDelay }]
-        : [
-          { id: "gpu", left: "60px", top: "30px", delay: startDelay },
-          { id: "about", left: "94px", top: "60px", delay: startDelay + 360 },
-        ];
+        ? []
+        : [{ id: "about", left: "max(42px, 6vw)", top: "58px", delay: startDelay }];
 
       startup.forEach((item) => {
         const win = WM.wins[item.id];
@@ -2767,6 +3372,20 @@
       switchToDgxTheme();
       cleanupBigBangState();
       closePanelsForReconstruct();
+      document.body.classList.remove("pre-iris");
+
+      if (reduceMotion) {
+        if (!isMobile()) {
+          const about = WM.wins.about;
+          if (about) {
+            about.style.left = "max(42px, 6vw)";
+            about.style.top = "58px";
+          }
+          WM.open("about");
+        }
+        setFlowPhase("nvidia-desktop", { mode: "nvidia" });
+        return;
+      }
 
       const backgrounds = $$(".desktop-video, .desktop-bg, .desktop-watermark");
       const menubar = $(".menubar");
@@ -2804,89 +3423,136 @@
       }, 2760);
 
       dockContents.forEach((target, index) => revealForReconstruct(target, 3260 + index * 85));
-      restoreStartupWindowsStaged(3260 + dockContents.length * 85 + 520);
+      const startupDelay = 3260 + dockContents.length * 85 + 520;
+      restoreStartupWindowsStaged(startupDelay);
+      window.setTimeout(() => setFlowPhase("nvidia-desktop", { mode: "nvidia" }), startupDelay + 980);
     }
 
-    function triggerCollision(black, white) {
+    function beginNvidiaLogin() {
+      switchToDgxTheme();
+      cleanupBigBangState();
+      closePanelsForReconstruct();
+      setFlowPhase("nvidia-login", { mode: "nvidia" });
+      LOGIN_FLOW.run("iris").then(() => {
+        window.dispatchEvent(new CustomEvent("portfolio:iris-boot"));
+        reconstructScene();
+      });
+    }
+
+    function triggerCollision(microsoft, apple) {
       if (collisionDone) return;
       collisionDone = true;
+      collisionArmed = false;
+      document.body.classList.remove("cosmic-armed");
+      document.body.classList.add("cosmic-active");
+      setFlowPhase("bigbang", { mode: "split" });
 
-      const cx = (black.cx + white.cx) / 2;
-      const cy = (black.cy + white.cy) / 2;
+      const cx = (microsoft.cx + apple.cx) / 2;
+      const cy = (microsoft.cy + apple.cy) / 2;
 
-      dismissSpaceWells();
+      dismissBrandCores();
       suppressCollisionChrome();
       pullEverythingToImpact(cx, cy);
-      window.dispatchEvent(new CustomEvent("portfolio:iris-bang"));
-      window.setTimeout(() => {
-        createShatterOverlay(cx, cy);
-        createBigBangOverlay(cx, cy);
-      }, PRE_EXPLOSION_PULL_DURATION);
-      window.setTimeout(blastEverythingFromImpact, BLAST_DELAY);
-      window.setTimeout(reconstructScene, PRE_EXPLOSION_PULL_DURATION + BIG_BANG_DURATION);
+      window.setTimeout(() => createBigBangOverlay(cx, cy), PRE_EXPLOSION_PULL_DURATION);
+      window.setTimeout(beginNvidiaLogin, PRE_EXPLOSION_PULL_DURATION + BIG_BANG_DURATION);
     }
 
     function checkCollision() {
-      if (collisionDone) return false;
-      const black = wells.find((well) => well.id === "blackhole");
-      const white = wells.find((well) => well.id === "whitehole");
-      if (!black || !white) return false;
+      if (collisionDone || !collisionArmed) return false;
+      const microsoft = wells.find((well) => well.id === "microsoft-orb");
+      const apple = wells.find((well) => well.id === "apple-orb");
+      if (!microsoft || !apple) return false;
 
-      const distance = Math.hypot(black.cx - white.cx, black.cy - white.cy);
-      const threshold = Math.max(12, black.size * 0.1 + white.size * 0.11);
+      const distance = Math.hypot(microsoft.cx - apple.cx, microsoft.cy - apple.cy);
+      const threshold = Math.max(12, microsoft.size * 0.1 + apple.size * 0.11);
       if (distance > threshold) return false;
 
-      triggerCollision(black, white);
+      triggerCollision(microsoft, apple);
       return true;
     }
 
-    function repelBlackHole(dt) {
-      const black = wells.find((well) => well.id === "blackhole");
-      const white = wells.find((well) => well.id === "whitehole");
-      if (!black || !white) return;
+    function armCollision() {
+      if (collisionArmed) return;
+      if (collisionDone) {
+        notify("IRIS sequence", "The cinematic has already completed for this session.");
+        return;
+      }
+      const microsoft = wells.find((well) => well.id === "microsoft-orb");
+      const apple = wells.find((well) => well.id === "apple-orb");
+      if (!microsoft || !apple) return;
+      consumeIrisLauncher();
+      if (reduceMotion) {
+        collisionDone = true;
+        dismissBrandCores();
+        switchToDgxTheme();
+        setFlowPhase("nvidia-login", { mode: "nvidia" });
+        notify("IRIS sequence", "Motion reduced. Continuing through a shortened verification.");
+        LOGIN_FLOW.run("iris").then(() => {
+          window.dispatchEvent(new CustomEvent("portfolio:iris-boot"));
+          reconstructScene();
+        });
+        return;
+      }
+      collisionArmed = true;
+      document.body.classList.add("cosmic-armed");
+      setFlowPhase("collision-armed", { mode: "split" });
+      aimBrandCoresAtEachOther();
+      notify("IRIS sequence armed", "Microsoft and Apple energy cores are converging.", { ttl: 2800 });
+    }
 
-      const dx = black.cx - white.cx;
-      const dy = black.cy - white.cy;
+    function separateBrandCores(dt) {
+      const microsoft = wells.find((well) => well.id === "microsoft-orb");
+      const apple = wells.find((well) => well.id === "apple-orb");
+      if (!microsoft || !apple) return;
+
+      const dx = microsoft.cx - apple.cx;
+      const dy = microsoft.cy - apple.cy;
       const distance = Math.max(Math.hypot(dx, dy), 1);
-      const influence = (black.size + white.size) * 0.16;
+      const influence = (microsoft.size + apple.size) * 0.74;
       if (distance > influence) return;
 
       const strength = Math.pow(1 - distance / influence, 2);
       const nx = dx / distance;
       const ny = dy / distance;
-      const acceleration = 0.8 * strength;
-      black.vx += nx * acceleration * dt;
-      black.vy += ny * acceleration * dt;
+      const acceleration = 54 * strength;
+      microsoft.vx += nx * acceleration * dt;
+      microsoft.vy += ny * acceleration * dt;
+      apple.vx -= nx * acceleration * dt;
+      apple.vy -= ny * acceleration * dt;
 
-      const overlap = (black.size + white.size) * 0.035 - distance;
+      const overlap = (microsoft.size + apple.size) * 0.56 - distance;
       if (overlap > 0) {
-        black.cx += nx * overlap * 0.035;
-        black.cy += ny * overlap * 0.035;
+        microsoft.cx += nx * overlap * 0.5;
+        microsoft.cy += ny * overlap * 0.5;
+        apple.cx -= nx * overlap * 0.5;
+        apple.cy -= ny * overlap * 0.5;
       }
 
-      const speed = Math.max(Math.hypot(black.vx, black.vy), 1);
-      const clampedSpeed = clamp(speed, SPEED * 0.88, SPEED * 1.22);
-      black.vx = (black.vx / speed) * clampedSpeed;
-      black.vy = (black.vy / speed) * clampedSpeed;
+      [microsoft, apple].forEach((well) => {
+        const speed = Math.max(Math.hypot(well.vx, well.vy), 1);
+        const clampedSpeed = clamp(speed, SPEED * 0.65, SPEED * 1.12);
+        well.vx = (well.vx / speed) * clampedSpeed;
+        well.vy = (well.vy / speed) * clampedSpeed;
+      });
     }
 
-    function steerPrimaryWellsTogether(dt) {
-      const black = wells.find((well) => well.id === "blackhole");
-      const white = wells.find((well) => well.id === "whitehole");
-      if (!black || !white) return;
+    function steerBrandCoresTogether(dt) {
+      const microsoft = wells.find((well) => well.id === "microsoft-orb");
+      const apple = wells.find((well) => well.id === "apple-orb");
+      if (!microsoft || !apple) return;
 
-      const dx = white.cx - black.cx;
-      const dy = white.cy - black.cy;
+      const dx = apple.cx - microsoft.cx;
+      const dy = apple.cy - microsoft.cy;
       const distance = Math.max(Math.hypot(dx, dy), 1);
       const nx = dx / distance;
       const ny = dy / distance;
       const steer = 0.55 * dt;
-      black.vx += nx * steer;
-      black.vy += ny * steer;
-      white.vx -= nx * steer;
-      white.vy -= ny * steer;
+      microsoft.vx += nx * steer;
+      microsoft.vy += ny * steer;
+      apple.vx -= nx * steer;
+      apple.vy -= ny * steer;
 
-      [black, white].forEach((well) => {
+      [microsoft, apple].forEach((well) => {
         const speed = Math.max(Math.hypot(well.vx, well.vy), 1);
         const clampedSpeed = clamp(speed, SPEED * 0.92, SPEED * 1.18);
         well.vx = (well.vx / speed) * clampedSpeed;
@@ -2966,6 +3632,10 @@
     }
 
     function frame(now) {
+      if (!wells.length || document.hidden) {
+        raf = 0;
+        return;
+      }
       let frameDt = 0;
       wells.forEach((well) => {
         const dt = Math.min((now - well.lastTime) / 1000, 0.25);
@@ -2974,12 +3644,11 @@
         well.size = getSize(well, now);
       });
       if (checkCollision()) {
-        warpNearby();
-        requestAnimationFrame(frame);
+        raf = 0;
         return;
       }
-      repelBlackHole(frameDt);
-      steerPrimaryWellsTogether(frameDt);
+      if (collisionArmed) steerBrandCoresTogether(frameDt);
+      else separateBrandCores(frameDt);
       wells.forEach((well) => {
         const dt = frameDt;
         well.cx += well.vx * dt;
@@ -2987,8 +3656,9 @@
         keepInBounds(well);
         paint(well);
       });
-      warpNearby();
-      requestAnimationFrame(frame);
+      if (collisionArmed) warpNearby();
+      else clearWarpClasses();
+      raf = requestAnimationFrame(frame);
     }
 
     function resize() {
@@ -3003,12 +3673,29 @@
       warpNearby();
     }
 
+    function startMotion() {
+      if (motionStarted || reduceMotion || !wells.length) return;
+      motionStarted = true;
+      const now = performance.now();
+      wells.forEach((well) => {
+        well.startTime = now;
+        well.lastTime = now;
+        well.baseSize = getBaseSize();
+        well.size = well.baseSize;
+        paint(well);
+      });
+      if (typeof BRAND_LIGHTNING !== "undefined" && !lightningMounts.length) {
+        lightningMounts = BRAND_LIGHTNING.init().filter(Boolean);
+      }
+      if (!raf) raf = requestAnimationFrame(frame);
+    }
+
     function init() {
       desk = $(".desktop");
       if (!desk) return;
 
       const now = performance.now();
-      wells = WELL_CONFIGS.map((config) => {
+      wells = BRAND_CONFIGS.map((config) => {
         const el = $("#" + config.id);
         if (!el) return null;
         const baseSize = getBaseSize();
@@ -3024,12 +3711,7 @@
         };
       }).filter(Boolean);
       if (!wells.length) return;
-      aimPrimaryWellsAtEachOther();
-      if (!isMobile()) {
-        document.body.classList.add("cosmic-active");
-        suppressCollisionChrome();
-      }
-      if (typeof HOLE_LIGHTNING !== "undefined") HOLE_LIGHTNING.init();
+      wells.forEach((well) => paint(well));
 
       if (reduceMotion) {
         wells.forEach((well) => paint(well));
@@ -3037,16 +3719,42 @@
       }
 
       window.addEventListener("resize", resize);
-      requestAnimationFrame(frame);
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          window.cancelAnimationFrame(raf);
+          raf = 0;
+          return;
+        }
+        if (!motionStarted) return;
+        const resumedAt = performance.now();
+        wells.forEach((well) => { well.lastTime = resumedAt; });
+        if (!raf && wells.length) raf = requestAnimationFrame(frame);
+      });
+      if (document.body.dataset.flowPhase === "brand-desktop") startMotion();
+      else window.addEventListener("portfolio:login-complete", startMotion, { once: true });
     }
 
-    return { init };
+    return {
+      init,
+      armCollision,
+      getState() {
+        return {
+          armed: collisionArmed,
+          complete: collisionDone,
+          motionStarted,
+          growthRate: GROWTH_PER_SECOND,
+          maxGrowth: MAX_GROWTH,
+          cores: wells.map((well) => ({ id: well.id, baseSize: well.baseSize, size: well.size, x: well.cx, y: well.cy })),
+        };
+      },
+    };
   })();
 
   /* =============================================================
      INIT
      ============================================================= */
   function showKeyboardHints() {
+    if (isMobile()) return;
     try {
       if (window.localStorage.getItem("portfolio-kbd-hint") === "1") return;
       window.localStorage.setItem("portfolio-kbd-hint", "1");
@@ -3054,22 +3762,21 @@
     const isApple = /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
     const mod = isApple ? "⌘" : "Ctrl";
     window.setTimeout(() => {
-      notify("Shortcuts", mod + "+Space search · F3 task view · Esc minimize", { ttl: 5200 });
-    }, isMobile() ? 2400 : 3600);
+      notify("Keyboard shortcuts", mod + "+K search · F3 task view · Esc minimize", { ttl: 4200 });
+    }, 4200);
   }
 
   function init() {
-    // pause the wallpaper video for users who prefer reduced motion
-    const bgVideo = $(".desktop-video");
-    if (bgVideo && reduceMotion) { bgVideo.removeAttribute("autoplay"); bgVideo.pause(); }
-    boot();
     clock();
     WM.init();
     dock();
-    osSwitcher();
     currentOsMode = document.body.classList.contains("theme-dgx")
       ? "nvidia"
-      : (document.body.classList.contains("theme-windows-only") ? "windows" : "macos");
+      : (document.body.classList.contains("theme-windows-only")
+        ? "windows"
+        : (document.body.classList.contains("theme-mac-only") ? "macos" : "split"));
+    osSwitcher();
+    syncOsSwitcher(currentOsMode);
     syncAppLabels(currentOsMode);
     windowsSearch();
     MISSION.init();
@@ -3087,37 +3794,38 @@
     GITHUB_APP.init();
     DIAGNOSTICS.init();
     TERM.init();
-    SPACE_WELLS.init();
+    BRAND_COLLISION.init();
+    initWallpaperVideo();
 
     const params = new URLSearchParams(location.search);
     const deepApp = (params.get("app") || location.hash.replace(/^#\/?/, "")).trim().toLowerCase();
     const validApps = ["about", "experience", "skills", "projects", "certificates", "sideprojects", "terminal", "gpu", "github", "diagnostics", "contact"];
     const hasDeepLink = validApps.includes(deepApp);
 
-    // default windows on first load (open About last so it takes focus)
-    if (!isMobile()) {
-      if (!hasDeepLink) {
-        WM.open("gpu");
-        WM.open("about");
-        window.setTimeout(() => playTaskbarIntro("macos"), 2100);
-        window.setTimeout(() => playTaskbarIntro("windows"), 5000);
-      } else {
-        WM.open(deepApp);
-      }
-    } else if (!hasDeepLink) {
-      WM.open("about");
-    } else {
-      WM.open(deepApp);
-    }
-    showKeyboardHints();
-
     window.__portfolio = {
       openApp(id) { WM.open(id); },
       closeApp(id) { WM.close(id); },
+      launchIris() { BRAND_COLLISION.armCollision(); },
+      switchMode(mode) { return setOsMode(mode); },
       notify,
       getMode() { return currentOsMode; },
+      getFlowState() {
+        return {
+          phase: document.body.dataset.flowPhase || "",
+          mode: currentOsMode,
+          authenticatedModes: LOGIN_FLOW.getAuthenticatedModes(),
+          collision: BRAND_COLLISION.getState(),
+          lightning: typeof BRAND_LIGHTNING !== "undefined" ? BRAND_LIGHTNING.snapshot() : [],
+          loginActive: LOGIN_FLOW.isActive(),
+        };
+      },
     };
-    window.dispatchEvent(new CustomEvent("portfolio:ready"));
+
+    boot().then(() => {
+      if (hasDeepLink) WM.open(deepApp);
+      showKeyboardHints();
+      window.dispatchEvent(new CustomEvent("portfolio:ready"));
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

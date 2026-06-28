@@ -17,26 +17,42 @@
   <meta name="apple-mobile-web-app-title" content="HK Portfolio">
   <meta name="mobile-web-app-capable" content="yes">
 
-  <link rel="icon" href="./assets/images/nvda-eye.png" type="image/png">
-  <link rel="apple-touch-icon" href="./assets/images/nvda-eye.png">
+  <link rel="icon" href="./assets/images/pwa-icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./assets/images/apple-touch-icon.png">
   <link rel="manifest" href="./manifest.json">
+  <link rel="preload" as="image" href="./assets/images/macos-bg-optimized.webp" type="image/webp" fetchpriority="high">
   <link rel="stylesheet" href="./assets/css/geforce-os.css">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
 
-  <!-- Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-G1H2WJ7XH4"></script>
+  <!-- Analytics loads only after genuine engagement, keeping first paint private and fast. -->
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() { dataLayer.push(arguments); }
-    gtag('js', new Date());
-    gtag('config', 'G-G1H2WJ7XH4');
+    (function () {
+      let loaded = false;
+      function loadAnalytics() {
+        if (loaded || navigator.doNotTrack === "1") return;
+        loaded = true;
+        const script = document.createElement("script");
+        script.async = true;
+        script.src = "https://www.googletagmanager.com/gtag/js?id=G-G1H2WJ7XH4";
+        document.head.appendChild(script);
+        gtag("js", new Date());
+        gtag("config", "G-G1H2WJ7XH4");
+      }
+      window.addEventListener("pointerdown", loadAnalytics, { once: true, passive: true });
+      window.addEventListener("keydown", loadAnalytics, { once: true });
+    })();
   </script>
 </head>
 
-<body class="theme-macos">
+<body class="theme-macos pre-iris" data-flow-phase="apple-lock">
+
+  <a class="skip-link" href="#desktop">Skip to portfolio desktop</a>
 
   <!-- ============================= ICON SPRITE ============================= -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -56,41 +72,55 @@
     <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.2.5c1.6.4 2.9 1 4.2 1.8a16.9 16.9 0 0 0-14.7 0C5.9 4.5 7.3 3.9 8.8 3.5L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.7 8.9-.1 13.3.3 17.6a19.9 19.9 0 0 0 6 3l.8-1.3c-.7-.3-1.3-.6-1.9-1l.5-.3a14.2 14.2 0 0 0 12.2 0l.5.3c-.6.4-1.2.7-1.9 1l.8 1.3a19.8 19.8 0 0 0 6-3c.5-5-.7-9.4-3-13.2zM8.3 15c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm7.4 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></symbol>
   </svg>
 
-  <!-- ============================= BOOT SPLASH ============================= -->
-  <div class="boot" id="boot" role="status" aria-label="IRIS clearance boot">
-    <div class="iris-boot">
-      <div class="iris-boot-scanner" aria-hidden="true">
-        <div class="iris-boot-housing"></div>
-        <div class="iris-boot-blades"></div>
-        <div class="iris-boot-scanline"></div>
-        <img class="iris-boot-pupil" src="./assets/images/nvda-eye.png" alt="">
-      </div>
-      <p class="iris-boot-kicker">DGX CLEARANCE PROTOCOL</p>
-      <p class="iris-boot-title">IRIS VERIFICATION</p>
-      <p class="iris-boot-status" id="iris-boot-status">Initializing optics…</p>
-      <div class="boot-bar iris-boot-bar"><div class="boot-bar-fill"></div></div>
+  <!-- ============================= APPLE AUTO-LOGIN ============================= -->
+  <div class="boot os-login-screen login-screen--apple" id="boot" role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="login-lock-clock" aria-hidden="true">
+      <time data-login-time>9:41</time>
+      <span data-login-date>Friday, June 26</span>
     </div>
-    <div class="boot-hint">click anywhere to skip</div>
+    <div class="login-card">
+      <div class="login-avatar" aria-hidden="true">
+        <img src="./assets/images/apple-logo.svg" alt="" width="58" height="70">
+      </div>
+      <p class="login-kicker">macOS Secure Login</p>
+      <h1 class="login-title" id="login-title">Hasan Khan</h1>
+      <label class="login-password-shell">
+        <span class="sr-only">Password is being filled automatically for this visual login sequence</span>
+        <input class="login-password" type="password" value="" readonly tabindex="-1" autocomplete="off" aria-readonly="true">
+        <span class="login-password-icon" aria-hidden="true">→</span>
+      </label>
+      <p class="login-status" data-login-status aria-live="polite">Preparing automatic sign-in…</p>
+      <div class="login-progress" aria-hidden="true"><span></span></div>
+    </div>
+    <button class="boot-hint login-skip" type="button">Skip login animation</button>
   </div>
 
   <!-- ============================= OS ============================= -->
-  <div id="os">
+  <div id="os" aria-hidden="true" inert>
 
     <!-- MENU BAR -->
     <header class="menubar">
       <div class="menubar-left">
-        <img class="menubar-logo" src="./assets/images/nvda-eye.png" alt="">
-        <span class="menubar-os">macOS</span>
+        <img class="menubar-logo" src="./assets/images/nvda-eye-ui.webp" alt="" width="32" height="18">
+        <span class="menubar-os">NVIDIA DGX OS</span>
         <span class="menubar-app" id="mb-app">Finder</span>
       </div>
       <div class="menubar-right">
+        <button type="button" class="menubar-quick-action menubar-search" data-action="command-palette" aria-label="Search portfolio">
+          <svg aria-hidden="true"><use href="#i-grid" xlink:href="#i-grid"/></svg>
+          <span>Search</span><kbd>⌘K</kbd>
+        </button>
+        <button type="button" class="menubar-quick-action menubar-theme-cycle" data-action="theme-cycle" aria-label="Switch operating system theme">
+          <span class="theme-cycle-dot" aria-hidden="true"></span>
+          <span data-theme-cycle-label>DGX</span>
+        </button>
         <div class="os-switcher" role="group" aria-label="Switch operating system">
           <button type="button" data-os-mode="windows" aria-pressed="false">Windows</button>
           <button type="button" data-os-mode="macos" aria-pressed="false">macOS</button>
           <button type="button" data-os-mode="nvidia" aria-pressed="false">NVIDIA OS</button>
         </div>
         <span class="mb-sep os-switcher-sep"></span>
-        <span class="menubar-dgx-status" id="mb-dgx-status" aria-live="polite"></span>
+        <span class="menubar-dgx-status" id="mb-dgx-status" aria-hidden="true"></span>
         <span class="menubar-stat"><span class="dot"></span><span id="mb-gpu">GPU 0% · 45°C</span></span>
         <span class="mb-sep"></span>
         <button type="button" class="menubar-sound" data-sound-toggle aria-label="Toggle UI sounds" aria-pressed="false">♪</button>
@@ -101,20 +131,29 @@
     </header>
 
     <!-- DESKTOP -->
-    <main class="desktop" id="desktop">
-      <video class="desktop-video" autoplay muted loop playsinline preload="auto">
-        <source src="./assets/images/eclipse.mp4" type="video/mp4">
+    <main class="desktop" id="desktop" tabindex="-1">
+      <video class="desktop-video" muted loop playsinline preload="none" aria-hidden="true">
+        <source data-src="./assets/images/eclipse.mp4" type="video/mp4">
       </video>
       <div class="desktop-bg"></div>
-      <div class="blackhole" id="blackhole" aria-hidden="true">
-        <div class="blackhole-lens"></div>
-        <div class="blackhole-ring"></div>
-        <div class="blackhole-core"></div>
+      <div class="brand-orb microsoft-orb" id="microsoft-orb" aria-hidden="true">
+        <div class="brand-orb-aura"></div>
+        <div class="brand-orb-ring"></div>
+        <div class="brand-orb-logo"><img src="./assets/images/Microsoft_icon.svg.png" alt=""></div>
+        <span class="brand-orb-label">MICROSOFT</span>
       </div>
-      <div class="whitehole" id="whitehole" aria-hidden="true">
-        <div class="whitehole-lens"></div>
-        <div class="whitehole-ring"></div>
-        <div class="whitehole-core"></div>
+      <div class="brand-orb apple-orb" id="apple-orb" aria-hidden="true">
+        <div class="brand-orb-aura"></div>
+        <div class="brand-orb-ring"></div>
+        <div class="brand-orb-logo"><img src="./assets/images/apple-logo.svg" alt=""></div>
+        <span class="brand-orb-label">APPLE</span>
+      </div>
+      <div class="iris-launch-stage" id="iris-launcher" data-iris-launch>
+        <span class="iris-launch-kicker">Cross-platform convergence</span>
+        <button class="iris-launch-button" type="button" data-action="iris-sequence" aria-label="Launch the IRIS Big Bang sequence">
+          <span class="iris-launch-icon" aria-hidden="true"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg></span>
+          <span><strong>Launch IRIS</strong><small>Begin the Big Bang</small></span>
+        </button>
       </div>
       <div class="greyhole" id="greyhole" aria-hidden="true">
         <div class="greyhole-lens"></div>
@@ -142,17 +181,26 @@
           <span>NVLink stable</span>
           <div class="widget-bars" aria-hidden="true"><i></i><i></i><i></i></div>
         </button>
-        <button class="desktop-widget" type="button" data-action="demo" aria-label="Start portfolio demo">
-          <span class="widget-kicker">Demo</span>
-          <strong>Portfolio tour</strong>
-          <span>Open sequence</span>
-        </button>
       </aside>
       <div class="windows-mobile-hint" aria-hidden="true">
         <img src="./assets/images/Microsoft_icon.svg.png" alt="">
         <p>Tap <strong>Start</strong> to open apps · swipe the taskbar for more</p>
       </div>
       <section class="mobile-launcher" aria-label="Mobile app launcher">
+        <div class="mobile-home-card">
+          <div class="mobile-home-identity">
+            <img src="./assets/images/hasan-avatar.webp" alt="Hasan Khan" width="320" height="280">
+            <div>
+              <span>Software engineer</span>
+              <strong>Hasan Khan</strong>
+              <p>AI infrastructure, developer tools, and thoughtful product experiences.</p>
+            </div>
+          </div>
+          <div class="mobile-home-actions">
+            <button type="button" data-open-app="projects">Featured work</button>
+            <button type="button" data-open-app="contact">Contact</button>
+          </div>
+        </div>
         <button data-app="about"><svg><use href="#i-user" xlink:href="#i-user"/></svg><span>About</span></button>
         <button data-app="experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg><span>Experience</span></button>
         <button data-app="projects"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span>Projects</span></button>
@@ -179,31 +227,53 @@
           <span class="win-title">About — Hasan Khan</span>
         </header>
         <div class="win-body">
-          <div class="about-head">
-            <img class="about-avatar" src="./assets/images/blueback.png" alt="Hasan Khan">
-            <div class="about-id">
-              <div class="name">Hasan Khan</div>
-              <div class="role">&gt; Software Engineer Intern @ NVIDIA</div>
-              <div class="meta">📍 Santa Clara, CA</div>
+          <div class="about-hero">
+            <div class="about-head">
+              <div class="about-avatar-wrap">
+                <img class="about-avatar" src="./assets/images/hasan-avatar.webp" alt="Hasan Khan" width="320" height="280">
+                <span class="about-presence" aria-label="Currently active"></span>
+              </div>
+              <div class="about-id">
+                <span class="about-eyebrow">Systems · Product · Security</span>
+                <div class="name">Hasan Khan</div>
+                <div class="role">Software Engineer Intern @ NVIDIA</div>
+                <div class="meta">Santa Clara, CA · Building for AI factories</div>
+              </div>
+            </div>
+            <p class="about-summary">
+              I build reliable software where infrastructure and product meet—from automated recovery for next-generation DGX systems to developer tools people enjoy using.
+            </p>
+            <div class="about-actions">
+              <button class="btn btn-primary" type="button" data-open-app="projects"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg> Explore projects</button>
+              <button class="btn" type="button" data-open-app="experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg> Experience</button>
+              <a class="btn" href="mailto:hkhan7@ualberta.ca"><svg><use href="#i-mail" xlink:href="#i-mail"/></svg> Email me</a>
             </div>
           </div>
-          <div class="divider"></div>
-          <p class="lead">
-            I'm a software engineer who likes building things that live close to the hardware. Right now I'm at <strong>NVIDIA</strong> on the
-            <strong>DGX Mission Control</strong> team, writing automated hardware-recovery tooling that keeps AI-factory infrastructure healthy across
-            <strong>GB200, GB300, and Vera Rubin NVL72</strong> systems. Before this I built developer tooling at SAP and a financial-markets frontend at
-            the Bank of Canada, with earlier internships spanning data, security, and research at Accenture, GeoComply, and the University of Alberta.
-          </p>
-          <p class="lead" style="margin-top:12px">
-            Day to day I write <strong>Python, Go, C++, and TypeScript</strong>, and I'm comfortable moving between low-level systems code and the
-            product layer on top. I got into security through <strong>Capture the Flag</strong> competitions and still play them when I can; chasing
-            flags has made me a sharper debugger everywhere else. Mostly I care about software that's fast, reliable, and not annoying to use.
-          </p>
-          <p class="lead" style="margin-top:12px">
-            Outside of work I co-run <strong>Kuudra Gang</strong>, a Minecraft Discord community that's grown past <strong>45,000 members</strong>,
-            where I run the bots, automation, and the day-to-day moderation. I like shipping, taking things apart to understand them, and the odd
-            2am hackathon. If you're working on something ambitious, a CTF, or a hackathon, my inbox is open.
-          </p>
+
+          <div class="about-metrics" aria-label="Highlights">
+            <div><strong>GB200 → NVL72</strong><span>AI infrastructure</span></div>
+            <div><strong>45K+</strong><span>Community members</span></div>
+            <div><strong>32</strong><span>CTF flags captured</span></div>
+          </div>
+
+          <h3 class="h-sub">What I bring</h3>
+          <div class="about-focus-grid">
+            <article><svg><use href="#i-cpu" xlink:href="#i-cpu"/></svg><div><strong>Infrastructure depth</strong><span>Automation and recovery close to the hardware.</span></div></article>
+            <article><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><div><strong>Product judgment</strong><span>Clear interfaces for complex technical workflows.</span></div></article>
+            <article><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><div><strong>Builder mindset</strong><span>Fast iteration across Python, Go, C++, and TypeScript.</span></div></article>
+          </div>
+
+          <details class="about-story">
+            <summary>More about my path <span aria-hidden="true">+</span></summary>
+            <div class="about-story-body">
+              <p class="lead">
+                Right now I'm at <strong>NVIDIA</strong> on the <strong>DGX Mission Control</strong> team, writing automated hardware-recovery tooling that keeps AI-factory infrastructure healthy across <strong>GB200, GB300, and Vera Rubin NVL72</strong> systems. Before this I built developer tooling at SAP and a financial-markets frontend at the Bank of Canada, with earlier internships spanning data, security, and research.
+              </p>
+              <p class="lead">
+                I got into security through <strong>Capture the Flag</strong> competitions, which made me a sharper debugger everywhere else. Outside work I co-run <strong>Kuudra Gang</strong>, a Minecraft Discord community with more than <strong>45,000 members</strong>. I like shipping, taking things apart to understand them, and the occasional 2am hackathon.
+              </p>
+            </div>
+          </details>
 
           <h3 class="h-sub">Current Goals</h3>
           <ul class="goals">
@@ -214,8 +284,10 @@
             <li><span class="g-em">🤖</span> Peak paid Discord bot users <span class="g-val">700 / 1000</span></li>
           </ul>
 
-          <div class="divider"></div>
-          <p class="lead">Want to collaborate on a hackathon, CTF, or tech project? <a data-open-app="contact" href="#">Open Contact <span aria-hidden="true">→</span></a></p>
+          <div class="about-footer-cta">
+            <div><strong>Have an ambitious technical problem?</strong><span>I'm always happy to compare notes or build together.</span></div>
+            <button class="btn" type="button" data-open-app="contact">Open contact <span aria-hidden="true">→</span></button>
+          </div>
         </div>
       </section>
 
@@ -235,7 +307,7 @@
           <ul class="xp-list" style="margin-top:22px">
 
             <li class="xp-item">
-              <div class="xp-logo is-nvidia"><img src="./assets/images/nvda-eye.png" alt="NVIDIA"></div>
+              <div class="xp-logo is-nvidia"><img data-src="./assets/images/nvda-eye-ui.webp" decoding="async" alt="NVIDIA"></div>
               <div class="xp-head">
                 <span class="xp-role">Software Engineer Intern</span>
                 <span class="xp-co">· NVIDIA</span>
@@ -252,7 +324,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/sap.png" alt="SAP"></div>
+              <div class="xp-logo"><img data-src="./assets/images/sap.png" decoding="async" alt="SAP"></div>
               <div class="xp-head">
                 <span class="xp-role">Software Engineer Intern</span>
                 <span class="xp-co">· SAP</span>
@@ -262,7 +334,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/boc_logo.jpeg" alt="Bank of Canada"></div>
+              <div class="xp-logo"><img data-src="./assets/images/boc_logo.jpeg" decoding="async" alt="Bank of Canada"></div>
               <div class="xp-head">
                 <span class="xp-role">Fullstack Software Developer Intern</span>
                 <span class="xp-co">· Bank of Canada</span>
@@ -272,7 +344,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/accenture.png" alt="Accenture"></div>
+              <div class="xp-logo"><img data-src="./assets/images/accenture.png" decoding="async" alt="Accenture"></div>
               <div class="xp-head">
                 <span class="xp-role">Solutions Architect (AI & Data) Intern</span>
                 <span class="xp-co">· Accenture</span>
@@ -282,7 +354,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/scaleai_logo.jpeg" alt="Scale AI"></div>
+              <div class="xp-logo"><img data-src="./assets/images/scaleai_logo.jpeg" decoding="async" alt="Scale AI"></div>
               <div class="xp-head">
                 <span class="xp-role">Gen AI Technical Advisor</span>
                 <span class="xp-co">· Scale AI</span>
@@ -292,7 +364,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/geocomply.png" alt="GeoComply"></div>
+              <div class="xp-logo"><img data-src="./assets/images/geocomply.png" decoding="async" alt="GeoComply"></div>
               <div class="xp-head">
                 <span class="xp-role">Fraud & Product Risk Management Intern</span>
                 <span class="xp-co">· GeoComply</span>
@@ -302,7 +374,7 @@
             </li>
 
             <li class="xp-item">
-              <div class="xp-logo"><img src="./assets/images/university_of_alberta_logo.jpeg" alt="University of Alberta"></div>
+              <div class="xp-logo"><img data-src="./assets/images/university_of_alberta_logo.jpeg" decoding="async" alt="University of Alberta"></div>
               <div class="xp-head">
                 <span class="xp-role">Software Developer · Optimization Research</span>
                 <span class="xp-co">· University of Alberta</span>
@@ -337,14 +409,14 @@
           <h2 class="h-title"><span class="accent">Skills</span> &amp; Languages</h2>
           <div class="skills-grid" style="margin-top:20px">
             <div>
-              <h3 class="h-sub" style="margin-top:0">Coding Languages</h3>
-              <div class="skill"><div class="skill-top"><b>JavaScript</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>Python</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>TypeScript</b><span>100%</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>C / C++ / C#</b><span>80%</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>Go</b><span>80%</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>CSS</b><span>70%</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
-              <div class="skill"><div class="skill-top"><b>SQL</b><span>70%</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
+              <h3 class="h-sub" style="margin-top:0">Engineering Languages</h3>
+              <div class="skill"><div class="skill-top"><b>JavaScript</b><span>Primary</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Python</b><span>Primary</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>TypeScript</b><span>Primary</span></div><div class="skill-bar"><div class="skill-fill" data-val="100"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>C / C++ / C#</b><span>Strong</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>Go</b><span>Strong</span></div><div class="skill-bar"><div class="skill-fill" data-val="80"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>CSS</b><span>Working</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
+              <div class="skill"><div class="skill-top"><b>SQL</b><span>Working</span></div><div class="skill-bar"><div class="skill-fill" data-val="70"></div></div></div>
             </div>
             <div>
               <h3 class="h-sub" style="margin-top:0">Human Languages</h3>
@@ -359,28 +431,28 @@
 
           <h3 class="h-sub">Development Skills</h3>
           <div class="tech-grid">
-            <a href="https://www.figma.com/" target="_blank" rel="noopener"><img src="./assets/images/figma.png" alt=""><span>Figma</span></a>
-            <a href="https://www.docker.com/" target="_blank" rel="noopener"><img src="./assets/images/icons8-docker-96.png" alt=""><span>Docker</span></a>
-            <a href="https://developer.mozilla.org/docs/Web/HTML" target="_blank" rel="noopener"><img src="./assets/images/html.png" alt=""><span>HTML</span></a>
-            <a href="https://developer.mozilla.org/docs/Web/CSS" target="_blank" rel="noopener"><img src="./assets/images/css.png" alt=""><span>CSS</span></a>
-            <a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noopener"><img src="./assets/images/java-script.png" alt=""><span>JavaScript</span></a>
-            <a href="https://react.dev/" target="_blank" rel="noopener"><img src="./assets/images/react.png" alt=""><span>React</span></a>
-            <a href="https://unity.com/" target="_blank" rel="noopener"><img src="./assets/images/unity3d.png" alt=""><span>Unity</span></a>
-            <a href="https://nodejs.org/" target="_blank" rel="noopener"><img src="./assets/images/node.png" alt=""><span>Node.js</span></a>
-            <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener"><img src="./assets/images/typescript.png" alt=""><span>TypeScript</span></a>
-            <a href="https://azure.microsoft.com/" target="_blank" rel="noopener"><img src="./assets/images/Azure.png" alt=""><span>Azure</span></a>
-            <a href="https://code.visualstudio.com/" target="_blank" rel="noopener"><img src="./assets/images/vs-code.png" alt=""><span>VS Code</span></a>
-            <a href="https://www.mysql.com/" target="_blank" rel="noopener"><img src="./assets/images/mysql.png" alt=""><span>MySQL</span></a>
-            <a href="https://www.python.org/" target="_blank" rel="noopener"><img src="./assets/images/python.png" alt=""><span>Python</span></a>
-            <a href="https://www.linux.org/" target="_blank" rel="noopener"><img src="./assets/images/linux.png" alt=""><span>Linux</span></a>
-            <a href="https://www.tensorflow.org/" target="_blank" rel="noopener"><img src="./assets/images/tensor.png" alt=""><span>TensorFlow</span></a>
-            <a href="https://git-scm.com/" target="_blank" rel="noopener"><img src="./assets/images/git.png" alt=""><span>Git</span></a>
-            <a href="https://www.r-project.org/" target="_blank" rel="noopener"><img src="./assets/images/R.png" alt=""><span>R</span></a>
-            <a href="https://www.adobe.com/" target="_blank" rel="noopener"><img src="./assets/images/adobe.png" alt=""><span>Adobe</span></a>
-            <a href="https://www.microsoft.com/microsoft-365" target="_blank" rel="noopener"><img src="./assets/images/365.png" alt=""><span>M365</span></a>
-            <a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank" rel="noopener"><img src="./assets/images/c.png" alt=""><span>C</span></a>
-            <a href="https://en.wikipedia.org/wiki/C%2B%2B" target="_blank" rel="noopener"><img src="./assets/images/c++.png" alt=""><span>C++</span></a>
-            <a href="https://en.wikipedia.org/wiki/C_Sharp_(programming_language)" target="_blank" rel="noopener"><img src="./assets/images/cs.png" alt=""><span>C#</span></a>
+            <a href="https://www.figma.com/" target="_blank" rel="noopener"><img data-src="./assets/images/figma.png" decoding="async" alt=""><span>Figma</span></a>
+            <a href="https://www.docker.com/" target="_blank" rel="noopener"><img data-src="./assets/images/icons8-docker-96.png" decoding="async" alt=""><span>Docker</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/HTML" target="_blank" rel="noopener"><img data-src="./assets/images/html.png" decoding="async" alt=""><span>HTML</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/CSS" target="_blank" rel="noopener"><img data-src="./assets/images/css.png" decoding="async" alt=""><span>CSS</span></a>
+            <a href="https://developer.mozilla.org/docs/Web/JavaScript" target="_blank" rel="noopener"><img data-src="./assets/images/java-script.png" decoding="async" alt=""><span>JavaScript</span></a>
+            <a href="https://react.dev/" target="_blank" rel="noopener"><img data-src="./assets/images/react.png" decoding="async" alt=""><span>React</span></a>
+            <a href="https://unity.com/" target="_blank" rel="noopener"><img data-src="./assets/images/unity3d.png" decoding="async" alt=""><span>Unity</span></a>
+            <a href="https://nodejs.org/" target="_blank" rel="noopener"><img data-src="./assets/images/node.png" decoding="async" alt=""><span>Node.js</span></a>
+            <a href="https://www.typescriptlang.org/" target="_blank" rel="noopener"><img data-src="./assets/images/typescript.png" decoding="async" alt=""><span>TypeScript</span></a>
+            <a href="https://azure.microsoft.com/" target="_blank" rel="noopener"><img data-src="./assets/images/Azure.png" decoding="async" alt=""><span>Azure</span></a>
+            <a href="https://code.visualstudio.com/" target="_blank" rel="noopener"><img data-src="./assets/images/vs-code.png" decoding="async" alt=""><span>VS Code</span></a>
+            <a href="https://www.mysql.com/" target="_blank" rel="noopener"><img data-src="./assets/images/mysql.png" decoding="async" alt=""><span>MySQL</span></a>
+            <a href="https://www.python.org/" target="_blank" rel="noopener"><img data-src="./assets/images/python.png" decoding="async" alt=""><span>Python</span></a>
+            <a href="https://www.linux.org/" target="_blank" rel="noopener"><img data-src="./assets/images/linux.png" decoding="async" alt=""><span>Linux</span></a>
+            <a href="https://www.tensorflow.org/" target="_blank" rel="noopener"><img data-src="./assets/images/tensor.png" decoding="async" alt=""><span>TensorFlow</span></a>
+            <a href="https://git-scm.com/" target="_blank" rel="noopener"><img data-src="./assets/images/git.png" decoding="async" alt=""><span>Git</span></a>
+            <a href="https://www.r-project.org/" target="_blank" rel="noopener"><img data-src="./assets/images/R.png" decoding="async" alt=""><span>R</span></a>
+            <a href="https://www.adobe.com/" target="_blank" rel="noopener"><img data-src="./assets/images/adobe.png" decoding="async" alt=""><span>Adobe</span></a>
+            <a href="https://www.microsoft.com/microsoft-365" target="_blank" rel="noopener"><img data-src="./assets/images/365.png" decoding="async" alt=""><span>M365</span></a>
+            <a href="https://en.wikipedia.org/wiki/C_(programming_language)" target="_blank" rel="noopener"><img data-src="./assets/images/c.png" decoding="async" alt=""><span>C</span></a>
+            <a href="https://en.wikipedia.org/wiki/C%2B%2B" target="_blank" rel="noopener"><img data-src="./assets/images/c++.png" decoding="async" alt=""><span>C++</span></a>
+            <a href="https://en.wikipedia.org/wiki/C_Sharp_(programming_language)" target="_blank" rel="noopener"><img data-src="./assets/images/cs.png" decoding="async" alt=""><span>C#</span></a>
           </div>
         </div>
       </section>
@@ -407,7 +479,7 @@
           <div class="proj-grid">
 
             <div class="proj" data-category="ai">
-              <a class="proj-img" href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images" target="_blank" rel="noopener"><img src="./assets/images/projects/AI.png" alt="AI Disease Detection" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images" target="_blank" rel="noopener"><img data-src="./assets/images/projects/AI.png" alt="AI Disease Detection" decoding="async"></a>
               <div class="proj-info">
                 <h4>AI-Powered Disease Detection (X-Ray)</h4>
                 <p class="cat">Deep-learning model · Solo</p>
@@ -417,7 +489,7 @@
             </div>
 
             <div class="proj" data-category="data">
-              <a class="proj-img" href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis" target="_blank" rel="noopener"><img src="./assets/images/projects/sql.png" alt="Spotify Data Analysis" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis" target="_blank" rel="noopener"><img data-src="./assets/images/projects/sql.png" alt="Spotify Data Analysis" decoding="async"></a>
               <div class="proj-info">
                 <h4>Spotify Top Songs 2021 Analysis</h4>
                 <p class="cat">Data analysis · Solo</p>
@@ -427,7 +499,7 @@
             </div>
 
             <div class="proj" data-category="apps data">
-              <a class="proj-img" href="https://github.com/osu/Beartracks/" target="_blank" rel="noopener"><img src="./assets/images/projects/beartrack.jpeg" alt="Mini BearTracks" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/osu/Beartracks/" target="_blank" rel="noopener"><img data-src="./assets/images/projects/beartrack.jpeg" alt="Mini BearTracks" decoding="async"></a>
               <div class="proj-info">
                 <h4>Mini BearTracks</h4>
                 <p class="cat">Timetable management · Solo</p>
@@ -437,7 +509,7 @@
             </div>
 
             <div class="proj" data-category="apps">
-              <a class="proj-img" href="https://github.com/osu/Maze-Pathfinder" target="_blank" rel="noopener"><img src="./assets/images/projects/Maze.jpeg" alt="Maze Pathfinder" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/osu/Maze-Pathfinder" target="_blank" rel="noopener"><img data-src="./assets/images/projects/Maze.jpeg" alt="Maze Pathfinder" decoding="async"></a>
               <div class="proj-info">
                 <h4>Maze Pathfinder</h4>
                 <p class="cat">Pathfinding algorithms · Solo</p>
@@ -447,7 +519,7 @@
             </div>
 
             <div class="proj" data-category="ai data">
-              <a class="proj-img" href="https://github.com/adnansami1992sami/QNNGPD/" target="_blank" rel="noopener"><img src="./assets/images/projects/Normal%20vs%20AIPC%20enchanced%20matrixes.png" alt="Quantum Neural Networks" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/adnansami1992sami/QNNGPD/" target="_blank" rel="noopener"><img data-src="./assets/images/projects/Normal%20vs%20AIPC%20enchanced%20matrixes.png" alt="Quantum Neural Networks" decoding="async"></a>
               <div class="proj-info">
                 <h4>Quantum NN for Genomic Pattern Detection</h4>
                 <p class="cat">Intel Fall 2024 Hackathon · Team</p>
@@ -457,7 +529,7 @@
             </div>
 
             <div class="proj" data-category="apps ai">
-              <a class="proj-img" href="https://github.com/daksh3333/Neuro-Stress-Monitor" target="_blank" rel="noopener"><img src="./assets/images/projects/focusboost.gif" alt="FocusBoost" loading="lazy"></a>
+              <a class="proj-img" href="https://github.com/daksh3333/Neuro-Stress-Monitor" target="_blank" rel="noopener"><img data-src="./assets/images/projects/focusboost.webp" alt="FocusBoost" decoding="async"></a>
               <div class="proj-info">
                 <h4>FocusBoost — EEG Productivity App</h4>
                 <p class="cat">natHACKS Fall 2024 · Real-time EEG</p>
@@ -484,13 +556,13 @@
         <div class="win-body">
           <h2 class="h-title">My <span class="accent">Certificates</span></h2>
           <div class="cert-grid" style="margin-top:20px">
-            <div class="cert"><img data-zoom src="./assets/images/certificates/softwarespec.jpeg" alt="Software Product Management"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/specialization/XJSN1YN4D0VK" target="_blank" rel="noopener">Software Product Management</a></h4><p>University of Alberta</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/lambdatest.jpeg" alt="Test Automation"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/62071e091fb90401a5378c6ebe1dc04880c8d74dd9dca21405d00d68dda56cac" target="_blank" rel="noopener">Test Automation Professional</a></h4><p>LambdaTest</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/Cybersec_microsoft.jpeg" alt="Cybersecurity"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/4aa644556bb204964e44d860ef3a21bc502fb6d133d023ce00ad200c31cf47f0" target="_blank" rel="noopener">Career Essentials in Cybersecurity</a></h4><p>Microsoft · LinkedIn</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/github.jpeg" alt="GitHub"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/feb078c04d2cd23003d5fd1c547ef27400c236179a0a3a29a11d213895a16a38" target="_blank" rel="noopener">Career Essentials in GitHub</a></h4><p>GitHub</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/selenium.jpeg" alt="Selenium"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/5ea9835e1d448c7a819475ecec44ba1ab8543d8e41e1504e79e5f3cdc03a593d" target="_blank" rel="noopener">Selenium Essential Training</a></h4><p>LinkedIn Learning</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/teamwork.jpeg" alt="Teamwork"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/116db0466cce40ad5ab8e7be286f8e2ea41beb13e7a966aa03a54cb0a9c5e9a8" target="_blank" rel="noopener">Teamwork Foundations</a></h4><p>LinkedIn Learning</p></div></div>
-            <div class="cert"><img data-zoom src="./assets/images/certificates/ibm_agile.jpeg" alt="Agile & Scrum"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/verify/ZAJMG7R2BRNH" target="_blank" rel="noopener">Intro to Agile Development &amp; Scrum</a></h4><p>IBM</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/softwarespec.jpeg" alt="Software Product Management" decoding="async"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/specialization/XJSN1YN4D0VK" target="_blank" rel="noopener">Software Product Management</a></h4><p>University of Alberta</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/lambdatest.jpeg" alt="Test Automation" decoding="async"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/62071e091fb90401a5378c6ebe1dc04880c8d74dd9dca21405d00d68dda56cac" target="_blank" rel="noopener">Test Automation Professional</a></h4><p>LambdaTest</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/Cybersec_microsoft.jpeg" alt="Cybersecurity" decoding="async"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/4aa644556bb204964e44d860ef3a21bc502fb6d133d023ce00ad200c31cf47f0" target="_blank" rel="noopener">Career Essentials in Cybersecurity</a></h4><p>Microsoft · LinkedIn</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/github.jpeg" alt="GitHub" decoding="async"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/feb078c04d2cd23003d5fd1c547ef27400c236179a0a3a29a11d213895a16a38" target="_blank" rel="noopener">Career Essentials in GitHub</a></h4><p>GitHub</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/selenium.jpeg" alt="Selenium" decoding="async"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/5ea9835e1d448c7a819475ecec44ba1ab8543d8e41e1504e79e5f3cdc03a593d" target="_blank" rel="noopener">Selenium Essential Training</a></h4><p>LinkedIn Learning</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/teamwork.jpeg" alt="Teamwork" decoding="async"><div class="cert-cap"><h4><a href="https://www.linkedin.com/learning/certificates/116db0466cce40ad5ab8e7be286f8e2ea41beb13e7a966aa03a54cb0a9c5e9a8" target="_blank" rel="noopener">Teamwork Foundations</a></h4><p>LinkedIn Learning</p></div></div>
+            <div class="cert"><img data-zoom data-src="./assets/images/certificates/ibm_agile.jpeg" alt="Agile & Scrum" decoding="async"><div class="cert-cap"><h4><a href="https://www.coursera.org/account/accomplishments/verify/ZAJMG7R2BRNH" target="_blank" rel="noopener">Intro to Agile Development &amp; Scrum</a></h4><p>IBM</p></div></div>
           </div>
         </div>
       </section>
@@ -509,7 +581,7 @@
         <div class="win-body">
           <h2 class="h-title">Side <span class="accent">Projects</span></h2>
           <div class="card side-card" style="margin-top:20px">
-            <div class="banner"><img src="./assets/images/projects/kuudragang.gif" alt="Kuudra Gang"></div>
+            <div class="banner"><img data-src="./assets/images/projects/kuudragang.webp" alt="Kuudra Gang" decoding="async"></div>
             <div class="body">
               <div><span class="tag">Co-Founder</span><span class="tag">Server Co-owner</span></div>
               <h3 style="font-family:var(--font-ui);font-size:1.2rem;margin:6px 0 8px">Kuudra Gang</h3>
@@ -693,18 +765,18 @@
         <button class="dock-item" data-app="experience"><svg><use href="#i-briefcase" xlink:href="#i-briefcase"/></svg><span class="dock-tooltip">Experience</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="skills"><svg><use href="#i-cpu" xlink:href="#i-cpu"/></svg><span class="dock-tooltip">Skills</span><span class="dock-indicator"></span></button>
         <button class="dock-item" data-app="projects"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span class="dock-tooltip">Projects</span><span class="dock-indicator"></span></button>
-        <button class="dock-item" data-app="certificates"><svg><use href="#i-award" xlink:href="#i-award"/></svg><span class="dock-tooltip">Certificates</span><span class="dock-indicator"></span></button>
-        <button class="dock-item" data-app="sideprojects"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Side Projects</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="certificates" data-dock-priority="secondary"><svg><use href="#i-award" xlink:href="#i-award"/></svg><span class="dock-tooltip">Certificates</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="sideprojects" data-dock-priority="secondary"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Side Projects</span><span class="dock-indicator"></span></button>
         <span class="dock-sep"></span>
-        <button class="dock-item" type="button" data-action="mission" aria-label="Mission Control"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span class="dock-tooltip">Mission Control</span></button>
+        <button class="dock-item" type="button" data-action="mission" data-dock-priority="secondary" aria-label="Mission Control"><svg><use href="#i-grid" xlink:href="#i-grid"/></svg><span class="dock-tooltip">Mission Control</span></button>
         <button class="dock-item" type="button" data-action="launcher" aria-label="App Launcher"><svg><use href="#i-rocket" xlink:href="#i-rocket"/></svg><span class="dock-tooltip">Launchpad</span></button>
-        <button class="dock-item" type="button" data-action="command-palette" aria-label="Command Palette"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Command Palette</span></button>
+        <button class="dock-item" type="button" data-action="command-palette" data-dock-priority="secondary" aria-label="Command Palette"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Command Palette</span></button>
         <span class="dock-sep"></span>
         <button class="dock-item" data-app="terminal"><svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg><span class="dock-tooltip">Terminal</span><span class="dock-indicator"></span></button>
-        <button class="dock-item" data-app="gpu"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
-        <button class="dock-item" data-app="github"><svg><use href="#i-github" xlink:href="#i-github"/></svg><span class="dock-tooltip">GitHub</span><span class="dock-indicator"></span></button>
-        <button class="dock-item" data-app="diagnostics"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">Diagnostics</span><span class="dock-indicator"></span></button>
-        <button class="dock-item stock-dock-widget" type="button" data-stock-trigger data-stock-target="dock" aria-label="AAPL Stock">
+        <button class="dock-item" data-app="gpu" data-dock-priority="secondary"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">GPU Stats</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="github" data-dock-priority="secondary"><svg><use href="#i-github" xlink:href="#i-github"/></svg><span class="dock-tooltip">GitHub</span><span class="dock-indicator"></span></button>
+        <button class="dock-item" data-app="diagnostics" data-dock-priority="secondary"><svg><use href="#i-activity" xlink:href="#i-activity"/></svg><span class="dock-tooltip">Diagnostics</span><span class="dock-indicator"></span></button>
+        <button class="dock-item stock-dock-widget" type="button" data-stock-trigger data-stock-target="dock" data-dock-priority="secondary" aria-label="AAPL Stock">
           <span class="stock-widget-icon" aria-hidden="true">
             <svg viewBox="0 0 64 32" focusable="false">
               <path class="stock-grid-line" d="M4 26H60M4 16H60M4 6H60"/>
@@ -758,10 +830,10 @@
         <svg><use href="#i-grid" xlink:href="#i-grid"/></svg>
         <input type="search" placeholder="Search apps, files, and portfolio" aria-label="Search portfolio">
       </div>
-      <div class="windows-search-results" role="listbox" aria-label="Search results"></div>
+      <div class="windows-search-results" aria-label="Search results"></div>
     </div>
 
-    <aside class="stock-popover" data-stock-popover aria-hidden="true">
+    <aside class="stock-popover" id="stock-popover" data-stock-popover aria-hidden="true">
       <div class="stock-popover-head">
         <div>
           <span class="stock-kicker">Market</span>
@@ -784,7 +856,7 @@
       </div>
     </aside>
 
-    <section class="mission-control" data-mission-control aria-hidden="true" aria-label="Mission Control">
+    <section class="mission-control" data-mission-control role="dialog" aria-modal="true" aria-hidden="true" aria-label="Mission Control">
       <div class="overlay-shell">
         <header class="overlay-head">
           <div><span>Mission Control</span><strong data-mission-count>Open windows</strong></div>
@@ -794,7 +866,7 @@
       </div>
     </section>
 
-    <section class="universal-search spotlight-search" data-universal-search aria-hidden="true" aria-label="Search">
+    <section class="universal-search spotlight-search" data-universal-search role="dialog" aria-modal="true" aria-hidden="true" aria-label="Search">
       <div class="search-shell">
         <div class="search-input-row">
           <svg><use href="#i-grid" xlink:href="#i-grid"/></svg>
@@ -804,7 +876,7 @@
       </div>
     </section>
 
-    <section class="app-launcher" data-app-launcher aria-hidden="true" aria-label="App launcher">
+    <section class="app-launcher" data-app-launcher role="dialog" aria-modal="true" aria-hidden="true" aria-label="App launcher">
       <div class="overlay-shell">
         <header class="overlay-head">
           <div><span data-launcher-kicker>Launchpad</span><strong data-launcher-title>Apps</strong></div>
@@ -814,7 +886,7 @@
       </div>
     </section>
 
-    <section class="command-palette" data-command-palette aria-hidden="true" aria-label="NVIDIA command palette">
+    <section class="command-palette" data-command-palette role="dialog" aria-modal="true" aria-hidden="true" aria-label="NVIDIA command palette">
       <div class="search-shell command-shell">
         <div class="search-input-row">
           <svg><use href="#i-terminal" xlink:href="#i-terminal"/></svg>

@@ -1,19 +1,23 @@
 # Hasan Khan — Portfolio Desktop
 
-An interactive portfolio that mimics a split macOS / Windows 11 / NVIDIA DGX desktop. Built with vanilla HTML, CSS, and JavaScript — no framework, no build step.
+An interactive, NVIDIA-first portfolio desktop with optional macOS and Windows 11 themes. Built with vanilla HTML, CSS, and JavaScript — no framework or build step.
 
 ## Features
 
+- **Cinematic OS entry** — Apple auto-login opens the split desktop; macOS and Windows each authenticate on their first switch
 - **Three OS themes** — switch between macOS, Windows 11, and NVIDIA DGX OS from the menu bar
 - **Window manager** — drag, resize, minimize, maximize, snap, Mission Control / Task View
 - **Terminal** — shell with portfolio commands (`help`, `nvidia-smi`, `open`, etc.)
 - **Live widgets** — simulated GPU stats, stock chart (AAPL / MSFT), GitHub activity feed
-- **Cosmic collision** — drag the black & white holes together to trigger the IRIS big-bang transition into NVIDIA OS
+- **IRIS cinematic** — a centered, single-use launch drives the Microsoft × Apple energy-core collision, Big Bang, NVIDIA transition, and IRIS verification
+- **Progressive loading** — project media, skills artwork, and the ambient wallpaper hydrate only when needed
+- **Installable PWA** — responsive shell, offline navigation fallback, and platform-sized app icons
 
 ## Keyboard shortcuts
 
 | Shortcut | Action |
 |----------|--------|
+| `⌘/Ctrl + K` | Search apps and actions |
 | `⌘/Ctrl + Space` | Spotlight / Windows Search / Command Palette |
 | `F3` | Mission Control / Task View |
 | `Esc` | Minimize focused window (or close overlays) |
@@ -41,5 +45,5 @@ Static hosting only — GitHub Pages, GitLab Pages, Vercel, Netlify, or any CDN.
 
 ## Mobile
 
-- **macOS / NVIDIA** — grid launcher on the desktop; dock scrolls horizontally
+- **macOS / NVIDIA** — touch-friendly home launcher with a compact essential-app dock
 - **Windows** — taskbar with Start menu (opens Launchpad); swipe taskbar for pinned apps

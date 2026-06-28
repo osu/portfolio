@@ -42,7 +42,10 @@ const IRIS_WEBGL = (function () {
       vec2 uv = (gl_FragCoord.xy - u_center) / min(u_res.x, u_res.y);
       float r = length(uv);
 
-      float open = smoothstep(0.0, 0.22, u_phase) * (1.0 - smoothstep(0.58, 0.78, u_phase));
+      float irisPhase = clamp((u_phase - 0.45) / 0.48, 0.0, 1.0);
+      float irisReveal = smoothstep(0.45, 0.50, u_phase);
+      float irisFade = 1.0 - smoothstep(0.86, 0.98, u_phase);
+      float open = smoothstep(0.0, 0.26, irisPhase) * (1.0 - smoothstep(0.58, 0.82, irisPhase));
       float aperture = diaphragm(uv, open);
 
       vec3 bladeDark = vec3(0.07, 0.10, 0.06);
@@ -56,8 +59,8 @@ const IRIS_WEBGL = (function () {
       float bladeV = smoothstep(0.0, seg * 0.5, local);
       vec3 bladeCol = mix(bladeEdge, mix(bladeMid, bladeDark, bladeV), 0.55);
 
-      float housing = smoothstep(0.44, 0.40, r) * smoothstep(0.34, 0.38, r);
-      float innerPupil = smoothstep(0.14, 0.06, r) * (1.0 - open * 0.85);
+      float housing = (1.0 - smoothstep(0.40, 0.44, r)) * smoothstep(0.34, 0.38, r);
+      float innerPupil = (1.0 - smoothstep(0.06, 0.14, r)) * (1.0 - open * 0.85);
       float glow = exp(-r * 5.2) * (0.35 + open * 0.65);
 
       vec3 col = mix(pupil, bladeCol, aperture);
@@ -66,7 +69,7 @@ const IRIS_WEBGL = (function () {
       col += vec3(0.9, 1.0, 0.88) * glow * 0.28 * aperture;
 
       float alpha = clamp(aperture * 0.88 + housing * 0.35 + glow * 0.3, 0.0, 1.0);
-      alpha *= smoothstep(1.0, 0.84, u_phase);
+      alpha *= irisReveal * irisFade;
       gl_FragColor = vec4(col, alpha * 0.94);
     }
   `;
@@ -84,10 +87,12 @@ const IRIS_WEBGL = (function () {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
 
     const size = Math.min(window.innerWidth, window.innerHeight) * 0.76;
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const backingSize = Math.min(1792, Math.max(512, Math.floor(size * dpr)));
     const canvas = document.createElement("canvas");
     canvas.className = "bigbang-iris-canvas";
-    canvas.width = Math.floor(size * 2);
-    canvas.height = Math.floor(size * 2);
+    canvas.width = backingSize;
+    canvas.height = backingSize;
     canvas.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
     canvas.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
     overlay.appendChild(canvas);

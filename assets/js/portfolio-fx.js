@@ -137,6 +137,10 @@
         return;
       }
       el.classList.add("is-active");
+      if (reduceMotion) {
+        el.textContent = "NVLink fabric stable";
+        return;
+      }
       charIdx = 0;
       deleting = false;
       type();
@@ -332,6 +336,7 @@
   /* ----- 8. PWA install prompt (mobile) ----- */
   const PwaInstall = (function () {
     let deferredPrompt = null;
+    let engaged = false;
 
     function dismissed() {
       try { return window.localStorage.getItem("portfolio-pwa-dismiss") === "1"; } catch (_) { return false; }
@@ -352,7 +357,7 @@
         "<p>", label, "</p>",
         "<div class='pwa-install-actions'>",
         "<button type='button' class='pwa-install-go'>", actionText, "</button>",
-        "<button type='button' class='pwa-install-dismiss' aria-label='Dismiss'>Not now</button>",
+        "<button type='button' class='pwa-install-dismiss' aria-label='Not now'>Not now</button>",
         "</div>",
       ].join("");
       banner.querySelector(".pwa-install-dismiss").addEventListener("click", dismiss);
@@ -371,11 +376,13 @@
 
       const mobile = isMobile() || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       if (!mobile || dismissed()) return;
+      document.addEventListener("pointerdown", () => { engaged = true; }, { once: true, passive: true });
 
       window.addEventListener("beforeinstallprompt", (e) => {
         e.preventDefault();
         deferredPrompt = e;
         window.setTimeout(() => {
+          if (!engaged) return;
           showBanner(
             "Install this portfolio as an app on your home screen.",
             "Install",
@@ -386,19 +393,20 @@
               deferredPrompt = null;
             }
           );
-        }, 3200);
+        }, 18000);
       });
 
       const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone;
       if (isIos && !isStandalone) {
         window.setTimeout(() => {
+          if (!engaged) return;
           showBanner(
             "Add to Home Screen: tap Share, then <strong>Add to Home Screen</strong>.",
             "Got it",
             () => {}
           );
-        }, 4800);
+        }, 22000);
       }
     }
 
@@ -457,7 +465,7 @@
         "<div class='os-merge-glitch__brands'>",
         "<img class='os-merge-glitch__apple' src='./assets/images/apple-logo.svg' alt=''>",
         "<img class='os-merge-glitch__msft' src='./assets/images/Microsoft_icon.svg.png' alt=''>",
-        "<img class='os-merge-glitch__nvidia' src='./assets/images/nvda-eye.png' alt=''>",
+        "<img class='os-merge-glitch__nvidia' src='./assets/images/nvda-eye-ui.webp' alt=''>",
         "</div>",
         "<p class='os-merge-glitch__label'>",
         (LABELS[from] || from), " <span>⇄</span> ", (LABELS[to] || to),
