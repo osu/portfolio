@@ -13,20 +13,21 @@
   /* ----- 1. Aurora cursor trail (NVIDIA theme) ----- */
   const AuroraTrail = (function () {
     let canvas, ctx, particles = [], active = false, raf = 0;
+    const sprites = new Map();
 
     function resize() {
       if (!canvas) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = Math.floor(window.innerWidth * dpr);
       canvas.height = Math.floor(window.innerHeight * dpr);
       canvas.style.width = window.innerWidth + "px";
       canvas.style.height = window.innerHeight + "px";
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      sync();
     }
 
     function sync() {
       active = document.body.classList.contains("theme-dgx") && !reduceMotion && !isMobile();
-      if (active && !raf) loop();
       if (!active) {
         cancelAnimationFrame(raf);
         raf = 0;
@@ -36,39 +37,51 @@
     }
 
     function onMove(e) {
-      if (!active) return;
-      for (let i = 0; i < 2; i++) {
-        particles.push({
-          x: e.clientX + (Math.random() - 0.5) * 10,
-          y: e.clientY + (Math.random() - 0.5) * 10,
-          vx: (Math.random() - 0.5) * 0.7,
-          vy: (Math.random() - 0.5) * 0.7 - 0.35,
-          life: 1,
-          size: 1.8 + Math.random() * 3.2,
-          hue: Math.random() > 0.45 ? 108 : 205,
-        });
-      }
-      if (particles.length > 140) particles.splice(0, particles.length - 140);
+      if (!active || document.body.classList.contains("interface-dragging")) return;
+      if (e.target instanceof Element && e.target.closest(".win, .menubar, .dock, .windows-taskbar, [role='dialog']")) return;
+      particles.push({
+        x: e.clientX + (Math.random() - 0.5) * 8,
+        y: e.clientY + (Math.random() - 0.5) * 8,
+        vx: (Math.random() - 0.5) * 0.65,
+        vy: (Math.random() - 0.5) * 0.65 - 0.3,
+        life: 1,
+        size: 1.8 + Math.random() * 2.8,
+        hue: Math.random() > 0.45 ? 108 : 205,
+      });
+      if (particles.length > 80) particles.splice(0, particles.length - 80);
+      if (!raf) raf = requestAnimationFrame(loop);
+    }
+
+    function sprite(hue) {
+      if (sprites.has(hue)) return sprites.get(hue);
+      const surface = document.createElement("canvas");
+      surface.width = 48;
+      surface.height = 48;
+      const surfaceCtx = surface.getContext("2d");
+      const gradient = surfaceCtx.createRadialGradient(24, 24, 0, 24, 24, 24);
+      gradient.addColorStop(0, `hsla(${hue}, 90%, 68%, 0.82)`);
+      gradient.addColorStop(1, `hsla(${hue}, 80%, 50%, 0)`);
+      surfaceCtx.fillStyle = gradient;
+      surfaceCtx.fillRect(0, 0, 48, 48);
+      sprites.set(hue, surface);
+      return surface;
     }
 
     function loop() {
-      if (!active || !ctx) return;
-      raf = requestAnimationFrame(loop);
+      if (!active || !ctx) { raf = 0; return; }
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       particles = particles.filter((p) => {
         p.x += p.vx;
         p.y += p.vy;
         p.life -= 0.016;
         if (p.life <= 0) return false;
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-        g.addColorStop(0, `hsla(${p.hue}, 90%, 68%, ${p.life * 0.65})`);
-        g.addColorStop(1, `hsla(${p.hue}, 80%, 50%, 0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * p.life * 2.2, 0, Math.PI * 2);
-        ctx.fill();
+        const radius = p.size * p.life * 4.2;
+        ctx.globalAlpha = p.life * 0.7;
+        ctx.drawImage(sprite(p.hue), p.x - radius, p.y - radius, radius * 2, radius * 2);
         return true;
       });
+      ctx.globalAlpha = 1;
+      raf = particles.length ? requestAnimationFrame(loop) : 0;
     }
 
     function init() {

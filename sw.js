@@ -1,4 +1,4 @@
-const SHELL_CACHE = "portfolio-shell-v15";
+const SHELL_CACHE = "portfolio-shell-v21";
 const RUNTIME_CACHE = "portfolio-runtime-v2";
 const MAX_RUNTIME_ENTRIES = 32;
 const MAX_CACHEABLE_BYTES = 2 * 1024 * 1024;
@@ -7,11 +7,10 @@ const SHELL = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./assets/css/geforce-os.css",
-  "./assets/js/hole-lightning.js",
-  "./assets/js/iris-webgl.js",
-  "./assets/js/geforce-os.js",
-  "./assets/js/portfolio-fx.js",
+  "./assets/css/geforce-os.min.css",
+  "./assets/js/hole-lightning.min.js",
+  "./assets/js/geforce-os.min.js",
+  "./assets/js/portfolio-fx.min.js",
   "./assets/images/nvda-eye.png",
   "./assets/images/nvda-eye-ui.webp",
   "./assets/images/Microsoft_icon.svg.png",
@@ -19,6 +18,17 @@ const SHELL = [
   "./assets/images/macos-bg-optimized.webp",
   "./assets/images/windows-bg-optimized.webp",
   "./assets/images/hasan-avatar.webp",
+  "./assets/images/vault/ai-disease.webp",
+  "./assets/images/vault/spotify-analysis.webp",
+  "./assets/images/vault/beartracks.webp",
+  "./assets/images/vault/maze-pathfinder.webp",
+  "./assets/images/vault/quantum-genomics.webp",
+  "./assets/images/vault/focusboost.webp",
+  "./assets/images/vault/software-product.webp",
+  "./assets/images/vault/test-automation.webp",
+  "./assets/images/vault/cybersecurity.webp",
+  "./assets/images/vault/github-career.webp",
+  "./assets/images/vault/kuudra-gang.webp",
   "./assets/images/pwa-icon-192.png",
   "./assets/images/pwa-icon-512.png",
 ];

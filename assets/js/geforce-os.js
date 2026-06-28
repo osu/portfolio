@@ -11,16 +11,16 @@
   const isMobile = () => window.matchMedia("(max-width: 768px)").matches;
   let currentOsMode = "split";
   const APP_CATALOG = [
-    { id: "about", icon: "i-user", title: "About", desc: "Profile and background", names: { macos: "Finder", windows: "Portfolio Explorer", nvidia: "Identity Node" } },
+    { id: "about", icon: "i-identity", title: "About", desc: "Profile and background", names: { macos: "Finder", windows: "Portfolio Explorer", nvidia: "Identity Node" } },
     { id: "experience", icon: "i-briefcase", title: "Experience", desc: "Work history", names: { macos: "Work Timeline", windows: "Experience", nvidia: "Mission Log" } },
     { id: "skills", icon: "i-cpu", title: "Skills", desc: "Languages and tools", names: { macos: "System Profiler", windows: "Skills", nvidia: "Capability Matrix" } },
-    { id: "projects", icon: "i-grid", title: "Projects", desc: "Featured builds", names: { macos: "Projects", windows: "Pinned Projects", nvidia: "Build Grid" } },
+    { id: "projects", icon: "i-vault", title: "Asset Vault", desc: "Navigate portfolio artifacts in 3D", names: { macos: "Spatial Finder", windows: "Asset Explorer", nvidia: "Asset Vault" } },
     { id: "certificates", icon: "i-award", title: "Certificates", desc: "Credentials", names: { macos: "Certificates", windows: "Credentials", nvidia: "Trust Store" } },
     { id: "sideprojects", icon: "i-rocket", title: "Side Projects", desc: "Community and experiments", names: { macos: "Side Projects", windows: "Side Projects", nvidia: "Side Quests" } },
     { id: "terminal", icon: "i-terminal", title: "Terminal", desc: "Shell and commands", names: { macos: "Terminal", windows: "PowerShell", nvidia: "DGX Shell" } },
-    { id: "gpu", icon: "i-activity", title: "GPU Stats", desc: "Live graphics telemetry", names: { macos: "Graphics", windows: "Task Manager", nvidia: "GPU Telemetry" } },
+    { id: "gpu", icon: "i-gauge", title: "GPU Stats", desc: "Live graphics telemetry", names: { macos: "Graphics", windows: "Task Manager", nvidia: "GPU Telemetry" } },
     { id: "github", icon: "i-github", title: "GitHub", desc: "Repos and public activity", names: { macos: "GitHub", windows: "GitHub", nvidia: "Repo Feed" } },
-    { id: "diagnostics", icon: "i-activity", title: "Diagnostics", desc: "Fabric and recovery status", names: { macos: "Diagnostics", windows: "Diagnostics", nvidia: "Fabric Diagnostics" } },
+    { id: "diagnostics", icon: "i-diagnostics", title: "Diagnostics", desc: "Fabric and recovery status", names: { macos: "Diagnostics", windows: "Diagnostics", nvidia: "Fabric Diagnostics" } },
     { id: "contact", icon: "i-mail", title: "Contact", desc: "Email and socials", names: { macos: "Contacts", windows: "People", nvidia: "Comms" } },
   ];
 
@@ -31,7 +31,7 @@
   function appTitle(id, mode = currentOsMode) {
     const meta = appMeta(id);
     if (!meta) return id || "";
-    return meta.title;
+    return (meta.names && meta.names[mode]) || meta.title;
   }
 
   function appDescription(id) {
@@ -316,26 +316,43 @@
     const source = video && $("source[data-src]", video);
     if (!video) return;
     const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-    const allowed = mode === "nvidia" && !reduceMotion && !isMobile() && !(connection && connection.saveData);
+    const allowed = mode === "nvidia"
+      && !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      && !isMobile()
+      && !(connection && connection.saveData);
     if (!allowed || document.hidden) {
       video.pause();
+      document.body.classList.remove("wallpaper-video-playing");
       return;
     }
 
-    const play = () => video.play().catch(() => {});
+    const play = () => video.play().catch(() => {
+      document.body.classList.remove("wallpaper-video-playing");
+    });
     if (source && !source.src) {
       source.src = source.dataset.src;
+      video.preload = "auto";
       video.load();
       video.addEventListener("canplay", play, { once: true });
-      return;
     }
     play();
   }
 
   function initWallpaperVideo() {
+    const video = $(".desktop-video");
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
     const start = () => syncWallpaperVideo(currentOsMode);
+    if (video) {
+      video.addEventListener("playing", () => document.body.classList.add("wallpaper-video-playing"));
+      video.addEventListener("waiting", () => document.body.classList.remove("wallpaper-video-playing"));
+      video.addEventListener("error", () => document.body.classList.remove("wallpaper-video-playing"));
+    }
     window.addEventListener("pointerdown", start, { once: true, passive: true });
     window.addEventListener("keydown", start, { once: true });
+    window.addEventListener("resize", start, { passive: true });
+    mediaQuery.addEventListener?.("change", start);
+    connection?.addEventListener?.("change", start);
     document.addEventListener("visibilitychange", () => syncWallpaperVideo(currentOsMode));
   }
 
@@ -507,6 +524,97 @@
   }
 
   /* =============================================================
+     INTERFACE PHYSICS — compositor-friendly light response
+     ============================================================= */
+  const INTERFACE_PHYSICS = (function () {
+    let sample = null;
+
+    function suspended(win) {
+      return reduceMotion
+        || isMobile()
+        || !win
+        || win.classList.contains("is-max")
+        || document.hidden
+        || document.body.matches(".login-active, .pre-iris, .cosmic-armed, .cosmic-active");
+    }
+
+    function setLight(win, metrics) {
+      if (suspended(win)) return;
+      const localX = clamp(metrics.pointerX - metrics.left, 0, metrics.width);
+      const localY = clamp(metrics.pointerY - metrics.top, 0, metrics.height);
+      const centerX = metrics.left + metrics.width / 2;
+      const centerY = metrics.top + metrics.height / 2;
+      const nx = clamp((centerX / Math.max(metrics.desktopWidth, 1)) * 2 - 1, -1, 1);
+      const ny = clamp((centerY / Math.max(metrics.desktopHeight, 1)) * 2 - 1, -1, 1);
+      const now = performance.now();
+      const dt = sample ? Math.max(16, now - sample.time) : 16;
+      const vx = sample ? (metrics.pointerX - sample.x) / dt : 0;
+      const vy = sample ? (metrics.pointerY - sample.y) / dt : 0;
+      sample = { x: metrics.pointerX, y: metrics.pointerY, time: now };
+
+      win.style.setProperty("--physics-light-x", localX.toFixed(1) + "px");
+      win.style.setProperty("--physics-light-y", localY.toFixed(1) + "px");
+      win.style.setProperty("--physics-shadow-x", (nx * 18).toFixed(1) + "px");
+      win.style.setProperty("--physics-shadow-y", (14 + Math.abs(ny) * 13).toFixed(1) + "px");
+      win.style.setProperty("--physics-tilt-x", clamp(-vy * 0.55, -1.8, 1.8).toFixed(2) + "deg");
+      win.style.setProperty("--physics-tilt-y", clamp(vx * 0.55, -1.8, 1.8).toFixed(2) + "deg");
+      window.dispatchEvent(new CustomEvent("portfolio:window-physics", {
+        detail: {
+          id: win.dataset.app,
+          left: metrics.left,
+          top: metrics.top,
+          width: metrics.width,
+          height: metrics.height,
+          vx: Number(vx.toFixed(3)),
+          vy: Number(vy.toFixed(3)),
+        },
+      }));
+    }
+
+    function begin(win, metrics) {
+      sample = { x: metrics.pointerX, y: metrics.pointerY, time: performance.now() };
+      if (suspended(win)) return;
+      window.clearTimeout(win._physicsReleaseTimer);
+      document.body.classList.add("interface-dragging");
+      win.classList.add("is-physics-active", "is-dragging");
+      setLight(win, metrics);
+    }
+
+    function move(win, metrics) {
+      setLight(win, metrics);
+    }
+
+    function end(win) {
+      sample = null;
+      if (!win) return;
+      document.body.classList.remove("interface-dragging");
+      win.classList.remove("is-dragging");
+      window.clearTimeout(win._physicsReleaseTimer);
+      win._physicsReleaseTimer = window.setTimeout(() => win.classList.remove("is-physics-active"), 260);
+    }
+
+    function refresh(win) {
+      if (suspended(win)) return;
+      const desk = $(".desktop");
+      if (!desk) return;
+      const rect = win.getBoundingClientRect();
+      const deskRect = desk.getBoundingClientRect();
+      setLight(win, {
+        left: rect.left - deskRect.left,
+        top: rect.top - deskRect.top,
+        width: rect.width,
+        height: rect.height,
+        desktopWidth: deskRect.width,
+        desktopHeight: deskRect.height,
+        pointerX: deskRect.width * 0.72,
+        pointerY: deskRect.height * 0.14,
+      });
+    }
+
+    return { begin, move, end, refresh };
+  })();
+
+  /* =============================================================
      WINDOW MANAGER
      ============================================================= */
   const WM = (function () {
@@ -592,6 +700,7 @@
       if (id === "gpu" && typeof GPU !== "undefined") GPU.refreshMenubar();
       if (id === "github" && typeof GITHUB_APP !== "undefined") GITHUB_APP.refresh();
       if (id === "diagnostics" && typeof DIAGNOSTICS !== "undefined") DIAGNOSTICS.refresh();
+      if (id === "projects" && typeof ASSET_VAULT !== "undefined") ASSET_VAULT.refresh();
       syncDock();
       window.dispatchEvent(new CustomEvent("portfolio:win-open", { detail: { id } }));
       // move DOM focus into the freshly shown window (terminal manages its own input)
@@ -673,6 +782,7 @@
       const label = $("#mb-app");
       if (label) label.textContent = win.dataset.title || "";
       syncDock();
+      INTERFACE_PHYSICS.refresh(win);
     }
 
     function focusTopMost() {
@@ -715,10 +825,10 @@
       });
     }
 
-    function snapTargetFromPointer(x, y) {
+    function snapTargetFromPointer(x, y, cachedRect) {
       const desk = $(".desktop");
       if (!desk) return null;
-      const rect = desk.getBoundingClientRect();
+      const rect = cachedRect || desk.getBoundingClientRect();
       const edge = 34;
       if (y <= rect.top + edge) return "top";
       if (x <= rect.left + edge) return "left";
@@ -774,24 +884,64 @@
       if (!bar) return;
       let sx, sy, ox, oy, dragging = false;
       let snapTarget = null;
+      let deskRect = null;
+      let deskWidth = 0;
+      let deskHeight = 0;
+      let winWidth = 0;
+      let winHeight = 0;
+      let moveFrame = 0;
+      let pendingMove = null;
+      let currentLeft = 0;
+      let currentTop = 0;
       const dockH = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--dock-h")) || 76;
-      function move(e) {
-        if (!dragging) return;
-        const desk = $(".desktop");
-        const nx = clamp(ox + (e.clientX - sx), -win.offsetWidth + 80, desk.clientWidth - 80);
-        const ny = clamp(oy + (e.clientY - sy), 0, desk.clientHeight - dockH - 24);
-        win.style.left = nx + "px";
-        win.style.top = ny + "px";
-        snapTarget = snapTargetFromPointer(e.clientX, e.clientY);
+      function flushMove() {
+        moveFrame = 0;
+        if (!dragging || !pendingMove) return;
+        const move = pendingMove;
+        pendingMove = null;
+        currentLeft = move.left;
+        currentTop = move.top;
+        win.style.translate = (move.left - ox).toFixed(1) + "px " + (move.top - oy).toFixed(1) + "px";
+        INTERFACE_PHYSICS.move(win, {
+          left: move.left,
+          top: move.top,
+          width: winWidth,
+          height: winHeight,
+          desktopWidth: deskWidth,
+          desktopHeight: deskHeight,
+          pointerX: move.clientX,
+          pointerY: move.clientY,
+        });
+        snapTarget = snapTargetFromPointer(move.clientX, move.clientY, deskRect);
         if (snapTarget) showSnapPreview(snapTarget);
         else hideSnapPreview();
       }
+      function move(e) {
+        if (!dragging) return;
+        pendingMove = {
+          left: clamp(ox + (e.clientX - sx), -winWidth + 80, deskWidth - 80),
+          top: clamp(oy + (e.clientY - sy), 0, deskHeight - dockH - 24),
+          clientX: e.clientX,
+          clientY: e.clientY,
+        };
+        if (!moveFrame) moveFrame = window.requestAnimationFrame(flushMove);
+      }
       const end = (e) => {
         if (dragging) {
+          if (moveFrame) {
+            window.cancelAnimationFrame(moveFrame);
+            moveFrame = 0;
+            flushMove();
+          }
           dragging = false;
+          win.style.left = currentLeft + "px";
+          win.style.top = currentTop + "px";
+          win.style.translate = "none";
           hideSnapPreview();
           if (snapTarget) applySnap(win, snapTarget);
           snapTarget = null;
+          pendingMove = null;
+          INTERFACE_PHYSICS.end(win);
           window.removeEventListener("pointermove", move);
           window.removeEventListener("pointerup", end);
           window.removeEventListener("pointercancel", end);
@@ -804,11 +954,29 @@
         dragging = true;
         sx = e.clientX; sy = e.clientY;
         ox = win.offsetLeft; oy = win.offsetTop;
+        currentLeft = ox;
+        currentTop = oy;
+        const desk = $(".desktop");
+        deskRect = desk.getBoundingClientRect();
+        deskWidth = desk.clientWidth;
+        deskHeight = desk.clientHeight;
+        winWidth = win.offsetWidth;
+        winHeight = win.offsetHeight;
         try { bar.setPointerCapture(e.pointerId); } catch (_) {}
         window.addEventListener("pointermove", move);
         window.addEventListener("pointerup", end);
         window.addEventListener("pointercancel", end);
         focus(win.dataset.app);
+        INTERFACE_PHYSICS.begin(win, {
+          left: ox,
+          top: oy,
+          width: winWidth,
+          height: winHeight,
+          desktopWidth: deskWidth,
+          desktopHeight: deskHeight,
+          pointerX: e.clientX,
+          pointerY: e.clientY,
+        });
       });
       bar.addEventListener("pointermove", move);
       bar.addEventListener("pointerup", end);
@@ -827,22 +995,33 @@
       }
 
       let sx = 0, sy = 0, sw = 0, sh = 0, resizing = false;
+      let maxW = 0, maxH = 0, resizeFrame = 0, pendingSize = null;
+      function flushResize() {
+        resizeFrame = 0;
+        if (!resizing || !pendingSize) return;
+        win.style.width = pendingSize.width.toFixed(0) + "px";
+        win.style.height = pendingSize.height.toFixed(0) + "px";
+        pendingSize = null;
+      }
       function move(e) {
         if (!resizing) return;
-        const desk = $(".desktop");
-        const rect = win.getBoundingClientRect();
-        const deskRect = desk.getBoundingClientRect();
-        const maxW = Math.max(320, deskRect.right - rect.left - 12);
-        const maxH = Math.max(280, deskRect.bottom - rect.top - 12);
-        const nextW = clamp(sw + e.clientX - sx, 320, maxW);
-        const nextH = clamp(sh + e.clientY - sy, 280, maxH);
-        win.style.width = nextW.toFixed(0) + "px";
-        win.style.height = nextH.toFixed(0) + "px";
+        pendingSize = {
+          width: clamp(sw + e.clientX - sx, 320, maxW),
+          height: clamp(sh + e.clientY - sy, 280, maxH),
+        };
+        if (!resizeFrame) resizeFrame = window.requestAnimationFrame(flushResize);
       }
       function end(e) {
         if (!resizing) return;
+        if (resizeFrame) {
+          window.cancelAnimationFrame(resizeFrame);
+          resizeFrame = 0;
+          flushResize();
+        }
         resizing = false;
+        pendingSize = null;
         win.classList.remove("is-resizing");
+        INTERFACE_PHYSICS.refresh(win);
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", end);
         window.removeEventListener("pointercancel", end);
@@ -857,6 +1036,10 @@
         sy = e.clientY;
         sw = win.offsetWidth;
         sh = win.offsetHeight;
+        const deskRect = $(".desktop").getBoundingClientRect();
+        const winRect = win.getBoundingClientRect();
+        maxW = Math.max(320, deskRect.right - winRect.left - 12);
+        maxH = Math.max(280, deskRect.bottom - winRect.top - 12);
         handle.setPointerCapture(e.pointerId);
         focus(win.dataset.app);
         win.classList.add("is-resizing");
@@ -1384,17 +1567,18 @@
      GLOBAL "open app" hooks + keyboard
      ============================================================= */
   function globalHooks() {
-    $$("[data-open-app]").forEach((el) => {
-      el.addEventListener("click", (e) => {
+    document.addEventListener("click", (e) => {
+      const openApp = e.target.closest("[data-open-app]");
+      if (openApp) {
         e.preventDefault();
-        WM.open(el.dataset.openApp);
-      });
-    });
-    $$("[data-action]").forEach((el) => {
-      el.addEventListener("click", (e) => {
+        WM.open(openApp.dataset.openApp);
+        return;
+      }
+      const action = e.target.closest("[data-action]");
+      if (action) {
         e.preventDefault();
-        runSystemAction(el.dataset.action);
-      });
+        runSystemAction(action.dataset.action);
+      }
     });
     document.addEventListener("keydown", (e) => {
       if (trapSystemOverlayFocus(e)) return;
@@ -1568,8 +1752,8 @@
   const UNIVERSAL_SEARCH = (function () {
     let el, input, results, variant = "spotlight";
     const actions = [
-      { id: "mission", title: "Mission Control", desc: "Show all open panes", icon: "i-grid", action: "mission", keywords: "expose overview task view" },
-      { id: "launcher", title: "Launchpad", desc: "Open the app launcher", icon: "i-rocket", action: "launcher", keywords: "start apps" },
+      { id: "mission", title: "Mission Control", desc: "Show all open panes", icon: "i-mission", action: "mission", keywords: "expose overview task view" },
+      { id: "launcher", title: "Launchpad", desc: "Open the app launcher", icon: "i-launchpad", action: "launcher", keywords: "start apps" },
       { id: "demo", title: "Project Demo Mode", desc: "Walk through the portfolio", icon: "i-award", action: "demo", keywords: "presentation tour" },
     ];
     function init() {
@@ -1673,8 +1857,8 @@
       { id: "gpu", title: "Open GPU Telemetry", desc: "Live GPU gauges", icon: "i-activity", action: "app", keywords: "nvidia smi stats" },
       { id: "github", title: "Open Repo Feed", desc: "Fetch public GitHub activity", icon: "i-github", action: "app", keywords: "repos code" },
       { id: "terminal", title: "Open DGX Shell", desc: "Run terminal commands", icon: "i-terminal", action: "app", keywords: "console shell" },
-      { id: "mission", title: "Mission Control", desc: "Show open panes", icon: "i-grid", action: "mission", keywords: "overview" },
-      { id: "launcher", title: "Open App Launcher", desc: "Grid of portfolio apps", icon: "i-rocket", action: "launcher", keywords: "apps launchpad" },
+      { id: "mission", title: "Mission Control", desc: "Show open panes", icon: "i-mission", action: "mission", keywords: "overview" },
+      { id: "launcher", title: "Open App Launcher", desc: "Grid of portfolio apps", icon: "i-launchpad", action: "launcher", keywords: "apps launchpad" },
       { id: "demo", title: "Run Project Demo", desc: "Sequence the portfolio for presentation", icon: "i-award", action: "demo", keywords: "tour" },
     ];
     function init() {
@@ -1759,27 +1943,442 @@
   }
 
   /* =============================================================
-     PROJECT FILTERS
+     ASSET VAULT — spatial portfolio explorer
      ============================================================= */
-  function projectFilters() {
-    const btns = $$(".filter-btn");
-    btns.forEach((b) => {
-      b.setAttribute("aria-pressed", b.classList.contains("active") ? "true" : "false");
-      b.addEventListener("click", () => {
-        btns.forEach((x) => {
-          x.classList.remove("active");
-          x.setAttribute("aria-pressed", "false");
-        });
-        b.classList.add("active");
-        b.setAttribute("aria-pressed", "true");
-        const f = b.dataset.filter;
-        $$(".proj").forEach((p) => {
-          const cats = (p.dataset.category || "").toLowerCase();
-          p.classList.toggle("is-hidden", !(f === "all" || cats.includes(f)));
+  const ASSET_VAULT = (function () {
+    const ROOT_LOCATIONS = [
+      { id: "projects", kind: "folder", title: "Projects", subtitle: "6 build artifacts", description: "Production work, experiments, and accelerated-computing projects.", path: "/projects", icon: "i-vault", tone: "green" },
+      { id: "credentials", kind: "folder", title: "Credentials", subtitle: "4 verified records", description: "Selected certifications and professional learning records.", path: "/credentials", icon: "i-award", tone: "cyan" },
+      { id: "systems", kind: "folder", title: "Systems", subtitle: "4 live modules", description: "Open the telemetry, diagnostics, terminal, and repository subsystems.", path: "/systems", icon: "i-cpu", tone: "amber" },
+      { id: "community", kind: "folder", title: "Community", subtitle: "1 world", description: "Communities and side projects built beyond the workstation.", path: "/community", icon: "i-rocket", tone: "violet" },
+    ];
+    const DATA = {
+      "/": ROOT_LOCATIONS,
+      "/projects": [
+        { id: "xray-detection", kind: "asset", title: "AI Disease Detection", subtitle: "Neural inference package", description: "Deep-learning X-ray disease detection with an optimized OpenVINO inference path.", stack: "Python · TensorFlow · OpenVINO", image: "./assets/images/projects/AI.png", thumb: "./assets/images/vault/ai-disease.webp", href: "https://github.com/osu/AI-Powered-Disease-Detection-in-X-Ray-Images", format: "MODEL", size: "1.8 GB", tone: "green" },
+        { id: "spotify-analysis", kind: "asset", title: "Spotify Analysis", subtitle: "Data scene", description: "Exploratory analysis of Spotify's top songs with a reproducible SQL and Python pipeline.", stack: "SQL · Python · matplotlib", image: "./assets/images/projects/sql.png", thumb: "./assets/images/vault/spotify-analysis.webp", href: "https://github.com/osu/Spotify-Top-Songs-2021-Data-Analysis", format: "DATA", size: "420 MB", tone: "cyan" },
+        { id: "beartracks", kind: "asset", title: "Mini BearTracks", subtitle: "Application build", description: "A fast timetable-management experience built around Streamlit and Pandas.", stack: "Python · Streamlit · Pandas", image: "./assets/images/projects/beartrack.jpeg", thumb: "./assets/images/vault/beartracks.webp", href: "https://github.com/osu/Beartracks/", format: "APP", size: "680 MB", tone: "amber" },
+        { id: "maze-pathfinder", kind: "asset", title: "Maze Pathfinder", subtitle: "Interactive simulation", description: "A browser-based pathfinding visualizer for exploring graph-search algorithms.", stack: "JavaScript · HTML · CSS", image: "./assets/images/projects/Maze.jpeg", thumb: "./assets/images/vault/maze-pathfinder.webp", href: "https://github.com/osu/Maze-Pathfinder", format: "SCENE", size: "96 MB", tone: "violet" },
+        { id: "quantum-genomics", kind: "asset", title: "Quantum Genomics", subtitle: "Research notebook", description: "Quantum neural-network exploration for genomic pattern detection from an Intel hackathon.", stack: "Python · Jupyter · QNN", image: "./assets/images/projects/Normal%20vs%20AIPC%20enchanced%20matrixes.png", thumb: "./assets/images/vault/quantum-genomics.webp", href: "https://github.com/adnansami1992sami/QNNGPD", format: "NOTEBOOK", size: "310 MB", tone: "cyan" },
+        { id: "focusboost", kind: "asset", title: "FocusBoost", subtitle: "Real-time EEG system", description: "An EEG productivity app that turns live neural signals into actionable focus feedback.", stack: "Electron · JavaScript · Python", image: "./assets/images/projects/focusboost.webp", thumb: "./assets/images/vault/focusboost.webp", href: "https://github.com/daksh3333/Neuro-Stress-Monitor", format: "APP", size: "1.2 GB", tone: "green" },
+      ],
+      "/credentials": [
+        { id: "software-product", kind: "asset", title: "Software Product Management", subtitle: "University of Alberta", description: "Product strategy, requirements, process, and delivery specialization.", image: "./assets/images/certificates/softwarespec.jpeg", thumb: "./assets/images/vault/software-product.webp", href: "https://www.coursera.org/account/accomplishments/specialization/XJSN1YN4D0VK", format: "CERT", size: "Verified", tone: "green" },
+        { id: "test-automation", kind: "asset", title: "Test Automation Professional", subtitle: "LambdaTest", description: "Automation design, scalable coverage, and reliable delivery workflows.", image: "./assets/images/certificates/lambdatest.jpeg", thumb: "./assets/images/vault/test-automation.webp", href: "https://www.linkedin.com/learning/certificates/62071e091fb90401a5378c6ebe1dc04880c8d74dd9dca21405d00d68dda56cac", format: "CERT", size: "Verified", tone: "cyan" },
+        { id: "cybersecurity", kind: "asset", title: "Cybersecurity Essentials", subtitle: "Microsoft · LinkedIn", description: "Security fundamentals, risk, identity, and operational defense practices.", image: "./assets/images/certificates/Cybersec_microsoft.jpeg", thumb: "./assets/images/vault/cybersecurity.webp", href: "https://www.linkedin.com/learning/certificates/4aa644556bb204964e44d860ef3a21bc502fb6d133d023ce00ad200c31cf47f0", format: "CERT", size: "Verified", tone: "amber" },
+        { id: "github-career", kind: "asset", title: "GitHub Career Essentials", subtitle: "GitHub · LinkedIn", description: "Collaborative development, repository workflows, and GitHub tooling.", image: "./assets/images/certificates/github.jpeg", thumb: "./assets/images/vault/github-career.webp", href: "https://www.linkedin.com/learning/certificates/feb078c04d2cd23003d5fd1c547ef27400c236179a0a3a29a11d213895a16a38", format: "CERT", size: "Verified", tone: "violet" },
+      ],
+      "/systems": [
+        { id: "gpu-telemetry", kind: "app", title: "GPU Telemetry", subtitle: "Live Blackwell metrics", description: "Inspect utilization, memory, thermal, power, and clock telemetry.", target: "gpu", icon: "i-gauge", format: "MODULE", size: "LIVE", tone: "green" },
+        { id: "fabric-diagnostics", kind: "app", title: "Fabric Diagnostics", subtitle: "Recovery console", description: "Inspect fabric health and autonomous recovery signals.", target: "diagnostics", icon: "i-diagnostics", format: "MODULE", size: "LIVE", tone: "cyan" },
+        { id: "dgx-shell", kind: "app", title: "DGX Shell", subtitle: "Command interface", description: "Open the interactive terminal and explore portfolio commands.", target: "terminal", icon: "i-terminal", format: "MODULE", size: "READY", tone: "amber" },
+        { id: "repo-feed", kind: "app", title: "Repository Feed", subtitle: "GitHub activity", description: "Browse repositories and public engineering activity.", target: "github", icon: "i-github", format: "MODULE", size: "SYNC", tone: "violet" },
+      ],
+      "/community": [
+        { id: "kuudra-gang", kind: "asset", title: "Kuudra Gang", subtitle: "45,000+ member community", description: "A large Minecraft community built from scratch with partnerships, events, and 200+ paid Patreon members.", stack: "Community · Partnerships · Operations", image: "./assets/images/projects/kuudragang.webp", thumb: "./assets/images/vault/kuudra-gang.webp", href: "https://www.patreon.com/kuudragang", format: "WORLD", size: "45K MEMBERS", tone: "violet" },
+      ],
+    };
+    const PATH_LABELS = { projects: "Projects", credentials: "Credentials", systems: "Systems", community: "Community" };
+    const state = { path: "/", history: ["/"], historyIndex: 0, selectedId: null, query: "", view: "spatial", visibleIds: [] };
+    let root = null;
+    let stageFrame = 0;
+
+    function currentItems() {
+      const items = DATA[state.path] || [];
+      const query = state.query.trim().toLowerCase();
+      return query
+        ? items.filter((item) => [item.title, item.subtitle, item.description, item.stack, item.format].join(" ").toLowerCase().includes(query))
+        : items;
+    }
+
+    function itemById(id) {
+      return (DATA[state.path] || []).find((item) => item.id === id) || null;
+    }
+
+    function emit(name, detail) {
+      window.dispatchEvent(new CustomEvent(name, { detail }));
+    }
+
+    function snapshot() {
+      return {
+        path: state.path,
+        history: state.history.slice(),
+        historyIndex: state.historyIndex,
+        selectedId: state.selectedId,
+        query: state.query,
+        view: state.view,
+        visibleIds: state.visibleIds.slice(),
+      };
+    }
+
+    function emitChange(reason) {
+      emit("portfolio:vault-change", { ...snapshot(), reason });
+    }
+
+    function renderBreadcrumb() {
+      const target = $("[data-vault-breadcrumb]", root);
+      if (!target) return;
+      const parts = state.path.split("/").filter(Boolean);
+      const crumbs = [{ label: "Vault", path: "/" }];
+      let path = "";
+      parts.forEach((part) => {
+        path += "/" + part;
+        crumbs.push({ label: PATH_LABELS[part] || part, path });
+      });
+      target.innerHTML = crumbs.map((crumb, index) => (
+        "<button type='button' data-vault-path='" + escapePlain(crumb.path) + "'" + (index === crumbs.length - 1 ? " aria-current='page'" : "") + ">" +
+        escapePlain(crumb.label) + "</button>" + (index < crumbs.length - 1 ? "<span>/</span>" : "")
+      )).join("");
+    }
+
+    function renderSidebar() {
+      const target = $("[data-vault-sidebar]", root);
+      if (!target) return;
+      target.innerHTML = [
+        "<span class='vault-sidebar-label'>LOCATIONS</span>",
+        "<button type='button' data-vault-path='/' class='" + (state.path === "/" ? "is-active" : "") + "'" + (state.path === "/" ? " aria-current='page'" : "") + ">" + iconUse("i-vault") + "<span>Vault root</span><em>04</em></button>",
+      ].concat(ROOT_LOCATIONS.map((item) => (
+        "<button type='button' data-vault-path='" + item.path + "' class='" + (state.path === item.path ? "is-active" : "") + "'" + (state.path === item.path ? " aria-current='page'" : "") + ">" +
+        iconUse(item.icon) + "<span>" + escapePlain(item.title) + "</span><em>" + String((DATA[item.path] || []).length).padStart(2, "0") + "</em></button>"
+      ))).join("");
+      const active = $(".is-active", target);
+      if (active && isMobile()) {
+        window.requestAnimationFrame(() => target.scrollTo({
+          left: Math.max(0, active.offsetLeft - (target.clientWidth - active.offsetWidth) / 2),
+          behavior: reduceMotion ? "auto" : "smooth",
+        }));
+      }
+    }
+
+    function nodeVisual(item) {
+      const thumbnail = item.thumb || item.image;
+      if (thumbnail) {
+        return "<span class='vault-node-visual vault-node-image'><img data-src='" + escapePlain(thumbnail) + "' alt='' decoding='async' loading='lazy'></span>";
+      }
+      if (item.kind === "folder") {
+        return "<span class='vault-node-visual vault-folder-form' aria-hidden='true'><i></i><i></i><i></i>" + iconUse(item.icon) + "</span>";
+      }
+      return "<span class='vault-node-visual vault-app-form' aria-hidden='true'>" + iconUse(item.icon || "i-grid") + "<i></i></span>";
+    }
+
+    function renderItems(options = {}) {
+      const target = $("[data-vault-items]", root);
+      if (!target) return;
+      const items = currentItems();
+      state.visibleIds = items.map((item) => item.id);
+      if (state.selectedId && !state.visibleIds.includes(state.selectedId)) state.selectedId = null;
+      target.innerHTML = items.map((item, index) => {
+        const selected = item.id === state.selectedId;
+        const row = Math.floor(index / 2);
+        const column = index % 2;
+        const depth = 132 - row * 60 - column * 20;
+        const lean = column ? -7.5 : 7.5;
+        const tabbable = selected || (!state.selectedId && index === 0);
+        return "<li data-vault-item='" + escapePlain(item.id) + "' class='" + (selected ? "is-selected" : "") + "' style='--vault-index:" + index + ";--vault-row:" + row + ";--vault-depth:" + depth + "px;--vault-lean:" + lean + "deg'>" +
+          "<button class='vault-node vault-tone-" + escapePlain(item.tone || "green") + "' type='button' tabindex='" + (tabbable ? "0" : "-1") + "' data-vault-id='" + escapePlain(item.id) + "' data-vault-kind='" + escapePlain(item.kind) + "' aria-pressed='" + (selected ? "true" : "false") + "'>" +
+          nodeVisual(item) +
+          "<span class='vault-node-copy'><strong>" + escapePlain(item.title) + "</strong><small>" + escapePlain(item.subtitle || item.kind) + "</small></span>" +
+          "<span class='vault-node-meta'>" + escapePlain(item.format || (item.kind === "folder" ? "DIR" : "ASSET")) + "</span>" +
+          "</button></li>";
+      }).join("") || "<li class='vault-empty-state'><strong>No artifacts found</strong><span>Try a different search term.</span></li>";
+      hydrateDeferredMedia(root);
+      renderPreview();
+      renderStatus();
+      if (options.focusFirst) {
+        const first = $(".vault-node", target);
+        if (first) first.focus({ preventScroll: true });
+      }
+    }
+
+    function renderPreview() {
+      const target = $("[data-vault-preview]", root);
+      if (!target) return;
+      const item = itemById(state.selectedId);
+      if (!item) {
+        target.innerHTML = "<div class='vault-preview-empty'><span>OPTICAL PREVIEW</span><strong>Select an artifact</strong><p>Inspect metadata and launch compatible portfolio modules from this panel.</p></div>";
+        return;
+      }
+      const previewImage = item.thumb || item.image;
+      const media = previewImage
+        ? "<div class='vault-preview-media'><img data-src='" + escapePlain(previewImage) + "' alt='" + escapePlain(item.title) + " preview' decoding='async'><span>RTX PREVIEW</span></div>"
+        : "<div class='vault-preview-media vault-preview-module'>" + iconUse(item.icon || "i-grid") + "<span>LIVE MODULE</span></div>";
+      const action = item.kind === "folder"
+        ? "<button class='btn btn-primary' type='button' data-vault-preview-action='open'>Open location</button>"
+        : (item.kind === "app"
+          ? "<button class='btn btn-primary' type='button' data-vault-preview-action='launch'>Launch module</button>"
+          : (item.href ? "<a class='btn btn-primary' href='" + escapePlain(item.href) + "' target='_blank' rel='noopener'>Open source</a>" : ""));
+      target.innerHTML = media +
+        "<div class='vault-preview-copy'><span class='vault-preview-kicker'>" + escapePlain(item.format || item.kind) + " // " + escapePlain(item.size || "READY") + "</span>" +
+        "<h3>" + escapePlain(item.title) + "</h3><p>" + escapePlain(item.description || "Portfolio artifact") + "</p>" +
+        (item.stack ? "<div class='vault-preview-stack'>" + escapePlain(item.stack) + "</div>" : "") +
+        "<div class='vault-preview-actions'>" + action + "</div></div>";
+      hydrateDeferredMedia(target);
+    }
+
+    function renderStatus() {
+      const target = $("[data-vault-status]", root);
+      if (!target) return;
+      const count = state.visibleIds.length;
+      target.innerHTML = "<span>VAULT MOUNTED</span><strong>" + count + " " + (count === 1 ? "artifact" : "artifacts") + "</strong><em>RTX PREVIEW · LOCAL INDEX</em>";
+    }
+
+    function syncControls() {
+      if (!root) return;
+      root.dataset.vaultPath = state.path;
+      root.dataset.vaultZone = state.path === "/" ? "root" : state.path.slice(1);
+      root.dataset.vaultView = state.view;
+      const back = $("[data-vault-action='back']", root);
+      const forward = $("[data-vault-action='forward']", root);
+      const upButton = $("[data-vault-action='up']", root);
+      const view = $("[data-vault-action='view']", root);
+      if (back) back.disabled = state.historyIndex <= 0;
+      if (forward) forward.disabled = state.historyIndex >= state.history.length - 1;
+      if (upButton) upButton.disabled = state.path === "/";
+      if (view) {
+        view.setAttribute("aria-pressed", state.view === "list" ? "true" : "false");
+        view.textContent = state.view === "list" ? "Spatial view" : "List view";
+      }
+    }
+
+    function render(reason = "render", options = {}) {
+      if (!root) return;
+      const search = $("[data-vault-search]", root);
+      if (search && search.value !== state.query) search.value = state.query;
+      renderBreadcrumb();
+      renderSidebar();
+      renderItems(options);
+      syncControls();
+      emitChange(reason);
+    }
+
+    function resetViewport() {
+      if (!root) return;
+      const previousBehavior = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+      const stage = $("[data-vault-stage]", root);
+      const preview = $("[data-vault-preview]", root);
+      if (stage) stage.scrollTop = 0;
+      if (preview) preview.scrollTop = 0;
+      window.requestAnimationFrame(() => {
+        root.scrollTop = 0;
+        root.style.scrollBehavior = previousBehavior;
+      });
+    }
+
+    function finishPathTransition(from, reason) {
+      window.requestAnimationFrame(() => {
+        resetViewport();
+        emit("portfolio:vault-transition", { phase: "end", from, to: state.path, reason });
+      });
+    }
+
+    function navigate(path, options = {}) {
+      if (!DATA[path]) return false;
+      const from = state.path;
+      const reason = options.reason || "navigate";
+      emit("portfolio:vault-transition", { phase: "start", from, to: path, reason });
+      if (path !== state.path) {
+        if (options.fromHistory !== true) {
+          state.history = state.history.slice(0, state.historyIndex + 1);
+          state.history.push(path);
+          state.historyIndex = state.history.length - 1;
+        }
+        state.path = path;
+      }
+      state.selectedId = null;
+      state.query = "";
+      const search = root && $("[data-vault-search]", root);
+      if (search) search.value = "";
+      render(reason, { focusFirst: options.focusFirst === true });
+      finishPathTransition(from, reason);
+      return true;
+    }
+
+    function back() {
+      if (state.historyIndex <= 0) return;
+      const from = state.path;
+      const to = state.history[state.historyIndex - 1];
+      emit("portfolio:vault-transition", { phase: "start", from, to, reason: "back" });
+      state.historyIndex -= 1;
+      state.path = state.history[state.historyIndex];
+      state.selectedId = null;
+      state.query = "";
+      render("back", { focusFirst: true });
+      finishPathTransition(from, "back");
+    }
+
+    function forward() {
+      if (state.historyIndex >= state.history.length - 1) return;
+      const from = state.path;
+      const to = state.history[state.historyIndex + 1];
+      emit("portfolio:vault-transition", { phase: "start", from, to, reason: "forward" });
+      state.historyIndex += 1;
+      state.path = state.history[state.historyIndex];
+      state.selectedId = null;
+      state.query = "";
+      render("forward", { focusFirst: true });
+      finishPathTransition(from, "forward");
+    }
+
+    function up() {
+      if (state.path === "/") return;
+      navigate("/", { reason: "up", focusFirst: true });
+    }
+
+    function select(id, options = {}) {
+      const item = itemById(id);
+      if (!item) return;
+      state.selectedId = id;
+      $$(".vault-node", root).forEach((node) => {
+        const active = node.dataset.vaultId === id;
+        node.setAttribute("aria-pressed", active ? "true" : "false");
+        node.tabIndex = active ? 0 : -1;
+        node.closest("[data-vault-item]")?.classList.toggle("is-selected", active);
+      });
+      renderPreview();
+      if (options.focus) {
+        const node = $(".vault-node[data-vault-id='" + id + "']", root);
+        if (node) node.focus({ preventScroll: true });
+      }
+      if (options.reveal && isMobile()) {
+        const preview = $("[data-vault-preview]", root);
+        if (preview) window.requestAnimationFrame(() => preview.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" }));
+      }
+      emit("portfolio:vault-select", { path: state.path, id: item.id, kind: item.kind });
+      emitChange("select");
+    }
+
+    function activate(id, source = "node") {
+      const item = itemById(id);
+      if (!item) return;
+      if (item.kind === "folder") navigate(item.path, { reason: "activate", focusFirst: true });
+      else if (item.kind === "app" && item.target) WM.open(item.target);
+      else select(id);
+      emit("portfolio:vault-activate", { path: state.path, id: item.id, kind: item.kind, target: item.path || item.target || item.href || "", source });
+    }
+
+    function setQuery(value) {
+      state.query = value || "";
+      renderItems();
+      emitChange("search");
+    }
+
+    function toggleView() {
+      state.view = state.view === "spatial" ? "list" : "spatial";
+      syncControls();
+      emitChange("view");
+    }
+
+    function rove(event, node) {
+      const nodes = $$(".vault-node", root);
+      if (!nodes.length) return;
+      const index = Math.max(0, nodes.indexOf(node));
+      const columns = state.view === "list" || isMobile() ? 1 : 2;
+      let nextIndex = index;
+      if (event.key === "ArrowRight") nextIndex = Math.min(nodes.length - 1, index + 1);
+      else if (event.key === "ArrowLeft") nextIndex = Math.max(0, index - 1);
+      else if (event.key === "ArrowDown") nextIndex = Math.min(nodes.length - 1, index + columns);
+      else if (event.key === "ArrowUp") nextIndex = Math.max(0, index - columns);
+      else if (event.key === "Home") nextIndex = 0;
+      else if (event.key === "End") nextIndex = nodes.length - 1;
+      else if (event.key === " " || event.key === "Enter") {
+        event.preventDefault();
+        if (event.key === "Enter") activate(node.dataset.vaultId, "keyboard");
+        else select(node.dataset.vaultId);
+        return;
+      } else return;
+      event.preventDefault();
+      nodes.forEach((item, itemIndex) => { item.tabIndex = itemIndex === nextIndex ? 0 : -1; });
+      nodes[nextIndex].focus({ preventScroll: true });
+      select(nodes[nextIndex].dataset.vaultId);
+    }
+
+    function bindStageTilt() {
+      const stage = $("[data-vault-stage]", root);
+      if (!stage) return;
+      let stageRect = null;
+      let pendingTilt = null;
+      const measure = () => { stageRect = stage.getBoundingClientRect(); };
+      stage.addEventListener("pointerenter", measure, { passive: true });
+      stage.addEventListener("pointermove", (event) => {
+        if (reduceMotion || isMobile() || state.view === "list") return;
+        if (!stageRect) measure();
+        pendingTilt = {
+          x: clamp((event.clientX - stageRect.left) / stageRect.width, 0, 1),
+          y: clamp((event.clientY - stageRect.top) / stageRect.height, 0, 1),
+        };
+        if (stageFrame) return;
+        stageFrame = window.requestAnimationFrame(() => {
+          stageFrame = 0;
+          if (!pendingTilt) return;
+          const { x, y } = pendingTilt;
+          pendingTilt = null;
+          root.style.setProperty("--vault-tilt-x", ((0.5 - y) * 4.5).toFixed(2) + "deg");
+          root.style.setProperty("--vault-tilt-y", ((x - 0.5) * 6).toFixed(2) + "deg");
+          root.style.setProperty("--vault-light-x", (x * 100).toFixed(1) + "%");
+          root.style.setProperty("--vault-light-y", (y * 100).toFixed(1) + "%");
         });
       });
-    });
-  }
+      stage.addEventListener("pointerleave", () => {
+        window.cancelAnimationFrame(stageFrame);
+        stageFrame = 0;
+        stageRect = null;
+        pendingTilt = null;
+        root.style.setProperty("--vault-tilt-x", "0deg");
+        root.style.setProperty("--vault-tilt-y", "0deg");
+      });
+      window.addEventListener("resize", () => { stageRect = null; }, { passive: true });
+    }
+
+    function bindEvents() {
+      root.addEventListener("click", (event) => {
+        const node = event.target.closest("[data-vault-id]");
+        const pathButton = event.target.closest("button[data-vault-path]");
+        const action = event.target.closest("[data-vault-action]");
+        const previewAction = event.target.closest("[data-vault-preview-action]");
+        if (node) {
+          const kind = node.dataset.vaultKind;
+          if (kind === "folder" || kind === "app") activate(node.dataset.vaultId, isMobile() ? "touch" : "pointer");
+          else select(node.dataset.vaultId, { reveal: isMobile() });
+        }
+        else if (pathButton) navigate(pathButton.dataset.vaultPath, { reason: "location" });
+        else if (action) {
+          if (action.dataset.vaultAction === "back") back();
+          else if (action.dataset.vaultAction === "forward") forward();
+          else if (action.dataset.vaultAction === "up") up();
+          else if (action.dataset.vaultAction === "view") toggleView();
+        } else if (previewAction && state.selectedId) activate(state.selectedId, "preview");
+      });
+      root.addEventListener("keydown", (event) => {
+        const node = event.target.closest("[data-vault-id]");
+        if (node) rove(event, node);
+        else if (event.key === "Backspace" && event.target !== $("[data-vault-search]", root)) {
+          event.preventDefault();
+          up();
+        }
+      });
+      const search = $("[data-vault-search]", root);
+      if (search) search.addEventListener("input", () => setQuery(search.value));
+      bindStageTilt();
+    }
+
+    function init() {
+      root = $("[data-vault-root]");
+      if (!root) return;
+      bindEvents();
+      render("init");
+    }
+
+    function refresh() {
+      if (!root) return;
+      renderPreview();
+      syncControls();
+    }
+
+    return { init, refresh, navigate, back, forward, up, select, activate, setQuery, toggleView, snapshot };
+  })();
 
   /* =============================================================
      CERTIFICATE LIGHTBOX
@@ -2945,6 +3544,66 @@
       });
     }
 
+    function createDigitalIris(impactX, impactY, lowQuality = false) {
+      const fragment = document.createDocumentFragment();
+      const setImpact = (element) => {
+        element.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
+        element.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
+      };
+
+      const aperture = document.createElement("div");
+      aperture.className = "bigbang-iris digital-iris-aperture";
+      aperture.classList.toggle("is-low-quality", lowQuality);
+      aperture.dataset.bigbangLayer = "digital-iris";
+      setImpact(aperture);
+      aperture.innerHTML = [
+        "<div class='bigbang-iris-ring'></div>",
+        "<div class='digital-iris-hud' aria-hidden='true'><i></i><i></i><i></i><i></i></div>",
+        "<div class='digital-iris-reticle' aria-hidden='true'><span></span><span></span><span></span><span></span></div>",
+        "<span class='digital-iris-readout digital-iris-readout--left'>OPTIC / 01<small>APERTURE SYNC</small></span>",
+        "<span class='digital-iris-readout digital-iris-readout--right'>IRIS LINK<small>IDENTITY READY</small></span>",
+      ].join("");
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const angle = (i * (360 / IRIS_BLADES)).toFixed(2) + "deg";
+        const spoke = document.createElement("span");
+        spoke.className = "bigbang-iris-spoke";
+        spoke.style.setProperty("--blade-i", String(i));
+        spoke.style.setProperty("--blade-angle", angle);
+        const blade = document.createElement("span");
+        blade.className = "bigbang-iris-blade";
+        blade.style.setProperty("--blade-i", String(i));
+        blade.style.setProperty("--blade-angle", angle);
+        aperture.append(spoke, blade);
+      }
+      const pupil = document.createElement("span");
+      pupil.className = "bigbang-iris-pupil";
+      aperture.appendChild(pupil);
+      fragment.appendChild(aperture);
+
+      const scanner = document.createElement("div");
+      scanner.className = "bigbang-nvidia-eye iris-boot-scanner digital-iris-scanner";
+      scanner.dataset.bigbangLayer = "nvidia-formation";
+      setImpact(scanner);
+      scanner.innerHTML = [
+        "<div class='iris-boot-housing'></div>",
+        "<div class='iris-boot-blades'></div>",
+        "<div class='iris-boot-scanline'></div>",
+        "<span class='digital-iris-core' aria-hidden='true'></span>",
+        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye-ui.webp' alt='' width='75' height='42'>",
+        "<span class='digital-iris-lock' aria-hidden='true'>IRIS // VERIFIED</span>",
+      ].join("");
+      const blades = $(".iris-boot-blades", scanner);
+      for (let i = 0; i < IRIS_BLADES; i++) {
+        const blade = document.createElement("span");
+        blade.className = "iris-boot-blade";
+        blade.style.setProperty("--blade-i", String(i));
+        blade.style.setProperty("--blade-angle", (i * (360 / IRIS_BLADES)).toFixed(2) + "deg");
+        blades.appendChild(blade);
+      }
+      fragment.appendChild(scanner);
+      return fragment;
+    }
+
     function createBigBangOverlay(cx, cy) {
       const deskRect = desk.getBoundingClientRect();
       const impactX = deskRect.left + cx;
@@ -2956,7 +3615,6 @@
       overlay.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
       overlay.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       const lowQuality = useLowEffectsQuality();
-      const webglCandidate = !lowQuality && !reduceMotion && typeof IRIS_WEBGL !== "undefined";
 
       [
         ["bigbang-void", "void"],
@@ -3043,36 +3701,7 @@
         overlay.appendChild(ripple);
       });
 
-      const iris = document.createElement("div");
-      iris.className = "bigbang-iris";
-      iris.dataset.bigbangLayer = "iris";
-      iris.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
-      iris.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
-
-      const irisRing = document.createElement("div");
-      irisRing.className = "bigbang-iris-ring";
-      iris.appendChild(irisRing);
-
-      for (let i = 0; i < IRIS_BLADES; i++) {
-        const angle = (i / IRIS_BLADES) * 360;
-        const spoke = document.createElement("div");
-        spoke.className = "bigbang-iris-spoke";
-        spoke.style.setProperty("--blade-i", String(i));
-        spoke.style.setProperty("--blade-angle", angle + "deg");
-        iris.appendChild(spoke);
-
-        const blade = document.createElement("div");
-        blade.className = "bigbang-iris-blade";
-        blade.style.setProperty("--blade-i", String(i));
-        blade.style.setProperty("--blade-angle", angle + "deg");
-        iris.appendChild(blade);
-      }
-
-      const pupil = document.createElement("div");
-      pupil.className = "bigbang-iris-pupil";
-      iris.appendChild(pupil);
-
-      overlay.appendChild(iris);
+      overlay.appendChild(createDigitalIris(impactX, impactY, lowQuality));
 
       const marketChart = document.createElement("div");
       marketChart.className = "bigbang-market-chart";
@@ -3098,41 +3727,8 @@
       core.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
       overlay.appendChild(core);
 
-      const eye = document.createElement("div");
-      eye.className = "bigbang-nvidia-eye iris-boot-scanner";
-      eye.dataset.bigbangLayer = "nvidia-formation";
-      eye.style.setProperty("--impact-x", impactX.toFixed(2) + "px");
-      eye.style.setProperty("--impact-y", impactY.toFixed(2) + "px");
-      eye.innerHTML = [
-        "<div class='iris-boot-housing'></div>",
-        "<div class='iris-boot-blades'></div>",
-        "<div class='iris-boot-scanline'></div>",
-        "<img class='iris-boot-pupil' src='./assets/images/nvda-eye-ui.webp' alt='' width='32' height='18'>",
-      ].join("");
-      const eyeBlades = $(".iris-boot-blades", eye);
-      for (let i = 0; i < IRIS_BLADES; i++) {
-        const blade = document.createElement("div");
-        blade.className = "iris-boot-blade";
-        blade.style.setProperty("--blade-angle", (i * (360 / IRIS_BLADES)) + "deg");
-        eyeBlades.appendChild(blade);
-      }
-      overlay.appendChild(eye);
-
       document.body.appendChild(overlay);
       mountUniverseBurst(overlay, impactX, impactY, lowQuality);
-
-      if (webglCandidate) {
-        let webglMounted = false;
-        try {
-          webglMounted = IRIS_WEBGL.mount(overlay, impactX, impactY);
-        } catch (error) {
-          console.warn("WebGL IRIS fallback engaged", error);
-        }
-        if (webglMounted) {
-          overlay.classList.add("cosmic-bigbang--webgl");
-          iris.classList.add("bigbang-iris--webgl");
-        }
-      }
 
       scheduleBigBangPhases(overlay, cx, cy);
       window.setTimeout(() => overlay.remove(), BIG_BANG_DURATION + 500);
@@ -3787,7 +4383,7 @@
     taskbarPlacement();
     globalHooks();
     skillBars();
-    projectFilters();
+    ASSET_VAULT.init();
     lightbox();
     copyHooks();
     GPU.start();
@@ -3805,6 +4401,11 @@
     window.__portfolio = {
       openApp(id) { WM.open(id); },
       closeApp(id) { WM.close(id); },
+      openAssetVault(path = "/") {
+        WM.open("projects");
+        ASSET_VAULT.navigate(path, { reason: "api" });
+      },
+      getAssetVaultState() { return ASSET_VAULT.snapshot(); },
       launchIris() { BRAND_COLLISION.armCollision(); },
       switchMode(mode) { return setOsMode(mode); },
       notify,
